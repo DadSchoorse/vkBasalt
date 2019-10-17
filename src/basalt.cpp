@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"
@@ -8,14 +9,8 @@
 
 #include <mutex>
 #include <map>
+#include <unordered_map>
 #include <iostream>
-
-#undef VK_LAYER_EXPORT
-#if defined(WIN32)
-#define VK_LAYER_EXPORT extern "C" __declspec(dllexport)
-#else
-#define VK_LAYER_EXPORT extern "C"
-#endif
 
 std::mutex globalLock;
 typedef std::lock_guard<std::mutex> scoped_lock;
@@ -28,6 +23,31 @@ void *GetKey(DispatchableType inst)
 // layer book-keeping information, to store dispatch tables by key
 std::map<void *, VkLayerInstanceDispatchTable> instance_dispatch;
 std::map<void *, VkLayerDispatchTable> device_dispatch;
+
+
+//for each swapchain, we have the Images and the other stuff we need to execute the compute shader
+typedef struct {
+    VkDevice device;
+    VkExtent2D imageExtent;
+    VkFormat format;
+    uint32_t imageCout;
+    VkImage *imageList;
+    VkImageView *imageViewList;
+    VkDescriptorSet *descriptorSetList;
+    VkCommandBuffer *commandBufferList;
+    VkDescriptorPool descriptorPool;
+    VkCommandPool commandPool;
+} SwapchainStruct;
+
+typedef struct {
+    VkQueue queue;
+    uint32_t queueFamilyIndex;
+    VkPhysicalDevice physicalDevice;
+    VkCommandPool commandPool;
+} DeviceStruct;
+
+std::unordered_map<VkDevice, DeviceStruct> deviceMap;
+std::unordered_map<VkSwapchainKHR, SwapchainStruct> swapchainMap;
 
 VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     const VkInstanceCreateInfo*                 pCreateInfo,
@@ -105,6 +125,11 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     PFN_vkCreateDevice createFunc = (PFN_vkCreateDevice)gipa(VK_NULL_HANDLE, "vkCreateDevice");
 
     VkResult ret = createFunc(physicalDevice, pCreateInfo, pAllocator, pDevice);
+    
+    DeviceStruct deviceStruct;
+    deviceStruct.queue = VK_NULL_HANDLE;
+    deviceStruct.physicalDevice = physicalDevice;
+    deviceStruct.commandPool = VK_NULL_HANDLE;
 
     // fetch our own dispatch table for the functions we need, into the next layer
     VkLayerDispatchTable dispatchTable;
@@ -114,6 +139,8 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     {
         scoped_lock l(globalLock);
         device_dispatch[GetKey(*pDevice)] = dispatchTable;
+        deviceMap[*pDevice] = deviceStruct;
+        
     }
 
   return VK_SUCCESS;
@@ -122,16 +149,33 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
 VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
 {
     scoped_lock l(globalLock);
+    DeviceStruct deviceStruct = deviceMap[device];
+    if(deviceStruct.commandPool != VK_NULL_HANDLE)
+    {
+        device_dispatch[GetKey(device)].DestroyCommandPool(device,deviceStruct.commandPool,nullptr);
+    }
     device_dispatch.erase(GetKey(device));
 }
-
+VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
+{
+    scoped_lock l(globalLock);
+    std::cout << "Interrupted create swapchain" << std::endl;
+    device_dispatch[GetKey(device)].CreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
+}       
 
 VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t *pCount, VkImage *pSwapchainImages) 
 {
     scoped_lock l(globalLock);
-    printf("Interrupted gest swapchain images, printf");
-    std::cout << "Interrupted gest swapchain images" << std::endl;
+    std::cout << "Interrupted get swapchain images" << std::endl;
     device_dispatch[GetKey(device)].GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPresentInfoKHR* pPresentInfo)
+{
+    scoped_lock l(globalLock);
+    std::cout << "Interrupted QueuePresentKHR" << std::endl;
+    usleep(100000);
+    device_dispatch[GetKey(queue)].QueuePresentKHR(queue, pPresentInfo);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Enumeration function
@@ -188,6 +232,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(
     return VK_SUCCESS;
 }
 
+extern "C"{// these are the entry points for the layer, so they need to be c-linkeable
 
 #define GETPROCADDR(func) if(!strcmp(pName, "vk" #func)) return (PFN_vkVoidFunction)&vkBasalt_##func;
 /*
@@ -202,8 +247,9 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevic
     GETPROCADDR(EnumerateDeviceExtensionProperties);
     GETPROCADDR(CreateDevice);
     GETPROCADDR(DestroyDevice);
+    GETPROCADDR(CreateSwapchainKHR);
     GETPROCADDR(GetSwapchainImagesKHR);
-    GETPROCADDR(EndCommandBuffer);
+    GETPROCADDR(QueuePresentKHR);
 
     {
         scoped_lock l(globalLock);
@@ -226,11 +272,13 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetInstanceProcAddr(VkIns
     GETPROCADDR(EnumerateDeviceExtensionProperties);
     GETPROCADDR(CreateDevice);
     GETPROCADDR(DestroyDevice);
+    GETPROCADDR(CreateSwapchainKHR);
     GETPROCADDR(GetSwapchainImagesKHR);
-    GETPROCADDR(EndCommandBuffer);
-
+    GETPROCADDR(QueuePresentKHR);
     {
         scoped_lock l(globalLock);
         return instance_dispatch[GetKey(instance)].GetInstanceProcAddr(instance, pName);
     }
 }
+
+}//extern "C"
