@@ -1,6 +1,6 @@
 CPPC := g++
 CFLAGS := -O3 -fPIC #-Wall -Wextra
-LINKER :=  -shared #-fvisibility=hidden
+LINKER :=  -shared -fvisibility=hidden
 
 BUILD_DIR := ../build
 
