@@ -50,13 +50,6 @@ namespace vkBasalt
         
         std::cout << "before allocating descriptor Sets " << 1 << std::endl;
         VkResult result =  dispatchTable.AllocateDescriptorSets(device,&descriptorSetAllocateInfo,descriptorSets);
-        /*std::cout << "after allocating descriptor Sets " << std::endl;
-        std::cout << "before allocating descriptor Sets " << 2 << std::endl;
-        result =  dispatchTable.AllocateDescriptorSets(device,&descriptorSetAllocateInfo,&(descriptorSets[1]));
-        std::cout << "after allocating descriptor Sets " << std::endl;
-        std::cout << "before allocating descriptor Sets " << 3 << std::endl;
-        result =  dispatchTable.AllocateDescriptorSets(device,&descriptorSetAllocateInfo,&(descriptorSets[2]));
-        std::cout << "after allocating descriptor Sets " << std::endl;*/
 
         VkDescriptorImageInfo imageInfo;
         imageInfo.sampler = VK_NULL_HANDLE;
