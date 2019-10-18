@@ -12,6 +12,9 @@
 #include <unordered_map>
 #include <iostream>
 
+#include "image_view.hpp"
+
+
 std::mutex globalLock;
 typedef std::lock_guard<std::mutex> scoped_lock;
 template<typename DispatchableType>
@@ -272,6 +275,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     {
         swapchainStruct.imageList[i] = pSwapchainImages[i];
     }
+    vkBasalt::createImageViews(device,device_dispatch[GetKey(device)],swapchainStruct.format,swapchainStruct.imageCount,swapchainStruct.imageList,swapchainStruct.imageViewList);
     
     return result;
 }
