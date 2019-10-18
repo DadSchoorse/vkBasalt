@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "image_view.hpp"
+#include "descriptor_set.hpp"
 
 
 std::mutex globalLock;
@@ -38,7 +39,7 @@ typedef struct {
     VkImageView *imageViewList;
     VkDescriptorSet *descriptorSetList;
     VkCommandBuffer *commandBufferList;
-    VkDescriptorPool descriptorPool;
+    VkDescriptorPool storageImageDescriptorPool;
 } SwapchainStruct;
 
 typedef struct {
@@ -46,6 +47,7 @@ typedef struct {
     uint32_t queueFamilyIndex;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
+    VkDescriptorSetLayout storageImageDescriptorSetLayout;
 } DeviceStruct;
 
 std::unordered_map<VkDevice, DeviceStruct> deviceMap;
@@ -132,10 +134,12 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     deviceStruct.queue = VK_NULL_HANDLE;
     deviceStruct.physicalDevice = physicalDevice;
     deviceStruct.commandPool = VK_NULL_HANDLE;
-
+    
     // fetch our own dispatch table for the functions we need, into the next layer
     VkLayerDispatchTable dispatchTable;
     layer_init_device_dispatch_table(*pDevice,&dispatchTable,gdpa);
+    
+    vkBasalt::createStorageImageDescriptorSetLayout(*pDevice,dispatchTable,deviceStruct.storageImageDescriptorSetLayout);
 
     // store the table by key
     {
@@ -206,6 +210,8 @@ VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t que
         deviceStruct.queue = *pQueue;
         deviceStruct.queueFamilyIndex = queueFamilyIndex;
         std::cout << (deviceMap[device].queue == *pQueue) << std::endl;
+        std::cout << "queue " << *pQueue << std::endl; 
+        std::cout << "queue " << deviceMap[device].queue << std::endl;
     }
 }
 
@@ -231,9 +237,12 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
             delete[] oldStruct.descriptorSetList;
             device_dispatch[GetKey(device)].FreeCommandBuffers(device,deviceMap[device].commandPool,oldStruct.imageCount, oldStruct.commandBufferList);
             delete[] oldStruct.commandBufferList;
-            device_dispatch[GetKey(device)].DestroyDescriptorPool(device,oldStruct.descriptorPool,nullptr);
+            device_dispatch[GetKey(device)].DestroyDescriptorPool(device,oldStruct.storageImageDescriptorPool,nullptr);
         }   
     }
+    std::cout << "queue " << deviceMap[device].queue << std::endl;
+    std::cout << "format " << (*pCreateInfo).imageFormat << std::endl;
+    std::cout << "format " << modifiedCreateInfo.imageFormat << std::endl;
     SwapchainStruct swapchainStruct;
     swapchainStruct.device = device;
     swapchainStruct.imageExtent = modifiedCreateInfo.imageExtent;
@@ -243,12 +252,17 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     swapchainStruct.imageViewList = nullptr;
     swapchainStruct.descriptorSetList =nullptr;
     swapchainStruct.commandBufferList = nullptr;
-    swapchainStruct.descriptorPool = VK_NULL_HANDLE;
+    swapchainStruct.storageImageDescriptorPool = VK_NULL_HANDLE;
+    std::cout << "device " << swapchainStruct.device << std::endl;
+    
+    VkResult result = device_dispatch[GetKey(device)].CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
     
     swapchainMap[*pSwapchain] = swapchainStruct;
+    std::cout << "format " << swapchainMap[*pSwapchain].format << std::endl;
+    std::cout << "swapchain " << *pSwapchain << std::endl;
     
     std::cout << "Interrupted create swapchain" << std::endl;
-    VkResult result = device_dispatch[GetKey(device)].CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
+    
     
     
     return result;
@@ -257,18 +271,23 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
 VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t *pCount, VkImage *pSwapchainImages) 
 {
     scoped_lock l(globalLock);
-    std::cout << "Interrupted get swapchain images" << std::endl;
+    std::cout << "Interrupted get swapchain images " << *pCount << std::endl;
     if(pSwapchainImages==nullptr)
     {
         return device_dispatch[GetKey(device)].GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
     }
     
+    DeviceStruct& deviceStruct = deviceMap[device];
+    std::cout << "queue " << deviceStruct.queue << std::endl;
+    std::cout << "swapchain " << swapchain << std::endl;
     SwapchainStruct& swapchainStruct = swapchainMap[swapchain];
     swapchainStruct.imageCount = *pCount;
     swapchainStruct.imageList = new VkImage[*pCount];
     swapchainStruct.imageViewList = new VkImageView[*pCount];
     swapchainStruct.descriptorSetList = new VkDescriptorSet[*pCount];
     swapchainStruct.commandBufferList = new VkCommandBuffer[*pCount];
+    std::cout << "format " << swapchainStruct.format << std::endl;
+    std::cout << "device " << swapchainStruct.device << std::endl;
     
     VkResult result = device_dispatch[GetKey(device)].GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
     for(int i=0;i<*pCount;i++)
@@ -276,6 +295,10 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
         swapchainStruct.imageList[i] = pSwapchainImages[i];
     }
     vkBasalt::createImageViews(device,device_dispatch[GetKey(device)],swapchainStruct.format,swapchainStruct.imageCount,swapchainStruct.imageList,swapchainStruct.imageViewList);
+    std::cout << "before creating descriptor Pool " << std::endl;
+    vkBasalt::createStorageImageDescriptorPool(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorPool);
+    std::cout << "after creating descriptor Pool " << std::endl;
+    vkBasalt::allocateAndWriteStorageDescriptorSets(device, device_dispatch[GetKey(device)], swapchainStruct.storageImageDescriptorPool, swapchainStruct.imageCount, deviceStruct.storageImageDescriptorSetLayout, swapchainStruct.imageViewList, swapchainStruct.descriptorSetList);
     
     return result;
 }
