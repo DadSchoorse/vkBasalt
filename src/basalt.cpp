@@ -16,6 +16,7 @@
 #include "descriptor_set.hpp"
 #include "shader.hpp"
 #include "compute_pipeline.hpp"
+#include "command_buffer.hpp"
 
 
 const char* casFile = "/home/georg/cpp_projects/mitGit/vkBasalt/build/shader/cas.comp.spv";
@@ -313,6 +314,11 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     vkBasalt::createStorageImageDescriptorPool(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorPool);
     std::cout << "after creating descriptor Pool " << std::endl;
     vkBasalt::allocateAndWriteStorageDescriptorSets(device, device_dispatch[GetKey(device)], swapchainStruct.storageImageDescriptorPool, swapchainStruct.imageCount, deviceStruct.storageImageDescriptorSetLayout, swapchainStruct.imageViewList, swapchainStruct.descriptorSetList);
+    
+    vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
+    std::cout << "after allocateCommandBuffer " << std::endl;
+    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], deviceMap[device].casPipeline, deviceMap[device].casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
+    
     
     return result;
 }
