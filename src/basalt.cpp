@@ -14,7 +14,11 @@
 
 #include "image_view.hpp"
 #include "descriptor_set.hpp"
+#include "shader.hpp"
+#include "compute_pipeline.hpp"
 
+
+const char* casFile = "/home/georg/cpp_projects/mitGit/vkBasalt/build/shader/cas.comp.spv";
 
 std::mutex globalLock;
 typedef std::lock_guard<std::mutex> scoped_lock;
@@ -48,6 +52,9 @@ typedef struct {
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
     VkDescriptorSetLayout storageImageDescriptorSetLayout;
+    VkShaderModule casModule;
+    VkPipelineLayout casPipelineLayout;
+    VkPipeline casPipeline;
 } DeviceStruct;
 
 std::unordered_map<VkDevice, DeviceStruct> deviceMap;
@@ -140,6 +147,13 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     layer_init_device_dispatch_table(*pDevice,&dispatchTable,gdpa);
     
     vkBasalt::createStorageImageDescriptorSetLayout(*pDevice,dispatchTable,deviceStruct.storageImageDescriptorSetLayout);
+    
+    auto casCode = vkBasalt::readFile(casFile);
+    vkBasalt::createShaderModule(*pDevice, dispatchTable, casCode, &deviceStruct.casModule);
+    vkBasalt::createComputePipelineLayout(*pDevice, dispatchTable, deviceStruct.storageImageDescriptorSetLayout, deviceStruct.casPipelineLayout);
+    vkBasalt::createComputePipeline(*pDevice, dispatchTable, deviceStruct.casModule, deviceStruct.casPipelineLayout, deviceStruct.casPipeline);
+    
+    
 
     // store the table by key
     {
