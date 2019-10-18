@@ -9,6 +9,7 @@
 
 #include <mutex>
 #include <map>
+#include <vector>
 #include <unordered_map>
 #include <iostream>
 
@@ -326,8 +327,38 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
 VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPresentInfoKHR* pPresentInfo)
 {
     scoped_lock l(globalLock);
-    std::cout << "Interrupted QueuePresentKHR" << std::endl;
-    usleep(100000);
+    //std::cout << "Interrupted QueuePresentKHR" << std::endl;
+    for(int i=0;i<(*pPresentInfo).swapchainCount;i++)
+    {
+        uint32_t index = (*pPresentInfo).pImageIndices[i];
+        VkSwapchainKHR swapchain = (*pPresentInfo).pSwapchains[i];
+        SwapchainStruct& swapchainStruct = swapchainMap[swapchain];
+        VkDevice device = swapchainStruct.device;
+        DeviceStruct& deviceStruct = deviceMap[device];
+        
+        device_dispatch[GetKey(device)].QueueWaitIdle(queue);
+        device_dispatch[GetKey(device)].DeviceWaitIdle(device);
+        std::cout << (*pPresentInfo).pImageIndices[i] << std::endl;
+        
+        VkSubmitInfo submitInfo;
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pNext = nullptr;
+        submitInfo.waitSemaphoreCount = 0;//(*pPresentInfo).waitSemaphoreCount;
+        submitInfo.pWaitSemaphores = nullptr;//(*pPresentInfo).pWaitSemaphores;
+        std::vector<VkPipelineStageFlags> waitStages((*pPresentInfo).waitSemaphoreCount,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+        submitInfo.pWaitDstStageMask = nullptr;//waitStages.data();
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &(swapchainStruct.commandBufferList[i]);
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores = nullptr;
+        
+        device_dispatch[GetKey(device)].QueueSubmit(deviceStruct.queue, 1, &submitInfo, VK_NULL_HANDLE);
+        device_dispatch[GetKey(device)].QueueWaitIdle(deviceStruct.queue);
+        //device_dispatch[GetKey(device)].DeviceWaitIdle(device);
+        
+        
+    }
+    //usleep(1000000);
     device_dispatch[GetKey(queue)].QueuePresentKHR(queue, pPresentInfo);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
