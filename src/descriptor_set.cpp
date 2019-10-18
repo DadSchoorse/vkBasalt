@@ -68,7 +68,7 @@ namespace vkBasalt
         writeDescriptorSet.pBufferInfo = nullptr;
         writeDescriptorSet.pTexelBufferView = nullptr;
         
-        for(int i=0;i<1;i++)
+        for(int i=0;i<setCount;i++)
         {
             imageInfo.imageView = imageViews[i];
             writeDescriptorSet.dstSet = descriptorSets[i];
