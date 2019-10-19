@@ -10,22 +10,28 @@
 
 namespace vkBasalt
 {
-    void createComputePipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorSetLayout& descriptorSetLayout, VkPipelineLayout& pipelineLayout)
+    void createComputePipelineLayouts(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& count, const VkDescriptorSetLayout* descriptorSetLayouts, VkPipelineLayout* pipelineLayouts)
     {   
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo;
         pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutCreateInfo.pNext = nullptr;
         pipelineLayoutCreateInfo.flags = 0;
         pipelineLayoutCreateInfo.setLayoutCount = 1;
-        pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+        pipelineLayoutCreateInfo.pSetLayouts = VK_NULL_HANDLE;
         pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
         pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
         
-        dispatchTable.CreatePipelineLayout(device,&pipelineLayoutCreateInfo,nullptr,&pipelineLayout);
+        
+        for(int i=0;i<count;i++)
+        {
+            pipelineLayoutCreateInfo.pSetLayouts = &(descriptorSetLayouts[i]);
+            VkResult result = dispatchTable.CreatePipelineLayout(device,&pipelineLayoutCreateInfo,nullptr,&(pipelineLayouts[i]));
+            ASSERT_VULKAN(result);
+        }
     }
     
     
-    void createComputePipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& shaderModule,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline)
+    void createComputePipelines(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& shaderModule,const uint32_t& count,const VkPipelineLayout* pipelineLayouts, VkPipeline* pipelines)
     {
         VkPipelineShaderStageCreateInfo computeStageCreateInfo;
         computeStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -44,11 +50,16 @@ namespace vkBasalt
         computePipelineCreateInfo.pNext = nullptr;
         computePipelineCreateInfo.flags = 0;
         computePipelineCreateInfo.stage = computeStageCreateInfo;
-        computePipelineCreateInfo.layout = pipelineLayout;
+        computePipelineCreateInfo.layout = VK_NULL_HANDLE;
         computePipelineCreateInfo.basePipelineHandle = 0;//TODO
         computePipelineCreateInfo.basePipelineIndex = 0;//TODO
         
-        VkResult result = dispatchTable.CreateComputePipelines(device,VK_NULL_HANDLE,1,&computePipelineCreateInfo,nullptr,&pipeline);
-        ASSERT_VULKAN(result);
+        
+        for(int i=0;i<count;i++)
+        {
+            computePipelineCreateInfo.layout = pipelineLayouts[i];
+            VkResult result = dispatchTable.CreateComputePipelines(device,VK_NULL_HANDLE,1,&computePipelineCreateInfo,nullptr,&(pipelines[i]));
+            ASSERT_VULKAN(result);
+        }
     }
 }

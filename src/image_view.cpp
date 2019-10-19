@@ -1,5 +1,13 @@
 #include "image_view.hpp"
 
+#ifndef ASSERT_VULKAN
+#define ASSERT_VULKAN(val)\
+        if(val!=VK_SUCCESS)\
+        {\
+            throw std::runtime_error("ASSERT_VULKAN failed " + val);\
+        }
+#endif
+
 namespace vkBasalt
 {
     void createImageViews(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkFormat& format, const uint32_t& imageCount, const VkImage* images, VkImageView* imageViews)
@@ -26,7 +34,8 @@ namespace vkBasalt
         for(int i=0;i<imageCount;i++)
         {
             imageViewCreateInfo.image = images[i];
-            dispatchTable.CreateImageView(device,&imageViewCreateInfo,nullptr,&(imageViews[i]));
+            VkResult result = dispatchTable.CreateImageView(device,&imageViewCreateInfo,nullptr,&(imageViews[i]));
+            ASSERT_VULKAN(result);
         }
         
     }

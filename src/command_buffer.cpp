@@ -31,7 +31,7 @@ namespace vkBasalt
         }
     
     }
-    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers)
+    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline* pipelines, const VkPipelineLayout* layouts, const VkExtent2D& extent, const uint32_t& count, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers)
     {
         /*
             general 
@@ -91,11 +91,12 @@ namespace vkBasalt
         for(int i=0;i<count;i++)
         {
             std::cout << "before begin commandbuffer " << commandBuffers[i] << std::endl;
-            dispatchTable.BeginCommandBuffer(commandBuffers[i], &beginInfo);
+            VkResult result = dispatchTable.BeginCommandBuffer(commandBuffers[i], &beginInfo);
+            ASSERT_VULKAN(result);
             //1
             std::cout << "before command buffer step 1" << std::endl;
-            dispatchTable.CmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-            dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_COMPUTE,layout,0,1,&(descriptorSets[i]),0,nullptr);
+            dispatchTable.CmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_COMPUTE, pipelines[i]);
+            dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_COMPUTE,layouts[i],0,1,&(descriptorSets[i]),0,nullptr);
             
             std::cout << "before command buffer step 2" << std::endl;
             //2
@@ -109,7 +110,7 @@ namespace vkBasalt
             //4
             dispatchTable.CmdPipelineBarrier(commandBuffers[i],VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
             std::cout << "before ending command buffer" << std::endl;
-            dispatchTable.EndCommandBuffer(commandBuffers[i]);
+            result = dispatchTable.EndCommandBuffer(commandBuffers[i]);
         }
     }
 

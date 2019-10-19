@@ -46,6 +46,10 @@ typedef struct {
     VkDescriptorSet *descriptorSetList;
     VkCommandBuffer *commandBufferList;
     VkDescriptorPool storageImageDescriptorPool;
+    VkDescriptorSetLayout *storageImageDescriptorSetLayoutList;
+    VkShaderModule casModule;
+    VkPipelineLayout* casPipelineLayoutList;
+    VkPipeline* casPipelineList;
 } SwapchainStruct;
 
 typedef struct {
@@ -53,10 +57,6 @@ typedef struct {
     uint32_t queueFamilyIndex;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
-    VkDescriptorSetLayout storageImageDescriptorSetLayout;
-    VkShaderModule casModule;
-    VkPipelineLayout casPipelineLayout;
-    VkPipeline casPipeline;
 } DeviceStruct;
 
 std::unordered_map<VkDevice, DeviceStruct> deviceMap;
@@ -147,15 +147,6 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     // fetch our own dispatch table for the functions we need, into the next layer
     VkLayerDispatchTable dispatchTable;
     layer_init_device_dispatch_table(*pDevice,&dispatchTable,gdpa);
-    
-    vkBasalt::createStorageImageDescriptorSetLayout(*pDevice,dispatchTable,deviceStruct.storageImageDescriptorSetLayout);
-    
-    auto casCode = vkBasalt::readFile(casFile);
-    vkBasalt::createShaderModule(*pDevice, dispatchTable, casCode, &deviceStruct.casModule);
-    vkBasalt::createComputePipelineLayout(*pDevice, dispatchTable, deviceStruct.storageImageDescriptorSetLayout, deviceStruct.casPipelineLayout);
-    vkBasalt::createComputePipeline(*pDevice, dispatchTable, deviceStruct.casModule, deviceStruct.casPipelineLayout, deviceStruct.casPipeline);
-    
-    
 
     // store the table by key
     {
@@ -302,6 +293,9 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     swapchainStruct.imageViewList = new VkImageView[*pCount];
     swapchainStruct.descriptorSetList = new VkDescriptorSet[*pCount];
     swapchainStruct.commandBufferList = new VkCommandBuffer[*pCount];
+    swapchainStruct.storageImageDescriptorSetLayoutList = new VkDescriptorSetLayout[*pCount];
+    swapchainStruct.casPipelineLayoutList = new VkPipelineLayout[*pCount];
+    swapchainStruct.casPipelineList = new VkPipeline[*pCount];
     std::cout << "format " << swapchainStruct.format << std::endl;
     std::cout << "device " << swapchainStruct.device << std::endl;
     
@@ -310,15 +304,29 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     {
         swapchainStruct.imageList[i] = pSwapchainImages[i];
     }
+    
+    
+    vkBasalt::createStorageImageDescriptorSetLayouts(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList);
+    
+    auto casCode = vkBasalt::readFile(casFile);
+    vkBasalt::createShaderModule(device, device_dispatch[GetKey(device)], casCode, &swapchainStruct.casModule);
+    vkBasalt::createComputePipelineLayouts(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList, swapchainStruct.casPipelineLayoutList);
+    vkBasalt::createComputePipelines(device,device_dispatch[GetKey(device)],swapchainStruct.casModule,swapchainStruct.imageCount,swapchainStruct.casPipelineLayoutList , swapchainStruct.casPipelineList);
+    
+    
     vkBasalt::createImageViews(device,device_dispatch[GetKey(device)],swapchainStruct.format,swapchainStruct.imageCount,swapchainStruct.imageList,swapchainStruct.imageViewList);
     std::cout << "before creating descriptor Pool " << std::endl;
     vkBasalt::createStorageImageDescriptorPool(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorPool);
     std::cout << "after creating descriptor Pool " << std::endl;
-    vkBasalt::allocateAndWriteStorageDescriptorSets(device, device_dispatch[GetKey(device)], swapchainStruct.storageImageDescriptorPool, swapchainStruct.imageCount, deviceStruct.storageImageDescriptorSetLayout, swapchainStruct.imageViewList, swapchainStruct.descriptorSetList);
+    vkBasalt::allocateAndWriteStorageDescriptorSets(device, device_dispatch[GetKey(device)], swapchainStruct.storageImageDescriptorPool, swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList, swapchainStruct.imageViewList, swapchainStruct.descriptorSetList);
     
     vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
     std::cout << "after allocateCommandBuffer " << std::endl;
-    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], deviceMap[device].casPipeline, deviceMap[device].casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
+    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casPipelineList, swapchainStruct.casPipelineLayoutList, swapchainStruct.imageExtent, swapchainStruct.imageCount, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
+    for(int i=0;i<swapchainStruct.imageCount;i++)
+        {
+            std::cout << i << "writen commandbuffer" << swapchainStruct.commandBufferList[i] << std::endl;
+        }
     
     
     return result;
@@ -340,6 +348,9 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         device_dispatch[GetKey(device)].DeviceWaitIdle(device);
         std::cout << (*pPresentInfo).pImageIndices[i] << std::endl;
         
+        std::cout << &(swapchainStruct.commandBufferList[index]) << std::endl;
+        std::cout << swapchainStruct.commandBufferList[index] << std::endl;
+        
         VkSubmitInfo submitInfo;
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext = nullptr;
@@ -348,7 +359,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         std::vector<VkPipelineStageFlags> waitStages((*pPresentInfo).waitSemaphoreCount,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
         submitInfo.pWaitDstStageMask = nullptr;//waitStages.data();
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &(swapchainStruct.commandBufferList[i]);
+        submitInfo.pCommandBuffers = &(swapchainStruct.commandBufferList[index]);
         submitInfo.signalSemaphoreCount = 0;
         submitInfo.pSignalSemaphores = nullptr;
         

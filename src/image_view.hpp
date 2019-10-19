@@ -1,8 +1,10 @@
 #ifndef IMAGE_VIEW_HPP_INCLUDED
 #define IMAGE_VIEW_HPP_INCLUDED
-#include <assert.h>
-#include <string.h>
-#include <unistd.h>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <iostream>
+#include <vector>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"

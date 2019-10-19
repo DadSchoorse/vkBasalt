@@ -1,9 +1,8 @@
 #ifndef DESCRIPTOR_SET_HPP_INCLUDED
 #define DESCRIPTOR_SET_HPP_INCLUDED
-#include <assert.h>
-#include <string.h>
-#include <unistd.h>
-
+#include <vector>
+#include <fstream>
+#include <string>
 #include <iostream>
 #include <vector>
 
@@ -12,9 +11,9 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 
 namespace vkBasalt{
-    void createStorageImageDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout);
+    void createStorageImageDescriptorSetLayouts(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& count, VkDescriptorSetLayout* descriptorSetLayouts);
     void createStorageImageDescriptorPool(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& setCount, VkDescriptorPool& descriptorPool);
-    void allocateAndWriteStorageDescriptorSets(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const uint32_t& setCount, const VkDescriptorSetLayout& descriptorSetLayout,const  VkImageView* imageViews, VkDescriptorSet* descriptorSets);
+    void allocateAndWriteStorageDescriptorSets(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const uint32_t& setCount, const VkDescriptorSetLayout* descriptorSetLayouts,const  VkImageView* imageViews, VkDescriptorSet* descriptorSets);
 
 }
 
