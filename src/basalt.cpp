@@ -344,8 +344,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         VkDevice device = swapchainStruct.device;
         DeviceStruct& deviceStruct = deviceMap[device];
         
-        device_dispatch[GetKey(device)].QueueWaitIdle(queue);
-        device_dispatch[GetKey(device)].DeviceWaitIdle(device);
+        //device_dispatch[GetKey(device)].QueueWaitIdle(queue);
+        //device_dispatch[GetKey(device)].DeviceWaitIdle(device);
         std::cout << (*pPresentInfo).pImageIndices[i] << std::endl;
         
         std::cout << &(swapchainStruct.commandBufferList[index]) << std::endl;
@@ -356,7 +356,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         submitInfo.pNext = nullptr;
         submitInfo.waitSemaphoreCount = 0;//(*pPresentInfo).waitSemaphoreCount;
         submitInfo.pWaitSemaphores = nullptr;//(*pPresentInfo).pWaitSemaphores;
-        std::vector<VkPipelineStageFlags> waitStages((*pPresentInfo).waitSemaphoreCount,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+        //std::vector<VkPipelineStageFlags> waitStages((*pPresentInfo).waitSemaphoreCount,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
         submitInfo.pWaitDstStageMask = nullptr;//waitStages.data();
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &(swapchainStruct.commandBufferList[index]);
@@ -364,7 +364,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         submitInfo.pSignalSemaphores = nullptr;
         
         device_dispatch[GetKey(device)].QueueSubmit(deviceStruct.queue, 1, &submitInfo, VK_NULL_HANDLE);
-        device_dispatch[GetKey(device)].QueueWaitIdle(deviceStruct.queue);
+        //device_dispatch[GetKey(device)].QueueWaitIdle(deviceStruct.queue);
         //device_dispatch[GetKey(device)].DeviceWaitIdle(device);
         
         
