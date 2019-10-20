@@ -1,4 +1,4 @@
-INSTALL_DIR := /home/georg/.local/share/vulkan/implicit_layer.d
+INSTALL_DIR := $(HOME)/.local/share/vulkan/implicit_layer.d
 LIB32 := $(HOME)/.local/share/vkBasalt/libvkbasalt32.so
 LIB64 := $(HOME)/.local/share/vkBasalt/libvkbasalt64.so
 
