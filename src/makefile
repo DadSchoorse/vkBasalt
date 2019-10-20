@@ -27,7 +27,7 @@ $(BUILD_DIR)/%.32.o: %.cpp $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 	
-install: all
+install: 
 	install -m 0755 -D -T $(BUILD_DIR)/libvkbasalt64.so $(INSTALL_DIR)/libvkbasalt64.so
 	install -m 0755 -D -T $(BUILD_DIR)/libvkbasalt32.so $(INSTALL_DIR)/libvkbasalt32.so
 
