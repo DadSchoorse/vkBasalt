@@ -7,6 +7,7 @@ A vulkan post processing layer. Currently the only effect is Contrast Adaptiv Sh
 This one of my first projects ever. Look at the code at your own risk.
 
 # Build
+You need the vulkan sdk to build this and glslangValidator to compile the shader.
 
 Simply use
 ```
