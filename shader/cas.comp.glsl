@@ -6,7 +6,7 @@ layout(set=0, binding=0, rgba8) uniform image2D img;
 
 void main()
 {
-    float sharpness = 1.0;
+    float sharpness = 0.4;
     
     // fetch a 3x3 neighborhood around the pixel 'e',
     //  a b c
