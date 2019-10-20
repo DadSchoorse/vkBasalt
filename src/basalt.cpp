@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"
@@ -12,6 +13,7 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <string>
 
 #include "image_view.hpp"
 #include "descriptor_set.hpp"
@@ -20,7 +22,7 @@
 #include "command_buffer.hpp"
 
 
-const char* casFile = "/home/georg/cpp_projects/mitGit/vkBasalt/build/shader/cas.comp.spv";
+std::string casFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.comp.spv";
 
 std::mutex globalLock;
 typedef std::lock_guard<std::mutex> scoped_lock;
@@ -330,7 +332,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     
     vkBasalt::createStorageImageDescriptorSetLayouts(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList);
     
-    auto casCode = vkBasalt::readFile(casFile);
+    auto casCode = vkBasalt::readFile(casFile.c_str());
     vkBasalt::createShaderModule(device, device_dispatch[GetKey(device)], casCode, &swapchainStruct.casModule);
     vkBasalt::createComputePipelineLayouts(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList, swapchainStruct.casPipelineLayoutList);
     vkBasalt::createComputePipelines(device,device_dispatch[GetKey(device)],swapchainStruct.casModule,swapchainStruct.imageCount,swapchainStruct.casPipelineLayoutList , swapchainStruct.casPipelineList);
