@@ -62,6 +62,39 @@ typedef struct {
 std::unordered_map<VkDevice, DeviceStruct> deviceMap;
 std::unordered_map<VkSwapchainKHR, SwapchainStruct> swapchainMap;
 
+namespace vkBasalt{
+    void destroySwapchainStruct(SwapchainStruct& swapchainStruct)
+    {
+        VkDevice device = swapchainStruct.device;
+        VkLayerDispatchTable& dispatchTable = device_dispatch[GetKey(device)];
+        if(swapchainStruct.imageCount>0)
+        {
+            dispatchTable.FreeCommandBuffers(device,deviceMap[device].commandPool,swapchainStruct.imageCount, swapchainStruct.commandBufferList);
+            delete[] swapchainStruct.commandBufferList;
+            std::cout << "after free commandbuffer" << std::endl;
+            dispatchTable.DestroyDescriptorPool(device,swapchainStruct.storageImageDescriptorPool,nullptr);
+            std::cout << "after DestroyDescriptorPool" << std::endl;
+            delete[] swapchainStruct.imageList;
+            for(int i=0;i<swapchainStruct.imageCount;i++)
+            {
+                dispatchTable.DestroyImageView(device,swapchainStruct.imageViewList[i],nullptr);
+                std::cout << "after DestroyImageView" << std::endl;
+                dispatchTable.DestroyPipeline(device,swapchainStruct.casPipelineList[i],nullptr);
+                std::cout << "after DestroyPipeline" << std::endl;
+                dispatchTable.DestroyPipelineLayout(device,swapchainStruct.casPipelineLayoutList[i],nullptr);
+                std::cout << "after DestroyPipelineLayout" << std::endl;
+                dispatchTable.DestroyDescriptorSetLayout(device,swapchainStruct.storageImageDescriptorSetLayoutList[i],nullptr);
+                std::cout << "after DestroyDescriptorSetLayout" << std::endl;
+            }
+            delete[] swapchainStruct.imageViewList;
+            delete[] swapchainStruct.descriptorSetList;
+            
+            dispatchTable.DestroyShaderModule(device,swapchainStruct.casModule,nullptr);
+            std::cout << "after DestroyShaderModule" << std::endl;
+        } 
+    }
+}
+
 VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     const VkInstanceCreateInfo*                 pCreateInfo,
     const VkAllocationCallbacks*                pAllocator,
@@ -230,22 +263,11 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     
     if(modifiedCreateInfo.oldSwapchain != VK_NULL_HANDLE)
     {
-        //we need to delete the infos of the oldswapchain 
-        std::cout << "oldswapchain != 0" << std::endl;
+        //we need to delete the infos of the oldswapchain
+        // TODO do we really? it seems as if afer recreating a swapchain the old one is destroyed with vkDestroySwapchain 
+        /*std::cout << "oldswapchain != VK_NULL_HANDLE  swapchain " << modifiedCreateInfo.oldSwapchain << std::endl;
         SwapchainStruct& oldStruct = swapchainMap[modifiedCreateInfo.oldSwapchain];
-        if(oldStruct.imageCount>0)
-        {
-            delete[] oldStruct.imageList;
-            for(int i=0;i<oldStruct.imageCount;i++)
-            {
-                device_dispatch[GetKey(device)].DestroyImageView(device,oldStruct.imageViewList[i],nullptr);
-            }
-            delete[] oldStruct.imageViewList;
-            delete[] oldStruct.descriptorSetList;
-            device_dispatch[GetKey(device)].FreeCommandBuffers(device,deviceMap[device].commandPool,oldStruct.imageCount, oldStruct.commandBufferList);
-            delete[] oldStruct.commandBufferList;
-            device_dispatch[GetKey(device)].DestroyDescriptorPool(device,oldStruct.storageImageDescriptorPool,nullptr);
-        }   
+        vkBasalt::destroySwapchainStruct(oldStruct);*/
     }
     std::cout << "queue " << deviceMap[device].queue << std::endl;
     std::cout << "format " << (*pCreateInfo).imageFormat << std::endl;
@@ -346,10 +368,10 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         
         //device_dispatch[GetKey(device)].QueueWaitIdle(queue);
         //device_dispatch[GetKey(device)].DeviceWaitIdle(device);
-        std::cout << (*pPresentInfo).pImageIndices[i] << std::endl;
+        //std::cout << (*pPresentInfo).pImageIndices[i] << std::endl;
         
-        std::cout << &(swapchainStruct.commandBufferList[index]) << std::endl;
-        std::cout << swapchainStruct.commandBufferList[index] << std::endl;
+        //std::cout << &(swapchainStruct.commandBufferList[index]) << std::endl;
+        //std::cout << swapchainStruct.commandBufferList[index] << std::endl;
         
         VkSubmitInfo submitInfo;
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -371,6 +393,17 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
     }
     //usleep(1000000);
     device_dispatch[GetKey(queue)].QueuePresentKHR(queue, pPresentInfo);
+}
+
+VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain,const VkAllocationCallbacks* pAllocator)
+{
+    scoped_lock l(globalLock);
+    //we need to delete the infos of the oldswapchain 
+    SwapchainStruct& oldStruct = swapchainMap[swapchain];
+    std::cout << "destroying swapchain " << swapchain << std::endl;
+    vkBasalt::destroySwapchainStruct(oldStruct);
+    
+    device_dispatch[GetKey(device)].DestroySwapchainKHR(device, swapchain,pAllocator);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Enumeration function
@@ -446,7 +479,7 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevic
     GETPROCADDR(CreateSwapchainKHR);
     GETPROCADDR(GetSwapchainImagesKHR);
     GETPROCADDR(QueuePresentKHR);
-
+    GETPROCADDR(DestroySwapchainKHR);
     {
         scoped_lock l(globalLock);
         return device_dispatch[GetKey(device)].GetDeviceProcAddr(device, pName);
@@ -472,6 +505,7 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetInstanceProcAddr(VkIns
     GETPROCADDR(CreateSwapchainKHR);
     GETPROCADDR(GetSwapchainImagesKHR);
     GETPROCADDR(QueuePresentKHR);
+    GETPROCADDR(DestroySwapchainKHR);
     {
         scoped_lock l(globalLock);
         return instance_dispatch[GetKey(instance)].GetInstanceProcAddr(instance, pName);
