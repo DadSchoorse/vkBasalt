@@ -1,0 +1,21 @@
+{
+  "file_format_version" : "1.0.0",
+  "layer" : {
+    "name": "VK_LAYER_VKBASALT_PostProcess64",
+    "type": "GLOBAL",
+    "library_path": "@lib",
+    "api_version": "1.1.125",
+    "implementation_version": "1",
+    "description": "a post process layer",
+    "functions": {
+      "vkGetInstanceProcAddr": "vkBasalt_GetInstanceProcAddr",
+      "vkGetDeviceProcAddr": "vkBasalt_GetDeviceProcAddr"
+    },
+    "enable_environment": {
+      "ENABLE_VKBASALT": "1"
+    },
+    "disable_environment": {
+      "DISABLE_VKBASALT": "1"
+    }
+  }
+}
