@@ -31,7 +31,7 @@ namespace vkBasalt
         }
     
     }
-    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline* pipelines, const VkPipelineLayout* layouts, const VkExtent2D& extent, const uint32_t& count, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers)
+    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline* pipelines, const VkPipelineLayout* layouts, const VkExtent2D& extent, const uint32_t& count,const VkImage* images, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers)
     {
         /*
             general 
@@ -90,6 +90,8 @@ namespace vkBasalt
         
         for(int i=0;i<count;i++)
         {
+            fistBarrier.image = images[i];
+            secondBarrier.image =  images[i];
             std::cout << "before begin commandbuffer " << commandBuffers[i] << std::endl;
             VkResult result = dispatchTable.BeginCommandBuffer(commandBuffers[i], &beginInfo);
             ASSERT_VULKAN(result);

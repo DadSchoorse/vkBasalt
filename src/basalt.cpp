@@ -346,7 +346,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     
     vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
     std::cout << "after allocateCommandBuffer " << std::endl;
-    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casPipelineList, swapchainStruct.casPipelineLayoutList, swapchainStruct.imageExtent, swapchainStruct.imageCount, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
+    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casPipelineList, swapchainStruct.casPipelineLayoutList, swapchainStruct.imageExtent, swapchainStruct.imageCount,swapchainStruct.imageList, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
     for(int i=0;i<swapchainStruct.imageCount;i++)
         {
             std::cout << i << "writen commandbuffer" << swapchainStruct.commandBufferList[i] << std::endl;
