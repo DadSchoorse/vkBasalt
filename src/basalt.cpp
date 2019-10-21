@@ -52,6 +52,7 @@ typedef struct {
     VkImageView *imageViewList;
     VkDescriptorSet *descriptorSetList;
     VkCommandBuffer *commandBufferList;
+    VkSemaphore *semaphoreList;
     VkDescriptorPool storageImageDescriptorPool;
     VkDescriptorSetLayout *storageImageDescriptorSetLayoutList;
     VkShaderModule casModule;
@@ -84,6 +85,8 @@ namespace vkBasalt{
             delete[] swapchainStruct.imageList;
             for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
             {
+                dispatchTable.DestroySemaphore(device,swapchainStruct.semaphoreList[i],nullptr);
+                std::cout << "after DestroySemaphore" << std::endl;
                 dispatchTable.DestroyImageView(device,swapchainStruct.imageViewList[i],nullptr);
                 std::cout << "after DestroyImageView" << std::endl;
                 dispatchTable.DestroyPipeline(device,swapchainStruct.casPipelineList[i],nullptr);
@@ -95,6 +98,7 @@ namespace vkBasalt{
             }
             delete[] swapchainStruct.imageViewList;
             delete[] swapchainStruct.descriptorSetList;
+            delete[] swapchainStruct.semaphoreList;
             
             dispatchTable.DestroyShaderModule(device,swapchainStruct.casModule,nullptr);
             std::cout << "after DestroyShaderModule" << std::endl;
@@ -288,6 +292,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     swapchainStruct.imageViewList = nullptr;
     swapchainStruct.descriptorSetList =nullptr;
     swapchainStruct.commandBufferList = nullptr;
+    swapchainStruct.semaphoreList = nullptr;
     swapchainStruct.storageImageDescriptorPool = VK_NULL_HANDLE;
     std::cout << "device " << swapchainStruct.device << std::endl;
     
@@ -322,6 +327,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     swapchainStruct.imageViewList = new VkImageView[*pCount];
     swapchainStruct.descriptorSetList = new VkDescriptorSet[*pCount];
     swapchainStruct.commandBufferList = new VkCommandBuffer[*pCount];
+    swapchainStruct.semaphoreList = new VkSemaphore[*pCount];
     swapchainStruct.storageImageDescriptorSetLayoutList = new VkDescriptorSetLayout[*pCount];
     swapchainStruct.casPipelineLayoutList = new VkPipelineLayout[*pCount];
     swapchainStruct.casPipelineList = new VkPipeline[*pCount];
@@ -352,6 +358,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
     std::cout << "after allocateCommandBuffer " << std::endl;
     vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casPipelineList, swapchainStruct.casPipelineLayoutList, swapchainStruct.imageExtent, swapchainStruct.imageCount,swapchainStruct.imageList, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
+    vkBasalt::createSemaphores(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.semaphoreList);
     for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
         {
             std::cout << i << "writen commandbuffer" << swapchainStruct.commandBufferList[i] << std::endl;
@@ -365,6 +372,12 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
 {
     scoped_lock l(globalLock);
     //std::cout << "Interrupted QueuePresentKHR" << std::endl;
+
+    std::vector<VkSemaphore> presentSemaphores;
+    presentSemaphores.reserve(pPresentInfo->swapchainCount);
+
+    std::vector<VkPipelineStageFlags> waitStages;
+
     for(unsigned int i=0;i<(*pPresentInfo).swapchainCount;i++)
     {
         uint32_t index = (*pPresentInfo).pImageIndices[i];
@@ -380,18 +393,28 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         //std::cout << &(swapchainStruct.commandBufferList[index]) << std::endl;
         //std::cout << swapchainStruct.commandBufferList[index] << std::endl;
         
+        waitStages.resize(pPresentInfo->waitSemaphoreCount, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+
         VkSubmitInfo submitInfo;
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext = nullptr;
-        submitInfo.waitSemaphoreCount = 0;//(*pPresentInfo).waitSemaphoreCount;
-        submitInfo.pWaitSemaphores = nullptr;//(*pPresentInfo).pWaitSemaphores;
-        //std::vector<VkPipelineStageFlags> waitStages((*pPresentInfo).waitSemaphoreCount,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-        submitInfo.pWaitDstStageMask = nullptr;//waitStages.data();
+        submitInfo.waitSemaphoreCount = 0;
+        submitInfo.pWaitSemaphores = nullptr;
+        submitInfo.pWaitDstStageMask = nullptr;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &(swapchainStruct.commandBufferList[index]);
-        submitInfo.signalSemaphoreCount = 0;
-        submitInfo.pSignalSemaphores = nullptr;
-        
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &(swapchainStruct.semaphoreList[index]);
+
+        presentSemaphores.push_back(swapchainStruct.semaphoreList[index]);
+
+        if (i == 0)
+        {
+            submitInfo.waitSemaphoreCount = pPresentInfo->waitSemaphoreCount;
+            submitInfo.pWaitSemaphores = pPresentInfo->pWaitSemaphores;
+            submitInfo.pWaitDstStageMask = waitStages.data();
+        }
+
         VkResult vr = device_dispatch[GetKey(device)].QueueSubmit(deviceStruct.queue, 1, &submitInfo, VK_NULL_HANDLE);
 
         if (vr != VK_SUCCESS)
@@ -402,7 +425,11 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         
     }
     //usleep(1000000);
-    return device_dispatch[GetKey(queue)].QueuePresentKHR(queue, pPresentInfo);
+    VkPresentInfoKHR presentInfo = *pPresentInfo;
+    presentInfo.waitSemaphoreCount = presentSemaphores.size();
+    presentInfo.pWaitSemaphores = presentSemaphores.data();
+
+    return device_dispatch[GetKey(queue)].QueuePresentKHR(queue, &presentInfo);
 }
 
 VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain,const VkAllocationCallbacks* pAllocator)
