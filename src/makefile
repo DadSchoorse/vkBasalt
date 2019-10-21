@@ -1,5 +1,5 @@
 CPPC := g++
-CFLAGS := -O3 -fPIC #-Wall -Wextra
+CFLAGS := -fPIC #-Wall -Wextra
 LINKER :=  -shared -fvisibility=hidden
 
 BUILD_DIR := ../build
