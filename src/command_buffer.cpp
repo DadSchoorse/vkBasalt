@@ -19,13 +19,13 @@ namespace vkBasalt
         allocInfo.commandPool = commandPool;
         allocInfo.commandBufferCount = count;
         
-        for(int i=0;i<count;i++)
+        for(unsigned int i=0;i<count;i++)
         {
             std::cout << commandBuffers[i] << std::endl;
         }
         VkResult result = dispatchTable.AllocateCommandBuffers(device,&allocInfo,commandBuffers);
         ASSERT_VULKAN(result);
-        for(int i=0;i<count;i++)
+        for(unsigned int i=0;i<count;i++)
         {
             std::cout << commandBuffers[i] << std::endl;
         }
@@ -83,12 +83,12 @@ namespace vkBasalt
         secondBarrier.subresourceRange.baseArrayLayer = 0;
         secondBarrier.subresourceRange.layerCount = 1;
         
-        for(int i=0;i<count;i++)
+        for(unsigned int i=0;i<count;i++)
         {
             std::cout << commandBuffers[i] << std::endl;
         }
         
-        for(int i=0;i<count;i++)
+        for(unsigned int i=0;i<count;i++)
         {
             fistBarrier.image = images[i];
             secondBarrier.image =  images[i];

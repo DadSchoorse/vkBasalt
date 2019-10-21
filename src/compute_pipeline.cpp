@@ -22,7 +22,7 @@ namespace vkBasalt
         pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
         
         
-        for(int i=0;i<count;i++)
+        for(unsigned int i=0;i<count;i++)
         {
             pipelineLayoutCreateInfo.pSetLayouts = &(descriptorSetLayouts[i]);
             VkResult result = dispatchTable.CreatePipelineLayout(device,&pipelineLayoutCreateInfo,nullptr,&(pipelineLayouts[i]));
@@ -55,7 +55,7 @@ namespace vkBasalt
         computePipelineCreateInfo.basePipelineIndex = 0;//TODO
         
         
-        for(int i=0;i<count;i++)
+        for(unsigned int i=0;i<count;i++)
         {
             computePipelineCreateInfo.layout = pipelineLayouts[i];
             VkResult result = dispatchTable.CreateComputePipelines(device,VK_NULL_HANDLE,1,&computePipelineCreateInfo,nullptr,&(pipelines[i]));

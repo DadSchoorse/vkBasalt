@@ -25,7 +25,12 @@
 std::string casFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.comp.spv";
 
 std::mutex globalLock;
+#ifdef _GCC_
+typedef std::lock_guard<std::mutex> scoped_lock __attribute__((unused)) ;
+#else
 typedef std::lock_guard<std::mutex> scoped_lock;
+#endif
+
 template<typename DispatchableType>
 void *GetKey(DispatchableType inst)
 {
@@ -77,7 +82,7 @@ namespace vkBasalt{
             dispatchTable.DestroyDescriptorPool(device,swapchainStruct.storageImageDescriptorPool,nullptr);
             std::cout << "after DestroyDescriptorPool" << std::endl;
             delete[] swapchainStruct.imageList;
-            for(int i=0;i<swapchainStruct.imageCount;i++)
+            for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
             {
                 dispatchTable.DestroyImageView(device,swapchainStruct.imageViewList[i],nullptr);
                 std::cout << "after DestroyImageView" << std::endl;
@@ -135,7 +140,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
         instance_dispatch[GetKey(*pInstance)] = dispatchTable;
     }
 
-    return VK_SUCCESS;
+    return ret;
 }
 
 VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
@@ -191,7 +196,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
         
     }
 
-  return VK_SUCCESS;
+    return ret;
 }
 
 VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
@@ -201,7 +206,7 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const Vk
     if(deviceStruct.commandPool != VK_NULL_HANDLE)
     {
         std::cout << "DestroyCommandPool" << std::endl;
-        device_dispatch[GetKey(device)].DestroyCommandPool(device,deviceStruct.commandPool,nullptr);
+        device_dispatch[GetKey(device)].DestroyCommandPool(device,deviceStruct.commandPool,pAllocator);
     }
     device_dispatch.erase(GetKey(device));
 }
@@ -228,7 +233,7 @@ VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t que
     if(count > 0)
     {
         instance_dispatch[GetKey(deviceStruct.physicalDevice)].GetPhysicalDeviceQueueFamilyProperties(deviceStruct.physicalDevice, &count, queueProperties.data());
-        if(queueProperties[queueFamilyIndex].queueFlags & VK_QUEUE_GRAPHICS_BIT != 0)
+        if((queueProperties[queueFamilyIndex].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
         {
             graphicsCapable = VK_TRUE;
         }
@@ -324,7 +329,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << "device " << swapchainStruct.device << std::endl;
     
     VkResult result = device_dispatch[GetKey(device)].GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
-    for(int i=0;i<*pCount;i++)
+    for(unsigned int i=0;i<*pCount;i++)
     {
         swapchainStruct.imageList[i] = pSwapchainImages[i];
     }
@@ -347,7 +352,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
     std::cout << "after allocateCommandBuffer " << std::endl;
     vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casPipelineList, swapchainStruct.casPipelineLayoutList, swapchainStruct.imageExtent, swapchainStruct.imageCount,swapchainStruct.imageList, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
-    for(int i=0;i<swapchainStruct.imageCount;i++)
+    for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
         {
             std::cout << i << "writen commandbuffer" << swapchainStruct.commandBufferList[i] << std::endl;
         }
@@ -360,7 +365,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
 {
     scoped_lock l(globalLock);
     //std::cout << "Interrupted QueuePresentKHR" << std::endl;
-    for(int i=0;i<(*pPresentInfo).swapchainCount;i++)
+    for(unsigned int i=0;i<(*pPresentInfo).swapchainCount;i++)
     {
         uint32_t index = (*pPresentInfo).pImageIndices[i];
         VkSwapchainKHR swapchain = (*pPresentInfo).pSwapchains[i];

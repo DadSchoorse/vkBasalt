@@ -26,7 +26,7 @@ namespace vkBasalt
         descriptorSetCreateInfo.bindingCount = 1;
         descriptorSetCreateInfo.pBindings = &descriptorSetLayoutBinding;
 
-        for(int i=0;i<count;i++)
+        for(unsigned int i=0;i<count;i++)
         {
             VkResult result =  dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&(descriptorSetLayouts[i]));
             ASSERT_VULKAN(result);
@@ -83,7 +83,7 @@ namespace vkBasalt
         writeDescriptorSet.pBufferInfo = nullptr;
         writeDescriptorSet.pTexelBufferView = nullptr;
         
-        for(int i=0;i<setCount;i++)
+        for(unsigned int i=0;i<setCount;i++)
         {
             imageInfo.imageView = imageViews[i];
             writeDescriptorSet.dstSet = descriptorSets[i];
