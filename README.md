@@ -12,7 +12,7 @@ You need the vulkan sdk to build this and glslangValidator to compile the shader
 For Arch Linux and Manjaro Linux, they can be installed with:
 
 ```
-pacman -Sy glslang lib32-glslang vulkan-headers vulkan-tools vulkan-validation-layers
+pacman -Sy glslang vulkan-headers vulkan-tools vulkan-validation-layers
 ```
 
 Simply use
