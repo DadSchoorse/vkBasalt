@@ -26,6 +26,10 @@ make
 make install
 ```
 
+# Packaging status
+
+[Fedora (COPR)](https://copr.fedorainfracloud.org/coprs/atim/vkBasalt/) `sudo dnf copr enable atim/vkBasalt -y && sudo dnf install vkBasalt -y`
+
 # Usage
 Enable the layer with the environment variable. First, check if the game is 64-bit or 32-bit.
 
