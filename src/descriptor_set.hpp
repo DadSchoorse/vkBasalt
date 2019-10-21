@@ -11,9 +11,9 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 
 namespace vkBasalt{
-    void createStorageImageDescriptorSetLayouts(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& count, VkDescriptorSetLayout* descriptorSetLayouts);
+    void createStorageImageDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout);
     void createStorageImageDescriptorPool(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& setCount, VkDescriptorPool& descriptorPool);
-    void allocateAndWriteStorageDescriptorSets(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const uint32_t& setCount, const VkDescriptorSetLayout* descriptorSetLayouts,const  VkImageView* imageViews, VkDescriptorSet* descriptorSets);
+    void allocateAndWriteStorageDescriptorSets(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const uint32_t& setCount, const VkDescriptorSetLayout& descriptorSetLayout,const  VkImageView* imageViews, VkDescriptorSet* descriptorSets);
 
 }
 

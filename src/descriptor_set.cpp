@@ -10,7 +10,7 @@
 
 namespace vkBasalt
 {
-    void createStorageImageDescriptorSetLayouts(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& count, VkDescriptorSetLayout* descriptorSetLayouts)
+    void createStorageImageDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout)
     {
         VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
         descriptorSetLayoutBinding.binding = 0;
@@ -26,11 +26,9 @@ namespace vkBasalt
         descriptorSetCreateInfo.bindingCount = 1;
         descriptorSetCreateInfo.pBindings = &descriptorSetLayoutBinding;
 
-        for(unsigned int i=0;i<count;i++)
-        {
-            VkResult result =  dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&(descriptorSetLayouts[i]));
-            ASSERT_VULKAN(result);
-        }
+        
+        VkResult result = dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&descriptorSetLayout);
+        ASSERT_VULKAN(result)
         
     }
     void createStorageImageDescriptorPool(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& setCount, VkDescriptorPool& descriptorPool)
@@ -52,15 +50,15 @@ namespace vkBasalt
         VkResult result =  dispatchTable.CreateDescriptorPool(device,&descriptorPoolCreateInfo,nullptr,&descriptorPool);
         ASSERT_VULKAN(result);
     }
-    void allocateAndWriteStorageDescriptorSets(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const uint32_t& setCount, const VkDescriptorSetLayout* descriptorSetLayouts,const  VkImageView* imageViews, VkDescriptorSet* descriptorSets)
+    void allocateAndWriteStorageDescriptorSets(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const uint32_t& setCount, const VkDescriptorSetLayout& descriptorSetLayout,const  VkImageView* imageViews, VkDescriptorSet* descriptorSets)
     {
-        
+        std::vector<VkDescriptorSetLayout> layouts(setCount,descriptorSetLayout);
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo;
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
         descriptorSetAllocateInfo.descriptorPool = descriptorPool;
         descriptorSetAllocateInfo.descriptorSetCount = setCount;
-        descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts;
+        descriptorSetAllocateInfo.pSetLayouts = layouts.data();
         
         std::cout << "before allocating descriptor Sets " << 1 << std::endl;
         VkResult result =  dispatchTable.AllocateDescriptorSets(device,&descriptorSetAllocateInfo,descriptorSets);

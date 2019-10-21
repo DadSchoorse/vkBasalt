@@ -54,10 +54,6 @@ typedef struct {
     VkCommandBuffer *commandBufferList;
     VkSemaphore *semaphoreList;
     VkDescriptorPool storageImageDescriptorPool;
-    VkDescriptorSetLayout *storageImageDescriptorSetLayoutList;
-    VkShaderModule casModule;
-    VkPipelineLayout* casPipelineLayoutList;
-    VkPipeline* casPipelineList;
 } SwapchainStruct;
 
 typedef struct {
@@ -65,6 +61,10 @@ typedef struct {
     uint32_t queueFamilyIndex;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
+    VkDescriptorSetLayout storageImageDescriptorSetLayout;
+    VkShaderModule casModule;
+    VkPipelineLayout casPipelineLayout;
+    VkPipeline casPipeline;
 } DeviceStruct;
 
 std::unordered_map<VkDevice, DeviceStruct> deviceMap;
@@ -89,19 +89,10 @@ namespace vkBasalt{
                 std::cout << "after DestroySemaphore" << std::endl;
                 dispatchTable.DestroyImageView(device,swapchainStruct.imageViewList[i],nullptr);
                 std::cout << "after DestroyImageView" << std::endl;
-                dispatchTable.DestroyPipeline(device,swapchainStruct.casPipelineList[i],nullptr);
-                std::cout << "after DestroyPipeline" << std::endl;
-                dispatchTable.DestroyPipelineLayout(device,swapchainStruct.casPipelineLayoutList[i],nullptr);
-                std::cout << "after DestroyPipelineLayout" << std::endl;
-                dispatchTable.DestroyDescriptorSetLayout(device,swapchainStruct.storageImageDescriptorSetLayoutList[i],nullptr);
-                std::cout << "after DestroyDescriptorSetLayout" << std::endl;
             }
             delete[] swapchainStruct.imageViewList;
             delete[] swapchainStruct.descriptorSetList;
             delete[] swapchainStruct.semaphoreList;
-            
-            dispatchTable.DestroyShaderModule(device,swapchainStruct.casModule,nullptr);
-            std::cout << "after DestroyShaderModule" << std::endl;
         } 
     }
 }
@@ -183,14 +174,20 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
 
     VkResult ret = createFunc(physicalDevice, pCreateInfo, pAllocator, pDevice);
     
+    // fetch our own dispatch table for the functions we need, into the next layer
+    VkLayerDispatchTable dispatchTable;
+    layer_init_device_dispatch_table(*pDevice,&dispatchTable,gdpa);
+    
     DeviceStruct deviceStruct;
     deviceStruct.queue = VK_NULL_HANDLE;
     deviceStruct.physicalDevice = physicalDevice;
     deviceStruct.commandPool = VK_NULL_HANDLE;
     
-    // fetch our own dispatch table for the functions we need, into the next layer
-    VkLayerDispatchTable dispatchTable;
-    layer_init_device_dispatch_table(*pDevice,&dispatchTable,gdpa);
+    vkBasalt::createStorageImageDescriptorSetLayout(*pDevice, dispatchTable, deviceStruct.storageImageDescriptorSetLayout);
+    auto casCode = vkBasalt::readFile(casFile.c_str());
+    vkBasalt::createShaderModule(*pDevice, dispatchTable, casCode, &deviceStruct.casModule);
+    vkBasalt::createComputePipelineLayout(*pDevice, dispatchTable, deviceStruct.storageImageDescriptorSetLayout, deviceStruct.casPipelineLayout);
+    vkBasalt::createComputePipeline(*pDevice,dispatchTable,deviceStruct.casModule,deviceStruct.casPipelineLayout, deviceStruct.casPipeline);
 
     // store the table by key
     {
@@ -212,6 +209,12 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const Vk
         std::cout << "DestroyCommandPool" << std::endl;
         device_dispatch[GetKey(device)].DestroyCommandPool(device,deviceStruct.commandPool,pAllocator);
     }
+    device_dispatch[GetKey(device)].DestroyPipeline(device,deviceStruct.casPipeline,nullptr);
+    std::cout << "after DestroyPipeline" << std::endl;
+    device_dispatch[GetKey(device)].DestroyPipelineLayout(device,deviceStruct.casPipelineLayout,nullptr);
+    std::cout << "after DestroyPipelineLayout" << std::endl;
+    device_dispatch[GetKey(device)].DestroyDescriptorSetLayout(device,deviceStruct.storageImageDescriptorSetLayout,nullptr);
+    device_dispatch[GetKey(device)].DestroyShaderModule(device,deviceStruct.casModule,nullptr);
     device_dispatch.erase(GetKey(device));
 }
 
@@ -328,9 +331,6 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     swapchainStruct.descriptorSetList = new VkDescriptorSet[*pCount];
     swapchainStruct.commandBufferList = new VkCommandBuffer[*pCount];
     swapchainStruct.semaphoreList = new VkSemaphore[*pCount];
-    swapchainStruct.storageImageDescriptorSetLayoutList = new VkDescriptorSetLayout[*pCount];
-    swapchainStruct.casPipelineLayoutList = new VkPipelineLayout[*pCount];
-    swapchainStruct.casPipelineList = new VkPipeline[*pCount];
     std::cout << "format " << swapchainStruct.format << std::endl;
     std::cout << "device " << swapchainStruct.device << std::endl;
     
@@ -340,24 +340,15 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
         swapchainStruct.imageList[i] = pSwapchainImages[i];
     }
     
-    
-    vkBasalt::createStorageImageDescriptorSetLayouts(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList);
-    
-    auto casCode = vkBasalt::readFile(casFile.c_str());
-    vkBasalt::createShaderModule(device, device_dispatch[GetKey(device)], casCode, &swapchainStruct.casModule);
-    vkBasalt::createComputePipelineLayouts(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList, swapchainStruct.casPipelineLayoutList);
-    vkBasalt::createComputePipelines(device,device_dispatch[GetKey(device)],swapchainStruct.casModule,swapchainStruct.imageCount,swapchainStruct.casPipelineLayoutList , swapchainStruct.casPipelineList);
-    
-    
     vkBasalt::createImageViews(device,device_dispatch[GetKey(device)],swapchainStruct.format,swapchainStruct.imageCount,swapchainStruct.imageList,swapchainStruct.imageViewList);
     std::cout << "before creating descriptor Pool " << std::endl;
     vkBasalt::createStorageImageDescriptorPool(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorPool);
     std::cout << "after creating descriptor Pool " << std::endl;
-    vkBasalt::allocateAndWriteStorageDescriptorSets(device, device_dispatch[GetKey(device)], swapchainStruct.storageImageDescriptorPool, swapchainStruct.imageCount, swapchainStruct.storageImageDescriptorSetLayoutList, swapchainStruct.imageViewList, swapchainStruct.descriptorSetList);
+    vkBasalt::allocateAndWriteStorageDescriptorSets(device, device_dispatch[GetKey(device)], swapchainStruct.storageImageDescriptorPool, swapchainStruct.imageCount, deviceStruct.storageImageDescriptorSetLayout, swapchainStruct.imageViewList, swapchainStruct.descriptorSetList);
     
     vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
     std::cout << "after allocateCommandBuffer " << std::endl;
-    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casPipelineList, swapchainStruct.casPipelineLayoutList, swapchainStruct.imageExtent, swapchainStruct.imageCount,swapchainStruct.imageList, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
+    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], deviceStruct.casPipeline, deviceStruct.casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount,swapchainStruct.imageList, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
     vkBasalt::createSemaphores(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.semaphoreList);
     for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
         {
