@@ -116,4 +116,16 @@ namespace vkBasalt
         }
     }
 
+
+    void createSemaphores(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, uint32_t count, VkSemaphore* semaphores)
+    {
+        VkSemaphoreCreateInfo info;
+        info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        info.pNext = nullptr;
+        info.flags = 0;
+
+        for (uint32_t i = 0; i < count; i++)
+            dispatchTable.CreateSemaphore(device, &info, nullptr, &semaphores[i]);
+    }
+
 }
