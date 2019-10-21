@@ -387,14 +387,17 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         submitInfo.signalSemaphoreCount = 0;
         submitInfo.pSignalSemaphores = nullptr;
         
-        device_dispatch[GetKey(device)].QueueSubmit(deviceStruct.queue, 1, &submitInfo, VK_NULL_HANDLE);
+        VkResult vr = device_dispatch[GetKey(device)].QueueSubmit(deviceStruct.queue, 1, &submitInfo, VK_NULL_HANDLE);
+
+        if (vr != VK_SUCCESS)
+            return vr;
         //device_dispatch[GetKey(device)].QueueWaitIdle(deviceStruct.queue);
         //device_dispatch[GetKey(device)].DeviceWaitIdle(device);
         
         
     }
     //usleep(1000000);
-    device_dispatch[GetKey(queue)].QueuePresentKHR(queue, pPresentInfo);
+    return device_dispatch[GetKey(queue)].QueuePresentKHR(queue, pPresentInfo);
 }
 
 VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain,const VkAllocationCallbacks* pAllocator)
