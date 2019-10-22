@@ -39,14 +39,13 @@ For 32-bit:
 ENABLE_VKBASALT32=1 yourgame
 ```
 
-with Steam, edit your launch options, e.g. :
-
+with Steam, edit your launch options, e.g.:
 ```
 ENABLE_VKBASALT=1 %command% 
 ```
 
-# Conigure
+# Configure
 
-The sharpening strength can be changed in ~/.local/share/vkBasalt/vkBasalt.conf for all games
-If you want to changes for one game only, you can make a vkBasalt.conf in the working directory of the game and change the value there.
+The sharpening strength can be changed in `~/.local/share/vkBasalt/vkBasalt.conf` for all games.
+If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the value there.
 
