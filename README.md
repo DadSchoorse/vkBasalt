@@ -12,6 +12,11 @@ On Arch-based distributions, they can be installed with:
 pacman -Syu glslang vulkan-headers vulkan-tools vulkan-validation-layers
 ```
 
+On Fedora, they can be installed with:
+```
+sudo yum install vulkan-headers vulkan-tools vulkan-validation-layers
+```
+
 On Solus, they can be installed with:
 ```
 sudo eopkg it vulkan-headers vulkan-tools vulkan-validation-layers
