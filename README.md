@@ -9,7 +9,7 @@ You need the Vulkan SDK to build this, and glslangValidator to compile the shade
 
 On Arch-based distributions, they can be installed with:
 ```
-pacman -Sy glslang vulkan-headers vulkan-tools vulkan-validation-layers
+pacman -Syu glslang vulkan-headers vulkan-tools vulkan-validation-layers
 ```
 
 On Solus, they can be installed with:
