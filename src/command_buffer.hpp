@@ -12,7 +12,7 @@
 namespace vkBasalt
 {
     void allocateCommandBuffer(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkCommandPool& commandPool, const uint32_t& count, VkCommandBuffer* commandBuffers);
-    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkImage* images, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers);
+    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkImage* images,const VkDescriptorSet& uniformBufferDescriptorSet, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers);
     void createSemaphores(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, uint32_t count, VkSemaphore* semaphores);
 }
 

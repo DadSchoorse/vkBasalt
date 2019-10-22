@@ -31,7 +31,7 @@ namespace vkBasalt
         }
     
     }
-    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkImage* images, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers)
+    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkImage* images,const VkDescriptorSet& uniformBufferDescriptorSet, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers)
     {
         /*
             general 
@@ -99,6 +99,7 @@ namespace vkBasalt
             std::cout << "before command buffer step 1" << std::endl;
             dispatchTable.CmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
             dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_COMPUTE,layout,0,1,&(descriptorSets[i]),0,nullptr);
+            dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_COMPUTE,layout,1,1,&uniformBufferDescriptorSet,0,nullptr);
             
             std::cout << "before command buffer step 2" << std::endl;
             //2

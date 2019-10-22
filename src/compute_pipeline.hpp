@@ -11,7 +11,7 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 
 namespace vkBasalt{
-    void createComputePipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorSetLayout& descriptorSetLayout, VkPipelineLayout& pipelineLayout);
+    void createComputePipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const uint32_t& descriptorSetLayoutsCount, const VkDescriptorSetLayout* descriptorSetLayouts, VkPipelineLayout& pipelineLayout);
     void createComputePipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& shaderModule,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
 
 }

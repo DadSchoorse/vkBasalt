@@ -20,7 +20,15 @@
 #include "shader.hpp"
 #include "compute_pipeline.hpp"
 #include "command_buffer.hpp"
+#include "buffer.hpp"
 
+#ifndef ASSERT_VULKAN
+#define ASSERT_VULKAN(val)\
+        if(val!=VK_SUCCESS)\
+        {\
+            throw std::runtime_error("ASSERT_VULKAN failed " + std::to_string(val));\
+        }
+#endif
 
 std::string casFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.comp.spv";
 
@@ -36,6 +44,13 @@ void *GetKey(DispatchableType inst)
 {
     return *(void **)inst;
 }
+
+
+typedef struct {
+    float sharpness;
+} CasBufferObject;
+
+CasBufferObject casUBO = {0.4f};
 
 // layer book-keeping information, to store dispatch tables by key
 std::map<void *, VkLayerInstanceDispatchTable> instance_dispatch;
@@ -65,6 +80,11 @@ typedef struct {
     VkShaderModule casModule;
     VkPipelineLayout casPipelineLayout;
     VkPipeline casPipeline;
+    VkDescriptorSetLayout uniformBufferDescriptorSetLayout;
+    VkDescriptorPool uniformBufferDescriptorPool;
+    VkDescriptorSet casUniformBufferDescriptorSet;
+    VkBuffer casUniformBuffer;
+    VkDeviceMemory casUniformBufferMemory;
 } DeviceStruct;
 
 std::unordered_map<VkDevice, DeviceStruct> deviceMap;
@@ -183,11 +203,27 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     deviceStruct.physicalDevice = physicalDevice;
     deviceStruct.commandPool = VK_NULL_HANDLE;
     
+    VkDeviceSize casBufferSize = sizeof(CasBufferObject);
+    //TODO make buffer device local
+    vkBasalt::createBuffer(instance_dispatch[GetKey(physicalDevice)],*pDevice,dispatchTable,physicalDevice,casBufferSize,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,deviceStruct.casUniformBuffer,deviceStruct.casUniformBufferMemory);
+    
+    vkBasalt::createUniformBufferDescriptorSetLayout(*pDevice, dispatchTable,  deviceStruct.uniformBufferDescriptorSetLayout);
+    vkBasalt::createUniformBufferDescriptorPool(*pDevice, dispatchTable, 1, deviceStruct.uniformBufferDescriptorPool);
+    vkBasalt::writeCasBufferDescriptorSet(*pDevice, dispatchTable, deviceStruct.uniformBufferDescriptorPool, deviceStruct.uniformBufferDescriptorSetLayout, deviceStruct.casUniformBuffer,  deviceStruct.casUniformBufferDescriptorSet);
+    
     vkBasalt::createStorageImageDescriptorSetLayout(*pDevice, dispatchTable, deviceStruct.storageImageDescriptorSetLayout);
     auto casCode = vkBasalt::readFile(casFile.c_str());
     vkBasalt::createShaderModule(*pDevice, dispatchTable, casCode, &deviceStruct.casModule);
-    vkBasalt::createComputePipelineLayout(*pDevice, dispatchTable, deviceStruct.storageImageDescriptorSetLayout, deviceStruct.casPipelineLayout);
+    std::array<VkDescriptorSetLayout, 2> layouts= {deviceStruct.storageImageDescriptorSetLayout,deviceStruct.uniformBufferDescriptorSetLayout};
+    vkBasalt::createComputePipelineLayout(*pDevice, dispatchTable,2, layouts.data(), deviceStruct.casPipelineLayout);
     vkBasalt::createComputePipeline(*pDevice,dispatchTable,deviceStruct.casModule,deviceStruct.casPipelineLayout, deviceStruct.casPipeline);
+    
+    void* data;
+    VkResult result = dispatchTable.MapMemory(*pDevice, deviceStruct.casUniformBufferMemory, 0, sizeof(CasBufferObject), 0, &data);
+    ASSERT_VULKAN(result);
+    std::memcpy(data, &casUBO, sizeof(CasBufferObject));
+    dispatchTable.UnmapMemory(*pDevice, deviceStruct.casUniformBufferMemory);
+    
 
     // store the table by key
     {
@@ -348,7 +384,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     
     vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
     std::cout << "after allocateCommandBuffer " << std::endl;
-    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], deviceStruct.casPipeline, deviceStruct.casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount,swapchainStruct.imageList, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
+    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], deviceStruct.casPipeline, deviceStruct.casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount,swapchainStruct.imageList,deviceStruct.casUniformBufferDescriptorSet, swapchainStruct.descriptorSetList, swapchainStruct.commandBufferList);
     vkBasalt::createSemaphores(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.semaphoreList);
     for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
         {

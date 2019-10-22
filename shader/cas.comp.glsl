@@ -3,10 +3,13 @@
 layout(local_size_x=8, local_size_y=8, local_size_z=1) in;
 
 layout(set=0, binding=0, rgba8) uniform image2D img;
+layout(set=1, binding=0) uniform CasBufferObject{
+    float sharpness;
+} cbo;
 
 void main()
 {
-    float sharpness = 0.4;
+    float sharpness = cbo.sharpness;
     
     // fetch a 3x3 neighborhood around the pixel 'e',
     //  a b c

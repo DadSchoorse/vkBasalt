@@ -10,17 +10,17 @@
 
 namespace vkBasalt
 {
-    void createComputePipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorSetLayout& descriptorSetLayout, VkPipelineLayout& pipelineLayout)
+    void createComputePipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const uint32_t& descriptorSetLayoutsCount, const VkDescriptorSetLayout* descriptorSetLayouts, VkPipelineLayout& pipelineLayout)
     {   
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo;
         pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutCreateInfo.pNext = nullptr;
         pipelineLayoutCreateInfo.flags = 0;
-        pipelineLayoutCreateInfo.setLayoutCount = 1;
+        pipelineLayoutCreateInfo.setLayoutCount = descriptorSetLayoutsCount;
         pipelineLayoutCreateInfo.pSetLayouts = VK_NULL_HANDLE;
         pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
         pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
-        pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+        pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts;
         
         VkResult result = dispatchTable.CreatePipelineLayout(device,&pipelineLayoutCreateInfo,nullptr,&pipelineLayout);
         ASSERT_VULKAN(result);

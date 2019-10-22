@@ -8,6 +8,10 @@
         }
 #endif
 
+typedef struct {
+    float sharpness;
+} CasBufferObject;
+
 namespace vkBasalt
 {
     void createStorageImageDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout)
@@ -89,7 +93,78 @@ namespace vkBasalt
             dispatchTable.UpdateDescriptorSets(device,1,&writeDescriptorSet,0,nullptr);
             
         }
+ 
+    }
+    
+    void createUniformBufferDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout)
+    {
+        VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
+        descriptorSetLayoutBinding.binding = 0;
+        descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorSetLayoutBinding.descriptorCount = 1;
+        descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutCreateInfo descriptorSetCreateInfo;
+        descriptorSetCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptorSetCreateInfo.pNext = nullptr;
+        descriptorSetCreateInfo.flags = 0;
+        descriptorSetCreateInfo.bindingCount = 1;
+        descriptorSetCreateInfo.pBindings = &descriptorSetLayoutBinding;
 
         
+        VkResult result = dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&descriptorSetLayout);
+        ASSERT_VULKAN(result)
+    }
+    void createUniformBufferDescriptorPool(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& setCount, VkDescriptorPool& descriptorPool)
+    {
+        VkDescriptorPoolSize poolSize;
+        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize.descriptorCount = setCount;
+        
+        std::cout << "set count " << setCount << std::endl;
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo;
+        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.pNext = nullptr;
+        descriptorPoolCreateInfo.flags = 0;
+        descriptorPoolCreateInfo.maxSets = setCount;
+        descriptorPoolCreateInfo.poolSizeCount = 1;
+        descriptorPoolCreateInfo.pPoolSizes = &poolSize;
+
+        VkResult result =  dispatchTable.CreateDescriptorPool(device,&descriptorPoolCreateInfo,nullptr,&descriptorPool);
+        ASSERT_VULKAN(result);
+    }
+    void writeCasBufferDescriptorSet(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const VkDescriptorSetLayout& descriptorSetLayout, const VkBuffer& buffer, VkDescriptorSet& descriptorSet)
+    {
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo;
+        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.pNext = nullptr;
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount = 1;
+        descriptorSetAllocateInfo.pSetLayouts = &descriptorSetLayout;
+        
+        VkResult result =  dispatchTable.AllocateDescriptorSets(device,&descriptorSetAllocateInfo,&descriptorSet);
+        ASSERT_VULKAN(result);
+        
+        VkDescriptorBufferInfo bufferInfo;
+        bufferInfo.buffer = buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = VK_WHOLE_SIZE;
+        
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = descriptorSet;
+        writeDescriptorSet.dstBinding = 0;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        writeDescriptorSet.pImageInfo =  nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+        
+        std::cout << "before writing buffer descriptor Sets " << std::endl;
+        dispatchTable.UpdateDescriptorSets(device,1,&writeDescriptorSet,0,nullptr);
     }
 }
