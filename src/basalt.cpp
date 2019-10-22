@@ -21,6 +21,7 @@
 #include "compute_pipeline.hpp"
 #include "command_buffer.hpp"
 #include "buffer.hpp"
+#include "config.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -51,6 +52,9 @@ typedef struct {
 } CasBufferObject;
 
 CasBufferObject casUBO = {0.4f};
+vkBasalt::Config casConfig;
+
+
 
 // layer book-keeping information, to store dispatch tables by key
 std::map<void *, VkLayerInstanceDispatchTable> instance_dispatch;
@@ -152,6 +156,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     // store the table by key
     {
         scoped_lock l(globalLock);
+        casUBO.sharpness = std::stod(casConfig.getOption("casSharpness"));
         instance_dispatch[GetKey(*pInstance)] = dispatchTable;
     }
 
@@ -223,6 +228,8 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     ASSERT_VULKAN(result);
     std::memcpy(data, &casUBO, sizeof(CasBufferObject));
     dispatchTable.UnmapMemory(*pDevice, deviceStruct.casUniformBufferMemory);
+    
+    std::cout << casConfig.getOption("casSharpness") << std::endl;
     
 
     // store the table by key
