@@ -111,13 +111,16 @@ namespace vkBasalt{
             dispatchTable.DestroyDescriptorPool(device,swapchainStruct.storageImageDescriptorPool,nullptr);
             std::cout << "after DestroyDescriptorPool" << std::endl;
             delete[] swapchainStruct.imageList;
+            dispatchTable.FreeMemory(device,swapchainStruct.fakeImageMemory,nullptr);
             for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
             {
+                dispatchTable.DestroyImage(device,swapchainStruct.fakeImageList[i],nullptr);
                 dispatchTable.DestroySemaphore(device,swapchainStruct.semaphoreList[i],nullptr);
                 std::cout << "after DestroySemaphore" << std::endl;
                 dispatchTable.DestroyImageView(device,swapchainStruct.imageViewList[i],nullptr);
                 std::cout << "after DestroyImageView" << std::endl;
             }
+            delete[] swapchainStruct.fakeImageList;
             delete[] swapchainStruct.imageViewList;
             delete[] swapchainStruct.descriptorSetList;
             delete[] swapchainStruct.semaphoreList;
@@ -262,6 +265,13 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const Vk
     std::cout << "after DestroyPipelineLayout" << std::endl;
     device_dispatch[GetKey(device)].DestroyDescriptorSetLayout(device,deviceStruct.storageImageDescriptorSetLayout,nullptr);
     device_dispatch[GetKey(device)].DestroyShaderModule(device,deviceStruct.casModule,nullptr);
+    
+    
+    device_dispatch[GetKey(device)].DestroyDescriptorPool(device,deviceStruct.uniformBufferDescriptorPool,nullptr);
+    device_dispatch[GetKey(device)].FreeMemory(device,deviceStruct.casUniformBufferMemory,nullptr);
+    device_dispatch[GetKey(device)].DestroyDescriptorSetLayout(device,deviceStruct.uniformBufferDescriptorSetLayout,nullptr);
+    device_dispatch[GetKey(device)].DestroyBuffer(device,deviceStruct.casUniformBuffer,nullptr);
+    
     device_dispatch.erase(GetKey(device));
 }
 
