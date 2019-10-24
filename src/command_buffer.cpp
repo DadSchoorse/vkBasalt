@@ -27,6 +27,8 @@ namespace vkBasalt
         ASSERT_VULKAN(result);
         for(unsigned int i=0;i<count;i++)
         {
+            //initialize dispatch tables for commandBuffers since the are dispatchable objects
+            *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(device);
             std::cout << commandBuffers[i] << std::endl;
         }
     
