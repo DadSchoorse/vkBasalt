@@ -22,6 +22,7 @@
 #include "command_buffer.hpp"
 #include "buffer.hpp"
 #include "config.hpp"
+#include "fake_swapchain.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -64,15 +65,18 @@ std::map<void *, VkLayerDispatchTable> device_dispatch;
 //for each swapchain, we have the Images and the other stuff we need to execute the compute shader
 typedef struct {
     VkDevice device;
+    VkSwapchainCreateInfoKHR swapchainCreateInfo;
     VkExtent2D imageExtent;
     VkFormat format;
     uint32_t imageCount;
     VkImage *imageList;
+    VkImage *fakeImageList;
     VkImageView *imageViewList;
     VkDescriptorSet *descriptorSetList;
     VkCommandBuffer *commandBufferList;
     VkSemaphore *semaphoreList;
     VkDescriptorPool storageImageDescriptorPool;
+    VkDeviceMemory fakeImageMemory;
 } SwapchainStruct;
 
 typedef struct {
@@ -327,10 +331,10 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
         vkBasalt::destroySwapchainStruct(oldStruct);*/
     }
     std::cout << "queue " << deviceMap[device].queue << std::endl;
-    std::cout << "format " << (*pCreateInfo).imageFormat << std::endl;
     std::cout << "format " << modifiedCreateInfo.imageFormat << std::endl;
     SwapchainStruct swapchainStruct;
     swapchainStruct.device = device;
+    swapchainStruct.swapchainCreateInfo = *pCreateInfo;
     swapchainStruct.imageExtent = modifiedCreateInfo.imageExtent;
     swapchainStruct.format = modifiedCreateInfo.imageFormat;
     swapchainStruct.imageCount = 0;
@@ -345,7 +349,6 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     VkResult result = device_dispatch[GetKey(device)].CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
     
     swapchainMap[*pSwapchain] = swapchainStruct;
-    std::cout << "format " << swapchainMap[*pSwapchain].format << std::endl;
     std::cout << "swapchain " << *pSwapchain << std::endl;
     
     std::cout << "Interrupted create swapchain" << std::endl;
@@ -364,12 +367,14 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
         return device_dispatch[GetKey(device)].GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
     }
     
+    
     DeviceStruct& deviceStruct = deviceMap[device];
     std::cout << "queue " << deviceStruct.queue << std::endl;
     std::cout << "swapchain " << swapchain << std::endl;
     SwapchainStruct& swapchainStruct = swapchainMap[swapchain];
     swapchainStruct.imageCount = *pCount;
     swapchainStruct.imageList = new VkImage[*pCount];
+    swapchainStruct.fakeImageList = new VkImage[*pCount];
     swapchainStruct.imageViewList = new VkImageView[*pCount];
     swapchainStruct.descriptorSetList = new VkDescriptorSet[*pCount];
     swapchainStruct.commandBufferList = new VkCommandBuffer[*pCount];
@@ -377,10 +382,14 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << "format " << swapchainStruct.format << std::endl;
     std::cout << "device " << swapchainStruct.device << std::endl;
     
+    vkBasalt::createFakeSwapchainImages(instance_dispatch[GetKey(deviceStruct.physicalDevice)], deviceStruct.physicalDevice, device,  device_dispatch[GetKey(device)], swapchainStruct.swapchainCreateInfo, *pCount, swapchainStruct.fakeImageList, swapchainStruct.fakeImageMemory);
+    
+    
     VkResult result = device_dispatch[GetKey(device)].GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
     for(unsigned int i=0;i<*pCount;i++)
     {
         swapchainStruct.imageList[i] = pSwapchainImages[i];
+        pSwapchainImages[i] = swapchainStruct.fakeImageList[i];
     }
     
     vkBasalt::createImageViews(device,device_dispatch[GetKey(device)],swapchainStruct.format,swapchainStruct.imageCount,swapchainStruct.imageList,swapchainStruct.imageViewList);
