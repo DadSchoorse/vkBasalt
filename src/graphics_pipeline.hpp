@@ -13,7 +13,7 @@
 namespace vkBasalt
 {
     void createGraphicsPipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const uint32_t& descriptorSetLayoutsCount, const VkDescriptorSetLayout* descriptorSetLayouts, VkPipelineLayout& pipelineLayout);
-    void createGraphicsPipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& vertexModule,const VkShaderModule& fragmentModule, VkRenderPass renderPass,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
+    void createGraphicsPipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& vertexModule,const VkShaderModule& fragmentModule, VkExtent2D extent, VkRenderPass renderPass,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
 
 }
 

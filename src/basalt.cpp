@@ -35,6 +35,8 @@
 #endif
 
 std::string casFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.comp.spv";
+std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_rect.vert.spv";
+std::string casFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.frag.spv";
 
 std::mutex globalLock;
 #ifdef _GCC_
@@ -82,6 +84,7 @@ typedef struct {
     VkRenderPass renderPass;
     VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
     VkPipelineLayout casPipelineLayout;
+    VkPipeline casGraphicsPipeline;
 } SwapchainStruct;
 
 typedef struct {
@@ -91,6 +94,8 @@ typedef struct {
     VkCommandPool commandPool;
     VkDescriptorSetLayout storageImageDescriptorSetLayout;
     VkShaderModule casModule;
+    VkShaderModule fullScreenRectModule;
+    VkShaderModule casFragmentModule;
     VkPipelineLayout casPipelineLayout;
     VkPipeline casPipeline;
     VkDescriptorSetLayout uniformBufferDescriptorSetLayout;
@@ -229,8 +234,16 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     vkBasalt::writeCasBufferDescriptorSet(*pDevice, dispatchTable, deviceStruct.uniformBufferDescriptorPool, deviceStruct.uniformBufferDescriptorSetLayout, deviceStruct.casUniformBuffer,  deviceStruct.casUniformBufferDescriptorSet);
     
     vkBasalt::createStorageImageDescriptorSetLayout(*pDevice, dispatchTable, deviceStruct.storageImageDescriptorSetLayout);
+    
     auto casCode = vkBasalt::readFile(casFile.c_str());
     vkBasalt::createShaderModule(*pDevice, dispatchTable, casCode, &deviceStruct.casModule);
+    
+    auto fullScreenRectCode = vkBasalt::readFile(fullScreenRectFile.c_str());
+    vkBasalt::createShaderModule(*pDevice, dispatchTable, fullScreenRectCode, &deviceStruct.fullScreenRectModule);
+    
+    auto casFragmentCode = vkBasalt::readFile(casFragmentFile.c_str());
+    vkBasalt::createShaderModule(*pDevice, dispatchTable, casFragmentCode, &deviceStruct.casFragmentModule);
+    
     std::array<VkDescriptorSetLayout, 2> layouts= {deviceStruct.storageImageDescriptorSetLayout,deviceStruct.uniformBufferDescriptorSetLayout};
     vkBasalt::createComputePipelineLayout(*pDevice, dispatchTable,2, layouts.data(), deviceStruct.casPipelineLayout);
     vkBasalt::createComputePipeline(*pDevice,dispatchTable,deviceStruct.casModule,deviceStruct.casPipelineLayout, deviceStruct.casPipeline);
@@ -367,6 +380,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     vkBasalt::createImageSamplerDescriptorSetLayout(device, device_dispatch[GetKey(device)], swapchainStruct.imageSamplerDescriptorSetLayout);
     std::array<VkDescriptorSetLayout, 2> layouts= {swapchainStruct.imageSamplerDescriptorSetLayout,deviceStruct.uniformBufferDescriptorSetLayout};
     vkBasalt::createGraphicsPipelineLayout(device, device_dispatch[GetKey(device)], 2, layouts.data(), swapchainStruct.casPipelineLayout);
+    vkBasalt::createGraphicsPipeline(device, device_dispatch[GetKey(device)], deviceStruct.fullScreenRectModule, deviceStruct.casFragmentModule, modifiedCreateInfo.imageExtent, swapchainStruct.renderPass, swapchainStruct.casPipelineLayout, swapchainStruct.casGraphicsPipeline);
     
     VkResult result = device_dispatch[GetKey(device)].CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
     

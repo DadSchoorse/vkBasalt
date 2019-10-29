@@ -26,7 +26,7 @@ namespace vkBasalt
         ASSERT_VULKAN(result);
     }
     
-    void createGraphicsPipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& vertexModule,const VkShaderModule& fragmentModule, VkRenderPass renderPass,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline)
+    void createGraphicsPipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& vertexModule,const VkShaderModule& fragmentModule, VkExtent2D extent, VkRenderPass renderPass,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline)
     {
         VkResult result;
 
@@ -69,14 +69,14 @@ namespace vkBasalt
         VkViewport viewport;
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = 1920;
-        viewport.height = 1080;
+        viewport.width = extent.width;
+        viewport.height = extent.height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor;
         scissor.offset = {0,0};
-        scissor.extent = {1920,1080};
+        scissor.extent = {extent.width,extent.height};
 
         VkPipelineViewportStateCreateInfo viewportStateCreateInfo;
         viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -138,10 +138,7 @@ namespace vkBasalt
         colorBlendCreateInfo.blendConstants[2] = 0.0f;
         colorBlendCreateInfo.blendConstants[3] = 0.0f;
         
-        //we do not know the size of the image at this point
         VkDynamicState dynamicStates[] = {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR
         };
 
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo;
