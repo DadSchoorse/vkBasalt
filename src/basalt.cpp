@@ -23,6 +23,7 @@
 #include "buffer.hpp"
 #include "config.hpp"
 #include "fake_swapchain.hpp"
+#include "renderpass.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -77,6 +78,7 @@ typedef struct {
     VkSemaphore *semaphoreList;
     VkDescriptorPool storageImageDescriptorPool;
     VkDeviceMemory fakeImageMemory;
+    VkRenderPass renderPass;
 } SwapchainStruct;
 
 typedef struct {
@@ -355,6 +357,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     swapchainStruct.semaphoreList = nullptr;
     swapchainStruct.storageImageDescriptorPool = VK_NULL_HANDLE;
     std::cout << "device " << swapchainStruct.device << std::endl;
+    
+    vkBasalt::createRenderPass(device, device_dispatch[GetKey(device)], swapchainStruct.format, swapchainStruct.renderPass);
     
     VkResult result = device_dispatch[GetKey(device)].CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
     
