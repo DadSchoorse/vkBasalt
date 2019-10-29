@@ -167,4 +167,26 @@ namespace vkBasalt
         std::cout << "before writing buffer descriptor Sets " << std::endl;
         dispatchTable.UpdateDescriptorSets(device,1,&writeDescriptorSet,0,nullptr);
     }
+    
+    void createImageSamplerDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout)
+    {
+        VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
+        descriptorSetLayoutBinding.binding = 0;
+        descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorSetLayoutBinding.descriptorCount = 1;
+        descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutCreateInfo descriptorSetCreateInfo;
+        descriptorSetCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptorSetCreateInfo.pNext = nullptr;
+        descriptorSetCreateInfo.flags = 0;
+        descriptorSetCreateInfo.bindingCount = 1;
+        descriptorSetCreateInfo.pBindings = &descriptorSetLayoutBinding;
+
+        
+        VkResult result = dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&descriptorSetLayout);
+        ASSERT_VULKAN(result)
+        
+    }
 }

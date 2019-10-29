@@ -17,6 +17,7 @@ namespace vkBasalt{
     void createUniformBufferDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout);
     void createUniformBufferDescriptorPool(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const uint32_t& setCount, VkDescriptorPool& descriptorPool);
     void writeCasBufferDescriptorSet(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkDescriptorPool& descriptorPool, const VkDescriptorSetLayout& descriptorSetLayout, const VkBuffer& buffer, VkDescriptorSet& descriptorSet);
+    void createImageSamplerDescriptorSetLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkDescriptorSetLayout& descriptorSetLayout);
 
 }
 

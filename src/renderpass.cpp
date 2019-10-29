@@ -10,7 +10,7 @@
 
 namespace vkBasalt
 {
-    void createRenderpass(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkFormat& format, VkRenderPass& renderPass)
+    void createRenderPass(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkFormat& format, VkRenderPass& renderPass)
     {
         VkAttachmentDescription attachmentDescription;
         attachmentDescription.flags = 0;

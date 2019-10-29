@@ -19,6 +19,7 @@
 #include "descriptor_set.hpp"
 #include "shader.hpp"
 #include "compute_pipeline.hpp"
+#include "graphics_pipeline.hpp"
 #include "command_buffer.hpp"
 #include "buffer.hpp"
 #include "config.hpp"
@@ -79,6 +80,8 @@ typedef struct {
     VkDescriptorPool storageImageDescriptorPool;
     VkDeviceMemory fakeImageMemory;
     VkRenderPass renderPass;
+    VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
+    VkPipelineLayout casPipelineLayout;
 } SwapchainStruct;
 
 typedef struct {
@@ -358,7 +361,12 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     swapchainStruct.storageImageDescriptorPool = VK_NULL_HANDLE;
     std::cout << "device " << swapchainStruct.device << std::endl;
     
+    DeviceStruct& deviceStruct = deviceMap[device];
+        
     vkBasalt::createRenderPass(device, device_dispatch[GetKey(device)], swapchainStruct.format, swapchainStruct.renderPass);
+    vkBasalt::createImageSamplerDescriptorSetLayout(device, device_dispatch[GetKey(device)], swapchainStruct.imageSamplerDescriptorSetLayout);
+    std::array<VkDescriptorSetLayout, 2> layouts= {swapchainStruct.imageSamplerDescriptorSetLayout,deviceStruct.uniformBufferDescriptorSetLayout};
+    vkBasalt::createGraphicsPipelineLayout(device, device_dispatch[GetKey(device)], 2, layouts.data(), swapchainStruct.casPipelineLayout);
     
     VkResult result = device_dispatch[GetKey(device)].CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
     
