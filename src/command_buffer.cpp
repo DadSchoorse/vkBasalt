@@ -33,7 +33,7 @@ namespace vkBasalt
         }
     
     }
-    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkImage* images,const VkDescriptorSet& uniformBufferDescriptorSet, const VkDescriptorSet* descriptorSets, VkCommandBuffer* commandBuffers)
+    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkDescriptorSet& uniformBufferDescriptorSet, const VkRenderPass& renderPass, const VkDescriptorSet* descriptorSets, const VkFramebuffer* framebuffers, VkCommandBuffer* commandBuffers)
     {
         /*
             general 
@@ -92,30 +92,33 @@ namespace vkBasalt
         
         for(unsigned int i=0;i<count;i++)
         {
-            fistBarrier.image = images[i];
-            secondBarrier.image =  images[i];
-            std::cout << "before begin commandbuffer " << commandBuffers[i] << std::endl;
-            VkResult result = dispatchTable.BeginCommandBuffer(commandBuffers[i], &beginInfo);
+            VkResult result = dispatchTable.BeginCommandBuffer(commandBuffers[i],&beginInfo);
             ASSERT_VULKAN(result);
-            //1
-            std::cout << "before command buffer step 1" << std::endl;
-            dispatchTable.CmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-            dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_COMPUTE,layout,0,1,&(descriptorSets[i]),0,nullptr);
-            dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_COMPUTE,layout,1,1,&uniformBufferDescriptorSet,0,nullptr);
+
+            VkRenderPassBeginInfo renderPassBeginInfo;
+            renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassBeginInfo.pNext = nullptr;
+            renderPassBeginInfo.renderPass = renderPass;
+            renderPassBeginInfo.framebuffer = framebuffers[i];
+            renderPassBeginInfo.renderArea.offset = {0,0};
+            renderPassBeginInfo.renderArea.extent = extent;
+            VkClearValue clearValue = {0.0f, 0.0f, 0.0f, 1.0f};
+            renderPassBeginInfo.clearValueCount = 1;
+            renderPassBeginInfo.pClearValues = &clearValue;
+
+            dispatchTable.CmdBeginRenderPass(commandBuffers[i],&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
             
-            std::cout << "before command buffer step 2" << std::endl;
-            //2
-            dispatchTable.CmdPipelineBarrier(commandBuffers[i],VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,0,0, nullptr,0, nullptr,1, &fistBarrier);
+            dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_GRAPHICS,layout,0,1,&(descriptorSets[i]),0,nullptr);
+            dispatchTable.CmdBindDescriptorSets(commandBuffers[i],VK_PIPELINE_BIND_POINT_GRAPHICS,layout,1,1,&uniformBufferDescriptorSet,0,nullptr);
             
-            //3
-            std::cout << "before command buffer step 3" << std::endl;
-            dispatchTable.CmdDispatch(commandBuffers[i],extent.width/8 +1,extent.height/8 +1 ,1);//cas shader has a localgroup size of 8
-            
-            std::cout << "before command buffer step 4" << std::endl;
-            //4
-            dispatchTable.CmdPipelineBarrier(commandBuffers[i],VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
-            std::cout << "before ending command buffer" << std::endl;
+            dispatchTable.CmdBindPipeline(commandBuffers[i],VK_PIPELINE_BIND_POINT_GRAPHICS,pipeline);
+
+            dispatchTable.CmdDraw(commandBuffers[i], 6, 1, 0, 0);
+
+            dispatchTable.CmdEndRenderPass(commandBuffers[i]);
+
             result = dispatchTable.EndCommandBuffer(commandBuffers[i]);
+            ASSERT_VULKAN(result);
         }
     }
 
