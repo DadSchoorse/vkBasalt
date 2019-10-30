@@ -145,7 +145,7 @@ namespace vkBasalt
         dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamicStateCreateInfo.pNext = nullptr;
         dynamicStateCreateInfo.flags = 0;
-        dynamicStateCreateInfo.dynamicStateCount = 2;
+        dynamicStateCreateInfo.dynamicStateCount = 0;
         dynamicStateCreateInfo.pDynamicStates = dynamicStates;
 
 
