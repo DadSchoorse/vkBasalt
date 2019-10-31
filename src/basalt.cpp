@@ -123,14 +123,20 @@ namespace vkBasalt{
             dispatchTable.FreeMemory(device,swapchainStruct.fakeImageMemory,nullptr);
             for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
             {
+                dispatchTable.DestroyFramebuffer(device,swapchainStruct.framebufferList[i],nullptr);
+                dispatchTable.DestroyImageView(device,swapchainStruct.fakeImageViewList[i],nullptr);
                 dispatchTable.DestroyImage(device,swapchainStruct.fakeImageList[i],nullptr);
                 dispatchTable.DestroySemaphore(device,swapchainStruct.semaphoreList[i],nullptr);
                 std::cout << "after DestroySemaphore" << std::endl;
                 dispatchTable.DestroyImageView(device,swapchainStruct.imageViewList[i],nullptr);
                 std::cout << "after DestroyImageView" << std::endl;
             }
+            dispatchTable.DestroyPipeline(device, swapchainStruct.casGraphicsPipeline, nullptr);
+            dispatchTable.DestroyRenderPass(device,swapchainStruct.renderPass,nullptr);
             delete[] swapchainStruct.fakeImageList;
             delete[] swapchainStruct.imageViewList;
+            delete[] swapchainStruct.fakeImageViewList;
+            delete[] swapchainStruct.framebufferList;
             delete[] swapchainStruct.descriptorSetList;
             delete[] swapchainStruct.semaphoreList;
         } 
@@ -182,6 +188,10 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
 VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
 {
     scoped_lock l(globalLock);
+    VkLayerInstanceDispatchTable dispatchTable = instance_dispatch[instance];
+    std::cout << "before destroy instance " << dispatchTable.DestroyInstance << std::endl;
+    //dispatchTable.DestroyInstance(instance, pAllocator);
+    std::cout << "afer destroy instance" << std::endl;
     instance_dispatch.erase(GetKey(instance));
 }
 
@@ -274,6 +284,7 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const Vk
         std::cout << "DestroyCommandPool" << std::endl;
         device_dispatch[GetKey(device)].DestroyCommandPool(device,deviceStruct.commandPool,pAllocator);
     }
+    device_dispatch[GetKey(device)].DestroySampler(device,deviceStruct.sampler,nullptr);
     device_dispatch[GetKey(device)].DestroyPipelineLayout(device,deviceStruct.casPipelineLayout,nullptr);
     std::cout << "after DestroyPipelineLayout" << std::endl;
     device_dispatch[GetKey(device)].DestroyDescriptorSetLayout(device,deviceStruct.imageSamplerDescriptorSetLayout,nullptr);
@@ -286,7 +297,13 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const Vk
     device_dispatch[GetKey(device)].DestroyDescriptorSetLayout(device,deviceStruct.uniformBufferDescriptorSetLayout,nullptr);
     device_dispatch[GetKey(device)].DestroyBuffer(device,deviceStruct.casUniformBuffer,nullptr);
     
+    VkLayerDispatchTable dispatchTable = device_dispatch[GetKey(device)];
+    std::cout << "before Destroy Device" << dispatchTable.DestroyDevice << std::endl;
+    dispatchTable.DestroyDevice(device,pAllocator);
+    
     device_dispatch.erase(GetKey(device));
+    
+    std::cout << "after  Destroy Device" << std::endl;
 }
 
 VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue *pQueue)
