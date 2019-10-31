@@ -441,7 +441,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     
     vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
     std::cout << "after allocateCommandBuffer " << std::endl;
-    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casGraphicsPipeline, deviceStruct.casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount, deviceStruct.casUniformBufferDescriptorSet, swapchainStruct.renderPass, swapchainStruct.descriptorSetList, swapchainStruct.framebufferList, swapchainStruct.commandBufferList);
+    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casGraphicsPipeline, deviceStruct.casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount, deviceStruct.casUniformBufferDescriptorSet, swapchainStruct.renderPass, swapchainStruct.fakeImageList, swapchainStruct.descriptorSetList, swapchainStruct.framebufferList, swapchainStruct.commandBufferList);
     vkBasalt::createSemaphores(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.semaphoreList);
     for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
     {
