@@ -22,7 +22,7 @@ $(BUILD_DIR_TMP):
 	mkdir -p $(BUILD_DIR_TMP)
 	
 	
-install: all
+install:
 	mkdir -p $(INSTALL_DIR)
 	install -m 0644 -t  $(INSTALL_DIR)  $(SPV_FILES)
 	
