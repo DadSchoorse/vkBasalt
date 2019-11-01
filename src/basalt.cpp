@@ -391,7 +391,7 @@ VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t que
 VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
 {
     VkSwapchainCreateInfoKHR modifiedCreateInfo = *pCreateInfo;
-    modifiedCreateInfo.imageUsage |= VK_IMAGE_USAGE_STORAGE_BIT;//we want to use the swapchain images as storage images
+    modifiedCreateInfo.imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;//we want to use the swapchain images as output of the graphics pipeline
     scoped_lock l(globalLock);
     
     if(modifiedCreateInfo.oldSwapchain != VK_NULL_HANDLE)
