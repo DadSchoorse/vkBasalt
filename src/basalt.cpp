@@ -63,6 +63,7 @@
 
 std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_rect.vert.spv";
 std::string casFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.frag.spv";
+std::string fxaaFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/fxaa.frag.spv";
 
 std::mutex globalLock;
 #ifdef _GCC_
@@ -182,7 +183,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     {
         layerCreateInfo = (VkLayerInstanceCreateInfo *)layerCreateInfo->pNext;
     }
-    std::cout << "i am doing something" << std::endl;
+    std::cout << "interrupted create instance" << std::endl;
     if(layerCreateInfo == NULL)
     {
     // No loader instance create info
@@ -205,6 +206,10 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     {
         scoped_lock l(globalLock);
         casUBO.sharpness = std::stod(casConfig.getOption("casSharpness"));
+        if(casConfig.getOption("enableFxaa")==std::string("1"))
+        {
+            casFragmentFile = fxaaFragmentFile;
+        }
         instance_dispatch[GetKey(*pInstance)] = dispatchTable;
     }
 
