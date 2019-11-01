@@ -1,5 +1,5 @@
 # vkBasalt
-A Vulkan post processing layer. Currently, the only effect is Contrast Adaptive Sharpening.
+A Vulkan post processing layer. Currently, the only effects are Contrast Adaptive Sharpening and Fast Approximate Anti-Aliasing.
 
 # Disclaimer
 This one of my first projects ever. Look at the code at your own risk.
