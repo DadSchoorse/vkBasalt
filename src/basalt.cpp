@@ -219,9 +219,9 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
 VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
 {
     scoped_lock l(globalLock);
-    VkLayerInstanceDispatchTable dispatchTable = instance_dispatch[instance];
+    VkLayerInstanceDispatchTable dispatchTable = instance_dispatch[GetKey(instance)];
     std::cout << "before destroy instance " << dispatchTable.DestroyInstance << std::endl;
-    //dispatchTable.DestroyInstance(instance, pAllocator);
+    dispatchTable.DestroyInstance(instance, pAllocator);
     std::cout << "afer destroy instance" << std::endl;
     instance_dispatch.erase(GetKey(instance));
 }
