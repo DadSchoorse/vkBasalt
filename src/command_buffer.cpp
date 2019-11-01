@@ -113,7 +113,7 @@ namespace vkBasalt
 
             dispatchTable.CmdEndRenderPass(commandBuffers[i]);
             
-            dispatchTable.CmdPipelineBarrier(commandBuffers[i],VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
+            dispatchTable.CmdPipelineBarrier(commandBuffers[i],VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
 
             result = dispatchTable.EndCommandBuffer(commandBuffers[i]);
             ASSERT_VULKAN(result);
