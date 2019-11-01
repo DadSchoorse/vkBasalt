@@ -46,6 +46,11 @@ namespace vkBasalt
         std::cout << "fake image size: " << memoryRequirements.size << std::endl;
         std::cout << "fake image alignment: " << memoryRequirements.alignment << std::endl;
         
+        if(memoryRequirements.size%memoryRequirements.alignment!=0)
+        {
+            memoryRequirements.size = (memoryRequirements.size/memoryRequirements.alignment+1)*memoryRequirements.alignment;
+        }
+        
         //TODO make sure that size is alignment aligned
         
         VkMemoryAllocateInfo memoryAllocateInfo;
