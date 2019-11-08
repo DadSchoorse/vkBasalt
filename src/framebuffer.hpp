@@ -12,7 +12,7 @@
 
 namespace vkBasalt
 {
-    void createFramebuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const uint32_t& count, const VkRenderPass& renderPass, const VkExtent2D& extent, const VkImageView* imageViews, VkFramebuffer* framebuffers);
+    std::vector<VkFramebuffer> createFramebuffers(VkDevice device, VkLayerDispatchTable dispatchTable, VkRenderPass renderPass, VkExtent2D& extent, std::vector<VkImageView> imageViews);
 }
 
 
