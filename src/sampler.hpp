@@ -11,7 +11,7 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 namespace vkBasalt
 {
-    void createSampler(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkSampler& sampler);
+    VkSampler createSampler(VkDevice device, VkLayerDispatchTable dispatchTable);
 }
 
 #endif // SAMPLER_HPP_INCLUDED

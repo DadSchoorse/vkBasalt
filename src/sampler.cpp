@@ -10,8 +10,10 @@
 
 namespace vkBasalt
 {
-    void createSampler(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, VkSampler& sampler)
+    VkSampler createSampler(VkDevice& device, VkLayerDispatchTable dispatchTable)
     {
+        VkSampler sampler;
+        
         VkSamplerCreateInfo samplerCreateInfo;
         samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerCreateInfo.pNext = nullptr;
@@ -34,5 +36,6 @@ namespace vkBasalt
         
         VkResult result = dispatchTable.CreateSampler(device,&samplerCreateInfo,nullptr,&sampler);
         ASSERT_VULKAN(result);
+        return sampler;
     }
 }
