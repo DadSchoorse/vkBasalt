@@ -10,8 +10,10 @@
 
 namespace vkBasalt
 {
-    void createRenderPass(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkFormat& format, VkRenderPass& renderPass)
+    VkRenderPass createRenderPass(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format)
     {
+        VkRenderPass renderPass;
+        
         VkAttachmentDescription attachmentDescription;
         attachmentDescription.flags = 0;
         attachmentDescription.format = format;
@@ -61,5 +63,7 @@ namespace vkBasalt
 
         VkResult result = dispatchTable.CreateRenderPass(device,&renderPassCreateInfo,nullptr,&renderPass);
         ASSERT_VULKAN(result);
+        
+        return renderPass
     }
 }

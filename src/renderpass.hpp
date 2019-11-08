@@ -12,7 +12,7 @@
 
 namespace vkBasalt
 {
-    void createRenderPass(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkFormat& format, VkRenderPass& renderPass);
+    VkRenderPass createRenderPass(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format);
 
 }
 
