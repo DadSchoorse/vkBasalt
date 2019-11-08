@@ -10,8 +10,10 @@
 
 namespace vkBasalt
 {
-    void allocateCommandBuffer(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkCommandPool& commandPool, const uint32_t& count, VkCommandBuffer* commandBuffers)
+    std::vector<VkCommandBuffer> allocateCommandBuffer(VkDevice device, VkLayerDispatchTable dispatchTable, VkCommandPool commandPool, uint32_t count)
     {
+        std::vector<VkCommandBuffer> commandBuffers(count);
+        
         VkCommandBufferAllocateInfo allocInfo;
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.pNext = nullptr;
@@ -23,7 +25,7 @@ namespace vkBasalt
         {
             std::cout << commandBuffers[i] << std::endl;
         }
-        VkResult result = dispatchTable.AllocateCommandBuffers(device,&allocInfo,commandBuffers);
+        VkResult result = dispatchTable.AllocateCommandBuffers(device,&allocInfo,commandBuffers.data());
         ASSERT_VULKAN(result);
         for(unsigned int i=0;i<count;i++)
         {
@@ -31,9 +33,11 @@ namespace vkBasalt
             *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(device);
             std::cout << commandBuffers[i] << std::endl;
         }
+        
+        return commandBuffers;
     
     }
-    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkDescriptorSet& uniformBufferDescriptorSet, const VkRenderPass& renderPass, const VkImage* images, const VkDescriptorSet* descriptorSets, const VkFramebuffer* framebuffers, VkCommandBuffer* commandBuffers)
+    void writeCASCommandBuffers(VkDevice device, VkLayerDispatchTable dispatchTable, VkPipeline pipeline, VkPipelineLayout layout, VkExtent2D extent, VkDescriptorSet uniformBufferDescriptorSet, VkRenderPass renderPass, std::vector<VkImage> images, std::vector<VkDescriptorSet> descriptorSets, std::vector<VkFramebuffer> framebuffers, std::vector<VkCommandBuffer> commandBuffers)
     {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -77,12 +81,12 @@ namespace vkBasalt
         secondBarrier.subresourceRange.baseArrayLayer = 0;
         secondBarrier.subresourceRange.layerCount = 1;
         
-        for(unsigned int i=0;i<count;i++)
+        for(unsigned int i=0;i<commandBuffers.size();i++)
         {
             std::cout << commandBuffers[i] << std::endl;
         }
         
-        for(unsigned int i=0;i<count;i++)
+        for(unsigned int i=0;i<commandBuffers.size();i++)
         {
             memoryBarrier.image = images[i];
             secondBarrier.image = images[i];
@@ -121,15 +125,19 @@ namespace vkBasalt
     }
 
 
-    void createSemaphores(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, uint32_t count, VkSemaphore* semaphores)
+    std::vector<VkSemaphore> createSemaphores(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t count)
     {
+        std::vector<VkSemaphore> semaphores(count);
         VkSemaphoreCreateInfo info;
         info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         info.pNext = nullptr;
         info.flags = 0;
 
         for (uint32_t i = 0; i < count; i++)
+        {
             dispatchTable.CreateSemaphore(device, &info, nullptr, &semaphores[i]);
+        }
+        return semaphores;
     }
 
 }

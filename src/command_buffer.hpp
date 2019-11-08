@@ -11,9 +11,10 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 namespace vkBasalt
 {
-    void allocateCommandBuffer(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkCommandPool& commandPool, const uint32_t& count, VkCommandBuffer* commandBuffers);
-    void writeCASCommandBuffers(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkPipeline& pipeline, const VkPipelineLayout& layout, const VkExtent2D& extent, const uint32_t& count,const VkDescriptorSet& uniformBufferDescriptorSet, const VkRenderPass& renderPass, const VkImage* images, const VkDescriptorSet* descriptorSets, const VkFramebuffer* framebuffers, VkCommandBuffer* commandBuffers);
-    void createSemaphores(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, uint32_t count, VkSemaphore* semaphores);
+    
+    std::vector<VkCommandBuffer> allocateCommandBuffer(VkDevice device, VkLayerDispatchTable dispatchTable, VkCommandPool commandPool, uint32_t count);
+    void writeCASCommandBuffers(VkDevice device, VkLayerDispatchTable dispatchTable, VkPipeline pipeline, VkPipelineLayout layout, VkExtent2D extent, VkDescriptorSet uniformBufferDescriptorSet, VkRenderPass renderPass, std::vector<VkImage> images, std::vector<VkDescriptorSet> descriptorSets, std::vector<VkFramebuffer> framebuffers, std::vector<VkCommandBuffer> commandBuffers);
+    std::vector<VkSemaphore> createSemaphores(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t count);
 }
 
 #endif // COMMAND_BUFFER_HPP_INCLUDED
