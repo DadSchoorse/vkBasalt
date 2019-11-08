@@ -13,7 +13,7 @@
 
 namespace vkBasalt{
     std::vector<char> readFile(const std::string &filename);
-    void createShaderModule(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const std::vector<char> &code, VkShaderModule *shaderModule);
+    void createShaderModule(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<char> &code, VkShaderModule *shaderModule);
 }
 
 
