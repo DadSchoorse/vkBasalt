@@ -11,7 +11,7 @@
 
 namespace vkBasalt
 {
-    void createBuffer(const VkLayerInstanceDispatchTable& instanceDispatchTable, const VkDevice& device,const VkLayerDispatchTable& dispatchTable, const VkPhysicalDevice& physicalDevice,const VkDeviceSize& size,const VkBufferUsageFlags& usage,const VkMemoryPropertyFlags& properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+    void createBuffer(VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkPhysicalDevice physicalDevice, VkDeviceSize size,  VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
     {
         VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
