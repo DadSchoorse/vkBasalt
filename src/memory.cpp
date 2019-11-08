@@ -9,7 +9,7 @@
 #endif
 namespace vkBasalt
 {
-    uint32_t findMemoryTypeIndex(const VkLayerInstanceDispatchTable& dispatchTable, const VkPhysicalDevice& physicalDevice,const uint32_t& typeFilter,const VkMemoryPropertyFlags& properties)
+    uint32_t findMemoryTypeIndex(VkLayerInstanceDispatchTable dispatchTable, VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
     {
         VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
         dispatchTable.GetPhysicalDeviceMemoryProperties(physicalDevice,&physicalDeviceMemoryProperties);
