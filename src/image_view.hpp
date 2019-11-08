@@ -11,7 +11,7 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 
 namespace vkBasalt{
-     void createImageViews(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkFormat& format, const uint32_t& imageCount, const VkImage* images, VkImageView* imageViews);
+     std::vector<VkImageView> createImageViews(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format, std::vector<VkImage> images);
 }
 
 

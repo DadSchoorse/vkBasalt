@@ -10,9 +10,10 @@
 
 namespace vkBasalt
 {
-    void createImageViews(const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkFormat& format, const uint32_t& imageCount, const VkImage* images, VkImageView* imageViews)
+    std::vector<VkImageView> createImageViews(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format, std::vector<VkImage> images)
     {
-
+        std::vector<VkImageView> imageViews(images.size());
+        
         VkImageViewCreateInfo imageViewCreateInfo;
 
         imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -38,6 +39,7 @@ namespace vkBasalt
             ASSERT_VULKAN(result);
         }
         
+        return imageViews;
     }
         
 }
