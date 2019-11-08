@@ -11,7 +11,7 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 
 namespace vkBasalt{
-    void createFakeSwapchainImages(const VkLayerInstanceDispatchTable& instanceDispatchTable, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkSwapchainCreateInfoKHR& swapchainCreateInfo, const uint32_t& count, VkImage* fakeImages, VkDeviceMemory& deviceMemory);
+    std::vector<VkImage> createFakeSwapchainImages(VkLayerInstanceDispatchTable instanceDispatchTable, VkPhysicalDevice physicalDevice, VkDevice device, VkLayerDispatchTable dispatchTable, VkSwapchainCreateInfoKHR swapchainCreateInfo, uint32_t count, VkDeviceMemory& deviceMemory)
 }
 
 

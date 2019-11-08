@@ -11,8 +11,9 @@
 
 namespace vkBasalt
 {
-    void createFakeSwapchainImages(const VkLayerInstanceDispatchTable& instanceDispatchTable, const VkPhysicalDevice& physicalDevice, const VkDevice& device, const VkLayerDispatchTable& dispatchTable, const VkSwapchainCreateInfoKHR& swapchainCreateInfo, const uint32_t& count, VkImage* fakeImages, VkDeviceMemory& deviceMemory)
+    std::vector<VkImage> createFakeSwapchainImages(VkLayerInstanceDispatchTable instanceDispatchTable, VkPhysicalDevice physicalDevice, VkDevice device, VkLayerDispatchTable dispatchTable, VkSwapchainCreateInfoKHR swapchainCreateInfo, uint32_t count, VkDeviceMemory& deviceMemory)
     {
+        std::vector<VkImage> fakeImages(count);
         VkImageCreateInfo imageCreateInfo;
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageCreateInfo.pNext = nullptr;
@@ -51,7 +52,6 @@ namespace vkBasalt
             memoryRequirements.size = (memoryRequirements.size/memoryRequirements.alignment+1)*memoryRequirements.alignment;
         }
         
-        //TODO make sure that size is alignment aligned
         
         VkMemoryAllocateInfo memoryAllocateInfo;
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -67,5 +67,6 @@ namespace vkBasalt
             result = dispatchTable.BindImageMemory(device, fakeImages[i], deviceMemory, memoryRequirements.size*i);
             ASSERT_VULKAN(result);
         }
+        return fakeImages;
     }
 }
