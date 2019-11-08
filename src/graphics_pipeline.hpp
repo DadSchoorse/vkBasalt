@@ -12,8 +12,8 @@
 
 namespace vkBasalt
 {
-    void createGraphicsPipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const uint32_t& descriptorSetLayoutsCount, const VkDescriptorSetLayout* descriptorSetLayouts, VkPipelineLayout& pipelineLayout);
-    void createGraphicsPipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& vertexModule,const VkShaderModule& fragmentModule, VkExtent2D extent, VkRenderPass renderPass,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
+    VkPipelineLayout createGraphicsPipelineLayout(VkDevice device, VkLayerDispatchTable dispatchTable, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
+    VkPipeline createGraphicsPipeline(VkDevice device, VkLayerDispatchTable dispatchTable, VkShaderModule vertexModule, VkShaderModule fragmentModule, VkExtent2D extent, VkRenderPass renderPass, VkPipelineLayout pipelineLayout);
 
 }
 

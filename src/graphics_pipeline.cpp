@@ -10,26 +10,29 @@
 
 namespace vkBasalt
 {
-    void createGraphicsPipelineLayout(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const uint32_t& descriptorSetLayoutsCount, const VkDescriptorSetLayout* descriptorSetLayouts, VkPipelineLayout& pipelineLayout)
+    VkPipelineLayout createGraphicsPipelineLayout(VkDevice device, VkLayerDispatchTable dispatchTable, std::vector<VkDescriptorSetLayout> descriptorSetLayouts)
     {
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo;
         pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutCreateInfo.pNext = nullptr;
         pipelineLayoutCreateInfo.flags = 0;
-        pipelineLayoutCreateInfo.setLayoutCount = descriptorSetLayoutsCount;
-        pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts;
+        pipelineLayoutCreateInfo.setLayoutCount = descriptorSetLayouts.size();
+        pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
         pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
         pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-
+        VkPipelineLayout pipelineLayout;
         VkResult result = dispatchTable.CreatePipelineLayout(device,&pipelineLayoutCreateInfo,nullptr,&pipelineLayout);
         ASSERT_VULKAN(result);
+        return pipelineLayout;
     }
     
-    void createGraphicsPipeline(const VkDevice& device, const VkLayerDispatchTable& dispatchTable,const VkShaderModule& vertexModule,const VkShaderModule& fragmentModule, VkExtent2D extent, VkRenderPass renderPass,const VkPipelineLayout& pipelineLayout, VkPipeline& pipeline)
+    VkPipeline createGraphicsPipeline(VkDevice device, VkLayerDispatchTable dispatchTable, VkShaderModule& vertexModule, VkShaderModule fragmentModule, VkExtent2D extent, VkRenderPass renderPass, VkPipelineLayout pipelineLayout)
     {
         VkResult result;
-
+        
+        VkPipeline pipeline;
+        
         VkPipelineShaderStageCreateInfo shaderStageCreateInfoVert;
         shaderStageCreateInfoVert.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shaderStageCreateInfoVert.pNext = nullptr;
