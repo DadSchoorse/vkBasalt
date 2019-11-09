@@ -56,6 +56,7 @@
 
 #include "effect.hpp"
 #include "effect_fxaa.hpp"
+#include "effect_cas.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -378,7 +379,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << swapchainStruct.imageList.size() << "swapchain images" << std::endl;
     
     swapchainStruct.effectList.resize(1);
-    swapchainStruct.effectList[0] = std::shared_ptr<vkBasalt::Effect>(new vkBasalt::FxaaEffect(deviceStruct.physicalDevice,
+    swapchainStruct.effectList[0] = std::shared_ptr<vkBasalt::Effect>(new vkBasalt::CasEffect(deviceStruct.physicalDevice,
                                                          instance_dispatch[GetKey(deviceStruct.physicalDevice)],
                                                          device,
                                                          device_dispatch[GetKey(device)],

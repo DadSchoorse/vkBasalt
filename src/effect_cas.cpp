@@ -1,4 +1,4 @@
-#include "effect_fxaa.hpp"
+#include "effect_cas.hpp"
 
 #include <cstring>
 
@@ -22,18 +22,17 @@
 namespace vkBasalt
 {   
     typedef struct {
-        float fxaaQualitySubpix;
-        float fxaaQualityEdgeThreshold;
-        float fxaaQualityEdgeThresholdMin; 
-    } FxaaBufferObject;
+        float sharpness;
+    } CasBufferObject;
     
     
+
     
-    FxaaEffect::FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config)
+    CasEffect::CasEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config)
     {
         std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_rect.vert.spv";
-        std::string fxaaFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/fxaa.frag.spv";
-        std::cout << "in creating FxaaEffect " << std::endl;
+        std::string casFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.frag.spv";
+        std::cout << "in creating CasEffect " << std::endl;
         
         this->physicalDevice = physicalDevice;
         this->instanceDispatchTable = instanceDispatchTable;
@@ -69,52 +68,35 @@ namespace vkBasalt
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        VkDeviceSize bufferSize = sizeof(FxaaBufferObject);
+        VkDeviceSize bufferSize = sizeof(CasBufferObject);
         //TODO make buffer device local
         VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
         createBuffer(instanceDispatchTable,device,dispatchTable,physicalDevice,bufferSize,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, memoryFlags, uniformBuffer,uniformBufferMemory);
-        std::cout << "after creating Fxaa buffer" << std::endl;
+        std::cout << "after creating CasEffect buffer" << std::endl;
         uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
         
         
         //get config options
-        FxaaBufferObject fbo;
-        if(config.getOption("fxaaQualitySubpix")!=std::string(""))
+        CasBufferObject cbo;
+        if(config.getOption("casSharpness")!=std::string(""))
         {
-            fbo.fxaaQualitySubpix = std::stod(config.getOption("fxaaQualitySubpix"));
+            cbo.sharpness = std::stod(config.getOption("casSharpness"));
         }
         else
         {
-            fbo.fxaaQualitySubpix = 0.75f;
+            cbo.sharpness = 0.4f;
         }
-        if(config.getOption("fxaaQualityEdgeThreshold")!=std::string(""))
-        {
-            fbo.fxaaQualityEdgeThreshold = std::stod(config.getOption("fxaaQualityEdgeThreshold"));
-        }
-        else
-        {
-            fbo.fxaaQualityEdgeThreshold = 0.125f;
-        }
-        if(config.getOption("fxaaQualityEdgeThresholdMin")!=std::string(""))
-        {
-            fbo.fxaaQualityEdgeThresholdMin = std::stod(config.getOption("fxaaQualityEdgeThresholdMin"));
-        }
-        else
-        {
-            fbo.fxaaQualityEdgeThresholdMin = 0.0312f;
-        }
-        
         
         void* data;
-        VkResult result = dispatchTable.MapMemory(device, uniformBufferMemory, 0, sizeof(FxaaBufferObject), 0, &data);
+        VkResult result = dispatchTable.MapMemory(device, uniformBufferMemory, 0, sizeof(CasBufferObject), 0, &data);
         ASSERT_VULKAN(result);
-        std::memcpy(data, &fbo, sizeof(FxaaBufferObject));
+        std::memcpy(data, &cbo, sizeof(CasBufferObject));
         dispatchTable.UnmapMemory(device, uniformBufferMemory);
         
         auto vertexCode = readFile(fullScreenRectFile.c_str());
         createShaderModule(device, dispatchTable, vertexCode, &vertexModule);
     
-        auto fragmentCode = readFile(fxaaFragmentFile.c_str());
+        auto fragmentCode = readFile(casFragmentFile.c_str());
         createShaderModule(device, dispatchTable, fragmentCode, &fragmentModule);
         
         renderPass = createRenderPass(device, dispatchTable, format);
@@ -129,9 +111,9 @@ namespace vkBasalt
         
         framebuffers = createFramebuffers(device, dispatchTable, renderPass, imageExtent, outputImageViews);
     }
-    void FxaaEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
+    void CasEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
-        std::cout << "applying fxaa effect" << commandBuffer << std::endl;
+        std::cout << "applying cas effect" << commandBuffer << std::endl;
         //Used to make the Image accessable by the shader
         VkImageMemoryBarrier memoryBarrier;
         memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -206,9 +188,9 @@ namespace vkBasalt
         std::cout << "after the second pipeline barrier" << std::endl;
 
     }
-    FxaaEffect::~FxaaEffect()
+    CasEffect::~CasEffect()
     {
-        std::cout << "destroying fxaa effect " << this << std::endl;
+        std::cout << "destroying cas effect " << this << std::endl;
         dispatchTable.DestroyPipeline(device, graphicsPipeline, nullptr);
         dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
         dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
