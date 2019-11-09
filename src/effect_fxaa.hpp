@@ -20,6 +20,7 @@ namespace vkBasalt{
     public:
         FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config);
         void applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override; 
+        ~FxaaEffect();
     private:
         VkPhysicalDevice physicalDevice;
         VkLayerInstanceDispatchTable instanceDispatchTable;

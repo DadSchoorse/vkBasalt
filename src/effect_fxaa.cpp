@@ -185,4 +185,26 @@ namespace vkBasalt
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
 
     }
+    FxaaEffect::~FxaaEffect()
+    {
+        dispatchTable.DestroyPipeline(device, graphicsPipeline, nullptr);
+        dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
+        dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
+        dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
+        dispatchTable.DestroyShaderModule(device,vertexModule,nullptr);
+        dispatchTable.DestroyShaderModule(device,fragmentModule,nullptr);
+        
+        dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
+        dispatchTable.FreeMemory(device,uniformBufferMemory,nullptr);
+        dispatchTable.DestroyDescriptorSetLayout(device,uniformBufferDescriptorSetLayout,nullptr);
+        dispatchTable.DestroyBuffer(device,uniformBuffer,nullptr);
+        for(unsigned int i=0;i<framebuffers.size();i++)
+        {
+            dispatchTable.DestroyFramebuffer(device,framebuffers[i],nullptr);
+            dispatchTable.DestroyImageView(device,inputImageViews[i],nullptr);
+            dispatchTable.DestroyImageView(device,outputImageViews[i],nullptr);
+            std::cout << "after DestroyImageView" << std::endl;
+        }
+        dispatchTable.DestroySampler(device,sampler,nullptr);
+    }
 }
