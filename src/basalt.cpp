@@ -124,9 +124,12 @@ namespace vkBasalt{
             dispatchTable.FreeCommandBuffers(device,deviceMap[device].commandPool,swapchainStruct.imageCount, swapchainStruct.commandBufferList.data());
             std::cout << "after free commandbuffer" << std::endl;
             dispatchTable.FreeMemory(device,swapchainStruct.fakeImageMemory,nullptr);
-            for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
+            for(uint32_t i=0;i<swapchainStruct.fakeImageList.size();i++)
             {
                 dispatchTable.DestroyImage(device,swapchainStruct.fakeImageList[i],nullptr);
+            }
+            for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
+            {
                 dispatchTable.DestroySemaphore(device,swapchainStruct.semaphoreList[i],nullptr);
                 std::cout << "after DestroySemaphore" << std::endl;
             }
@@ -359,12 +362,29 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << "format " << swapchainStruct.format << std::endl;
     std::cout << "device " << swapchainStruct.device << std::endl;
     
+    
+    std::string effectOption = config.getOption("effects");
+    std::vector<std::string> effectStrings;
+    while(effectOption!=std::string(""))
+    {
+        size_t colon = effectOption.find(":");
+        effectStrings.push_back(effectOption.substr(0,colon));
+        if(colon==std::string::npos)
+        {
+            effectOption = std::string("");
+        }
+        else
+        {
+            effectOption = effectOption.substr(colon+1);
+        }
+    }
+    
     swapchainStruct.fakeImageList = vkBasalt::createFakeSwapchainImages(instance_dispatch[GetKey(deviceStruct.physicalDevice)],
                                                                         deviceStruct.physicalDevice,
                                                                         device,
                                                                         device_dispatch[GetKey(device)],
                                                                         swapchainStruct.swapchainCreateInfo,
-                                                                        *pCount,
+                                                                        *pCount * effectStrings.size(),
                                                                         swapchainStruct.fakeImageMemory);
     std::cout << "after createFakeSwapchainImages " << std::endl;
     
@@ -378,17 +398,62 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     
     std::cout << swapchainStruct.imageList.size() << "swapchain images" << std::endl;
     
-    swapchainStruct.effectList.resize(1);
-    swapchainStruct.effectList[0] = std::shared_ptr<vkBasalt::Effect>(new vkBasalt::CasEffect(deviceStruct.physicalDevice,
+    
+    
+    for(uint32_t i=0;i<effectStrings.size();i++)
+    {
+        std::cout << "current effectString " << effectStrings[i] << std::endl;
+        std::vector<VkImage> firstImages(swapchainStruct.fakeImageList.begin() + swapchainStruct.imageCount * i,
+                                         swapchainStruct.fakeImageList.begin() + swapchainStruct.imageCount * (i+1));
+        std::cout << firstImages.size() << " images in firstImages" << std::endl;
+        std::vector<VkImage> secondImages;
+        if(i==effectStrings.size()-1)
+        {
+            secondImages = swapchainStruct.imageList;
+            std::cout << "using swapchain images as second images" << std::endl;
+        }
+        else
+        {
+            secondImages = std::vector<VkImage>(swapchainStruct.fakeImageList.begin() + swapchainStruct.imageCount * (i+1),
+                                                swapchainStruct.fakeImageList.begin() + swapchainStruct.imageCount * (i+2));
+            std::cout << "not using swapchain images as second images" << std::endl;
+        }
+        std::cout << secondImages.size() << " images in secondImages" << std::endl;
+        if(effectStrings[i] == std::string("fxaa"))
+        {
+            swapchainStruct.effectList.push_back(std::shared_ptr<vkBasalt::Effect>(new vkBasalt::FxaaEffect(deviceStruct.physicalDevice,
                                                          instance_dispatch[GetKey(deviceStruct.physicalDevice)],
                                                          device,
                                                          device_dispatch[GetKey(device)],
                                                          swapchainStruct.format,
                                                          swapchainStruct.imageExtent,
-                                                         swapchainStruct.fakeImageList,
-                                                         swapchainStruct.imageList,
-                                                         config));
-    std::cout << "after creating FxaaEffect " << std::endl;
+                                                         firstImages,
+                                                         secondImages,
+                                                         config)));
+            std::cout << "after creating FxaaEffect " << std::endl;
+        }
+        else if(effectStrings[i] == std::string("cas"))
+        {
+            swapchainStruct.effectList.push_back(std::shared_ptr<vkBasalt::Effect>(new vkBasalt::CasEffect(deviceStruct.physicalDevice,
+                                                         instance_dispatch[GetKey(deviceStruct.physicalDevice)],
+                                                         device,
+                                                         device_dispatch[GetKey(device)],
+                                                         swapchainStruct.format,
+                                                         swapchainStruct.imageExtent,
+                                                         firstImages,
+                                                         secondImages,
+                                                         config)));
+            std::cout << "after creating CasEffect " << std::endl;
+        }
+        else
+        {
+            throw std::runtime_error("unknown effect" + effectStrings[i]);
+        }    
+        
+    }
+    std::cout << "effect string count: " << effectStrings.size() << std::endl;
+    std::cout << "effect count: " << swapchainStruct.effectList.size() << std::endl;
+    
     
     
     swapchainStruct.commandBufferList = vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceStruct.commandPool, swapchainStruct.imageCount);
