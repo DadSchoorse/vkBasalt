@@ -33,6 +33,8 @@ namespace vkBasalt
     
     FxaaEffect::FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config)
     {
+        std::cout << "in creating FxaaEffect " << std::endl;
+        
         this->physicalDevice = physicalDevice;
         this->instanceDispatchTable = instanceDispatchTable;
         this->device = device;
@@ -44,29 +46,34 @@ namespace vkBasalt
         this->config = config;
         
         inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
+        std::cout << "after creating input ImageViews" << std::endl;
         outputImageViews = createImageViews(device, dispatchTable, format, outputImages);
+        std::cout << "after creating ImageViews" << std::endl;
         sampler = createSampler(device, dispatchTable);
+        std::cout << "after creating sampler" << std::endl;
         
         uniformBufferDescriptorSetLayout = createUniformBufferDescriptorSetLayout(device, dispatchTable);
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable);
-        
+        std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
         imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imagePoolSize.descriptorCount = inputImages.size();
+        imagePoolSize.descriptorCount = inputImages.size()+10;
         
         VkDescriptorPoolSize bufferPoolSize;
         bufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        bufferPoolSize.descriptorCount = 1;
+        bufferPoolSize.descriptorCount = 10;
         
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize,bufferPoolSize};
         
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
+        std::cout << "after creating descriptorPool" << std::endl;
         
         VkDeviceSize bufferSize = sizeof(FxaaBufferObject);
         //TODO make buffer device local
         VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
         createBuffer(instanceDispatchTable,device,dispatchTable,physicalDevice,bufferSize,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, memoryFlags, uniformBuffer,uniformBufferMemory);
+        std::cout << "after creating Fxaa buffer" << std::endl;
         uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
         
         
@@ -124,6 +131,7 @@ namespace vkBasalt
     }
     void FxaaEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
+        std::cout << "applying fxaa effect" << commandBuffer << std::endl;
         //Used to make the Image accessable by the shader
         VkImageMemoryBarrier memoryBarrier;
         memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -159,6 +167,11 @@ namespace vkBasalt
         secondBarrier.subresourceRange.layerCount = 1;
         
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        std::cout << "after the first pipeline barrier" << std::endl;
+        
+        std::cout << "framebuffer " << framebuffers.size() << std::endl;
+        
+        std::cout << "framebuffer " << framebuffers[imageIndex] << std::endl;
 
         VkRenderPassBeginInfo renderPassBeginInfo;
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -170,23 +183,32 @@ namespace vkBasalt
         VkClearValue clearValue = {0.0f, 0.0f, 0.0f, 1.0f};
         renderPassBeginInfo.clearValueCount = 1;
         renderPassBeginInfo.pClearValues = &clearValue;
-
+        
+        std::cout << "before beginn renderpass" << std::endl;
         dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        std::cout << "after beginn renderpass" << std::endl;
         
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
+        std::cout << "after binding image sampler" << std::endl;
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&uniformBufferDescriptorSet,0,nullptr);
+        std::cout << "after binding uniform buffer" << std::endl;
         
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
-
+        std::cout << "after bind pipeliene" << std::endl;
+        
         dispatchTable.CmdDraw(commandBuffer, 6, 1, 0, 0);
+        std::cout << "after draw" << std::endl;
 
         dispatchTable.CmdEndRenderPass(commandBuffer);
+        std::cout << "after end renderpass" << std::endl;
         
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
+        std::cout << "after the second pipeline barrier" << std::endl;
 
     }
     FxaaEffect::~FxaaEffect()
     {
+        std::cout << "destroying fxaa effect " << this << std::endl;
         dispatchTable.DestroyPipeline(device, graphicsPipeline, nullptr);
         dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
         dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
