@@ -175,5 +175,7 @@ namespace vkBasalt
 
         result = dispatchTable.CreateGraphicsPipelines(device,VK_NULL_HANDLE,1,&pipelineCreateInfo,nullptr,&pipeline);
         ASSERT_VULKAN(result);
+        
+        return pipeline;
     }
 }

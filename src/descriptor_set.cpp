@@ -14,6 +14,30 @@ typedef struct {
 
 namespace vkBasalt
 {
+        
+    VkDescriptorPool createDescriptorPool(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<VkDescriptorPoolSize>& poolSizes)
+    {
+        uint32_t setCount = 0;
+        VkDescriptorPool descriptorPool;
+        for(uint32_t i=0;i<poolSizes.size();i++)
+        {
+            setCount += poolSizes[i].descriptorCount;
+        }
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo;
+        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.pNext = nullptr;
+        descriptorPoolCreateInfo.flags = 0;
+        descriptorPoolCreateInfo.maxSets = setCount;
+        descriptorPoolCreateInfo.poolSizeCount = poolSizes.size();
+        descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
+
+        VkResult result =  dispatchTable.CreateDescriptorPool(device,&descriptorPoolCreateInfo,nullptr,&descriptorPool);
+        ASSERT_VULKAN(result);
+        return descriptorPool;
+    }
+    
+    
+    
     VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable)
     {
         VkDescriptorSetLayout descriptorSetLayout;
@@ -149,12 +173,12 @@ namespace vkBasalt
     {
         std::vector<VkDescriptorSet> descriptorSets(imageViews.size());
         
-        std::vector<VkDescriptorSetLayout> layouts(setCount,descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(imageViews.size(),descriptorSetLayout);
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo;
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
         descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = setCount;
+        descriptorSetAllocateInfo.descriptorSetCount = imageViews.size();
         descriptorSetAllocateInfo.pSetLayouts = layouts.data();
         
         std::cout << "before allocating descriptor Sets " << 1 << std::endl;
@@ -178,7 +202,7 @@ namespace vkBasalt
         writeDescriptorSet.pBufferInfo = nullptr;
         writeDescriptorSet.pTexelBufferView = nullptr;
         
-        for(unsigned int i=0;i<setCount;i++)
+        for(unsigned int i=0;i<imageViews.size();i++)
         {
             imageInfo.imageView = imageViews[i];
             writeDescriptorSet.dstSet = descriptorSets[i];

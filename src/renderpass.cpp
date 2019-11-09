@@ -64,6 +64,6 @@ namespace vkBasalt
         VkResult result = dispatchTable.CreateRenderPass(device,&renderPassCreateInfo,nullptr,&renderPass);
         ASSERT_VULKAN(result);
         
-        return renderPass
+        return renderPass;
     }
 }

@@ -32,7 +32,7 @@ namespace vkBasalt
         imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
         imageViewCreateInfo.subresourceRange.layerCount = 1;
         
-        for(unsigned int i=0;i<imageCount;i++)
+        for(unsigned int i=0;i<images.size();i++)
         {
             imageViewCreateInfo.image = images[i];
             VkResult result = dispatchTable.CreateImageView(device,&imageViewCreateInfo,nullptr,&(imageViews[i]));

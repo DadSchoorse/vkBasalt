@@ -11,6 +11,8 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 
 namespace vkBasalt{
+    VkDescriptorPool createDescriptorPool(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<VkDescriptorPoolSize>& poolSizes);
+
     VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable);
     VkDescriptorPool createUniformBufferDescriptorPool(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t setCount);
     VkDescriptorSet writeCasBufferDescriptorSet(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer);

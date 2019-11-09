@@ -13,7 +13,7 @@ namespace vkBasalt
     std::vector<VkFramebuffer> createFramebuffers(VkDevice device, VkLayerDispatchTable dispatchTable, VkRenderPass renderPass, VkExtent2D& extent, std::vector<VkImageView> imageViews)
     {
         std::vector<VkFramebuffer> framebuffers(imageViews.size());
-        for(uint32_t i=0;i<count;i++)
+        for(uint32_t i=0;i<imageViews.size();i++)
         {
             VkFramebufferCreateInfo framebufferCreateInfo;
             framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -28,7 +28,8 @@ namespace vkBasalt
 
             VkResult result = dispatchTable.CreateFramebuffer(device,&framebufferCreateInfo,nullptr,&(framebuffers[i]));
             ASSERT_VULKAN(result);
-            return framebuffers;
+            
         }
+        return framebuffers;
     }
 }
