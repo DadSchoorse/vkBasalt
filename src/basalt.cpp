@@ -40,6 +40,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "image_view.hpp"
 #include "sampler.hpp"
@@ -53,6 +54,9 @@
 #include "fake_swapchain.hpp"
 #include "renderpass.hpp"
 
+#include "effect.hpp"
+#include "effect_fxaa.hpp"
+
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
         if(val!=VK_SUCCESS)\
@@ -60,10 +64,6 @@
             throw std::runtime_error("ASSERT_VULKAN failed " + std::to_string(val));\
         }
 #endif
-
-std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_rect.vert.spv";
-std::string casFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.frag.spv";
-std::string fxaaFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/fxaa.frag.spv";
 
 std::mutex globalLock;
 #ifdef _GCC_
@@ -78,13 +78,7 @@ void *GetKey(DispatchableType inst)
     return *(void **)inst;
 }
 
-
-typedef struct {
-    float sharpness;
-} CasBufferObject;
-
-CasBufferObject casUBO = {0.4f};
-vkBasalt::Config casConfig;
+vkBasalt::Config config;
 
 
 
@@ -100,18 +94,12 @@ typedef struct {
     VkExtent2D imageExtent;
     VkFormat format;
     uint32_t imageCount;
-    VkImage *imageList;
-    VkImage *fakeImageList;
-    VkImageView *imageViewList;
-    VkImageView *fakeImageViewList;
-    VkDescriptorSet *descriptorSetList;
-    VkCommandBuffer *commandBufferList;
-    VkSemaphore *semaphoreList;
-    VkFramebuffer *framebufferList;
-    VkDescriptorPool imageSamplerDescriptorPool;
+    std::vector<VkImage> imageList;
+    std::vector<VkImage> fakeImageList;
+    std::vector<VkCommandBuffer> commandBufferList;
+    std::vector<VkSemaphore> semaphoreList;
+    std::vector<std::shared_ptr<vkBasalt::Effect>> effectList;
     VkDeviceMemory fakeImageMemory;
-    VkRenderPass renderPass;
-    VkPipeline casGraphicsPipeline;
 } SwapchainStruct;
 
 typedef struct {
@@ -119,16 +107,6 @@ typedef struct {
     uint32_t queueFamilyIndex;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
-    VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
-    VkShaderModule fullScreenRectModule;
-    VkShaderModule casFragmentModule;
-    VkPipelineLayout casPipelineLayout;
-    VkDescriptorSetLayout uniformBufferDescriptorSetLayout;
-    VkDescriptorPool uniformBufferDescriptorPool;
-    VkDescriptorSet casUniformBufferDescriptorSet;
-    VkBuffer casUniformBuffer;
-    VkDeviceMemory casUniformBufferMemory;
-    VkSampler sampler;
 } DeviceStruct;
 
 std::unordered_map<VkDevice, DeviceStruct> deviceMap;
@@ -141,32 +119,17 @@ namespace vkBasalt{
         VkLayerDispatchTable& dispatchTable = device_dispatch[GetKey(device)];
         if(swapchainStruct.imageCount>0)
         {
-            dispatchTable.FreeCommandBuffers(device,deviceMap[device].commandPool,swapchainStruct.imageCount, swapchainStruct.commandBufferList);
-            delete[] swapchainStruct.commandBufferList;
+            swapchainStruct.effectList.clear();
+            dispatchTable.FreeCommandBuffers(device,deviceMap[device].commandPool,swapchainStruct.imageCount, swapchainStruct.commandBufferList.data());
             std::cout << "after free commandbuffer" << std::endl;
-            dispatchTable.DestroyDescriptorPool(device,swapchainStruct.imageSamplerDescriptorPool,nullptr);
-            std::cout << "after DestroyDescriptorPool" << std::endl;
-            delete[] swapchainStruct.imageList;
             dispatchTable.FreeMemory(device,swapchainStruct.fakeImageMemory,nullptr);
             for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
             {
-                dispatchTable.DestroyFramebuffer(device,swapchainStruct.framebufferList[i],nullptr);
-                dispatchTable.DestroyImageView(device,swapchainStruct.fakeImageViewList[i],nullptr);
                 dispatchTable.DestroyImage(device,swapchainStruct.fakeImageList[i],nullptr);
                 dispatchTable.DestroySemaphore(device,swapchainStruct.semaphoreList[i],nullptr);
                 std::cout << "after DestroySemaphore" << std::endl;
-                dispatchTable.DestroyImageView(device,swapchainStruct.imageViewList[i],nullptr);
-                std::cout << "after DestroyImageView" << std::endl;
             }
-            dispatchTable.DestroyPipeline(device, swapchainStruct.casGraphicsPipeline, nullptr);
-            dispatchTable.DestroyRenderPass(device,swapchainStruct.renderPass,nullptr);
-            delete[] swapchainStruct.fakeImageList;
-            delete[] swapchainStruct.imageViewList;
-            delete[] swapchainStruct.fakeImageViewList;
-            delete[] swapchainStruct.framebufferList;
-            delete[] swapchainStruct.descriptorSetList;
-            delete[] swapchainStruct.semaphoreList;
-        } 
+        }
     }
 }
 
@@ -205,11 +168,6 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     // store the table by key
     {
         scoped_lock l(globalLock);
-        casUBO.sharpness = std::stod(casConfig.getOption("casSharpness"));
-        if(casConfig.getOption("enableFxaa")==std::string("1"))
-        {
-            casFragmentFile = fxaaFragmentFile;
-        }
         instance_dispatch[GetKey(*pInstance)] = dispatchTable;
     }
 
@@ -238,7 +196,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     while(layerCreateInfo && (layerCreateInfo->sType != VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO ||
                             layerCreateInfo->function != VK_LAYER_LINK_INFO))
     {
-    layerCreateInfo = (VkLayerDeviceCreateInfo *)layerCreateInfo->pNext;
+        layerCreateInfo = (VkLayerDeviceCreateInfo *)layerCreateInfo->pNext;
     }
 
     if(layerCreateInfo == NULL)
@@ -265,36 +223,6 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     deviceStruct.physicalDevice = physicalDevice;
     deviceStruct.commandPool = VK_NULL_HANDLE;
     
-    VkDeviceSize casBufferSize = sizeof(CasBufferObject);
-    //TODO make buffer device local
-    vkBasalt::createBuffer(instance_dispatch[GetKey(physicalDevice)],*pDevice,dispatchTable,physicalDevice,casBufferSize,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,deviceStruct.casUniformBuffer,deviceStruct.casUniformBufferMemory);
-    
-    vkBasalt::createUniformBufferDescriptorSetLayout(*pDevice, dispatchTable,  deviceStruct.uniformBufferDescriptorSetLayout);
-    vkBasalt::createUniformBufferDescriptorPool(*pDevice, dispatchTable, 1, deviceStruct.uniformBufferDescriptorPool);
-    vkBasalt::writeCasBufferDescriptorSet(*pDevice, dispatchTable, deviceStruct.uniformBufferDescriptorPool, deviceStruct.uniformBufferDescriptorSetLayout, deviceStruct.casUniformBuffer,  deviceStruct.casUniformBufferDescriptorSet);
-    
-    vkBasalt::createImageSamplerDescriptorSetLayout(*pDevice, dispatchTable, deviceStruct.imageSamplerDescriptorSetLayout);
-    
-    auto fullScreenRectCode = vkBasalt::readFile(fullScreenRectFile.c_str());
-    vkBasalt::createShaderModule(*pDevice, dispatchTable, fullScreenRectCode, &deviceStruct.fullScreenRectModule);
-    
-    auto casFragmentCode = vkBasalt::readFile(casFragmentFile.c_str());
-    vkBasalt::createShaderModule(*pDevice, dispatchTable, casFragmentCode, &deviceStruct.casFragmentModule);
-    
-    std::array<VkDescriptorSetLayout, 2> layouts= {deviceStruct.imageSamplerDescriptorSetLayout,deviceStruct.uniformBufferDescriptorSetLayout};
-    vkBasalt::createGraphicsPipelineLayout(*pDevice, dispatchTable,layouts.size(), layouts.data(), deviceStruct.casPipelineLayout);
-    
-    vkBasalt::createSampler(*pDevice,dispatchTable,deviceStruct.sampler);
-    
-    void* data;
-    VkResult result = dispatchTable.MapMemory(*pDevice, deviceStruct.casUniformBufferMemory, 0, sizeof(CasBufferObject), 0, &data);
-    ASSERT_VULKAN(result);
-    std::memcpy(data, &casUBO, sizeof(CasBufferObject));
-    dispatchTable.UnmapMemory(*pDevice, deviceStruct.casUniformBufferMemory);
-    
-    std::cout << casConfig.getOption("casSharpness") << std::endl;
-    
-
     // store the table by key
     {
         scoped_lock l(globalLock);
@@ -315,18 +243,6 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const Vk
         std::cout << "DestroyCommandPool" << std::endl;
         device_dispatch[GetKey(device)].DestroyCommandPool(device,deviceStruct.commandPool,pAllocator);
     }
-    device_dispatch[GetKey(device)].DestroySampler(device,deviceStruct.sampler,nullptr);
-    device_dispatch[GetKey(device)].DestroyPipelineLayout(device,deviceStruct.casPipelineLayout,nullptr);
-    std::cout << "after DestroyPipelineLayout" << std::endl;
-    device_dispatch[GetKey(device)].DestroyDescriptorSetLayout(device,deviceStruct.imageSamplerDescriptorSetLayout,nullptr);
-    device_dispatch[GetKey(device)].DestroyShaderModule(device,deviceStruct.casFragmentModule,nullptr);
-    device_dispatch[GetKey(device)].DestroyShaderModule(device,deviceStruct.fullScreenRectModule,nullptr);
-    
-    
-    device_dispatch[GetKey(device)].DestroyDescriptorPool(device,deviceStruct.uniformBufferDescriptorPool,nullptr);
-    device_dispatch[GetKey(device)].FreeMemory(device,deviceStruct.casUniformBufferMemory,nullptr);
-    device_dispatch[GetKey(device)].DestroyDescriptorSetLayout(device,deviceStruct.uniformBufferDescriptorSetLayout,nullptr);
-    device_dispatch[GetKey(device)].DestroyBuffer(device,deviceStruct.casUniformBuffer,nullptr);
     
     VkLayerDispatchTable dispatchTable = device_dispatch[GetKey(device)];
     std::cout << "before Destroy Device" << dispatchTable.DestroyDevice << std::endl;
@@ -410,18 +326,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     swapchainStruct.imageExtent = modifiedCreateInfo.imageExtent;
     swapchainStruct.format = modifiedCreateInfo.imageFormat;
     swapchainStruct.imageCount = 0;
-    swapchainStruct.imageList = nullptr;
-    swapchainStruct.imageViewList = nullptr;
-    swapchainStruct.descriptorSetList =nullptr;
-    swapchainStruct.commandBufferList = nullptr;
-    swapchainStruct.semaphoreList = nullptr;
-    swapchainStruct.imageSamplerDescriptorPool = VK_NULL_HANDLE;
     std::cout << "device " << swapchainStruct.device << std::endl;
-    
-    DeviceStruct& deviceStruct = deviceMap[device];
-        
-    vkBasalt::createRenderPass(device, device_dispatch[GetKey(device)], swapchainStruct.format, swapchainStruct.renderPass);
-    vkBasalt::createGraphicsPipeline(device, device_dispatch[GetKey(device)], deviceStruct.fullScreenRectModule, deviceStruct.casFragmentModule, modifiedCreateInfo.imageExtent, swapchainStruct.renderPass, deviceStruct.casPipelineLayout, swapchainStruct.casGraphicsPipeline);
     
     VkResult result = device_dispatch[GetKey(device)].CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
     
@@ -429,8 +334,6 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
     std::cout << "swapchain " << *pSwapchain << std::endl;
     
     std::cout << "Interrupted create swapchain" << std::endl;
-    
-    
     
     return result;
 }       
@@ -450,52 +353,56 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << "swapchain " << swapchain << std::endl;
     SwapchainStruct& swapchainStruct = swapchainMap[swapchain];
     swapchainStruct.imageCount = *pCount;
-    swapchainStruct.imageList = new VkImage[*pCount];
-    swapchainStruct.fakeImageList = new VkImage[*pCount];
-    swapchainStruct.imageViewList = new VkImageView[*pCount];
-    swapchainStruct.fakeImageViewList = new VkImageView[*pCount];
-    swapchainStruct.descriptorSetList = new VkDescriptorSet[*pCount];
-    swapchainStruct.commandBufferList = new VkCommandBuffer[*pCount];
-    swapchainStruct.semaphoreList = new VkSemaphore[*pCount];
-    swapchainStruct.framebufferList = new VkFramebuffer[*pCount];
+    swapchainStruct.imageList.reserve(*pCount);
+    swapchainStruct.commandBufferList.reserve(*pCount);
     std::cout << "format " << swapchainStruct.format << std::endl;
     std::cout << "device " << swapchainStruct.device << std::endl;
     
-    vkBasalt::createFakeSwapchainImages(instance_dispatch[GetKey(deviceStruct.physicalDevice)], deviceStruct.physicalDevice, device,  device_dispatch[GetKey(device)], swapchainStruct.swapchainCreateInfo, *pCount, swapchainStruct.fakeImageList, swapchainStruct.fakeImageMemory);
+    swapchainStruct.fakeImageList = vkBasalt::createFakeSwapchainImages(instance_dispatch[GetKey(deviceStruct.physicalDevice)],
+                                                                        deviceStruct.physicalDevice,
+                                                                        device,
+                                                                        device_dispatch[GetKey(device)],
+                                                                        swapchainStruct.swapchainCreateInfo,
+                                                                        *pCount,
+                                                                        swapchainStruct.fakeImageMemory);
     std::cout << "after createFakeSwapchainImages " << std::endl;
     
     
     VkResult result = device_dispatch[GetKey(device)].GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
     for(unsigned int i=0;i<*pCount;i++)
     {
-        swapchainStruct.imageList[i] = pSwapchainImages[i];
+        swapchainStruct.imageList.push_back(pSwapchainImages[i]);
         pSwapchainImages[i] = swapchainStruct.fakeImageList[i];
     }
-    std::cout << "before creating swapchain image views " << std::endl;
-    vkBasalt::createImageViews(device,device_dispatch[GetKey(device)],swapchainStruct.format,swapchainStruct.imageCount,swapchainStruct.imageList,swapchainStruct.imageViewList);
     
-    std::cout << "before creating framebuffers " << std::endl;
-    vkBasalt::createFramebuffers(device,device_dispatch[GetKey(device)],swapchainStruct.imageCount, swapchainStruct.renderPass, swapchainStruct.imageExtent, swapchainStruct.imageViewList, swapchainStruct.framebufferList);
+    std::cout << swapchainStruct.imageList.size() << "swapchain images" << std::endl;
     
-    std::cout << "before creating fake swapchain image views " << std::endl;
-    vkBasalt::createImageViews(device,device_dispatch[GetKey(device)],swapchainStruct.format,swapchainStruct.imageCount,swapchainStruct.fakeImageList, swapchainStruct.fakeImageViewList);
+    swapchainStruct.effectList.resize(1);
+    swapchainStruct.effectList[0] = std::shared_ptr<vkBasalt::Effect>(new vkBasalt::FxaaEffect(deviceStruct.physicalDevice,
+                                                         instance_dispatch[GetKey(deviceStruct.physicalDevice)],
+                                                         device,
+                                                         device_dispatch[GetKey(device)],
+                                                         swapchainStruct.format,
+                                                         swapchainStruct.imageExtent,
+                                                         swapchainStruct.fakeImageList,
+                                                         swapchainStruct.imageList,
+                                                         config));
+    std::cout << "after creating FxaaEffect " << std::endl;
     
-    std::cout << "before creating descriptor Pool " << std::endl;
-    vkBasalt::createImageSamplerDescriptorPool(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.imageSamplerDescriptorPool);
-    std::cout << "after creating descriptor Pool " << std::endl;
-    vkBasalt::allocateAndWriteImageSamplerDescriptorSets(device, device_dispatch[GetKey(device)], swapchainStruct.imageSamplerDescriptorPool, swapchainStruct.imageCount, deviceStruct.imageSamplerDescriptorSetLayout, deviceStruct.sampler, swapchainStruct.fakeImageViewList, swapchainStruct.descriptorSetList);
     
-    std::cout << "before creating descriptor Pool " << std::endl;
-    
-    vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceMap[device].commandPool,swapchainStruct.imageCount , swapchainStruct.commandBufferList);
+    swapchainStruct.commandBufferList = vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceStruct.commandPool, swapchainStruct.imageCount);
     std::cout << "after allocateCommandBuffer " << std::endl;
-    vkBasalt::writeCASCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.casGraphicsPipeline, deviceStruct.casPipelineLayout, swapchainStruct.imageExtent, swapchainStruct.imageCount, deviceStruct.casUniformBufferDescriptorSet, swapchainStruct.renderPass, swapchainStruct.fakeImageList, swapchainStruct.descriptorSetList, swapchainStruct.framebufferList, swapchainStruct.commandBufferList);
-    vkBasalt::createSemaphores(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount, swapchainStruct.semaphoreList);
+    
+    vkBasalt::writeCommandBuffers(device, device_dispatch[GetKey(device)], swapchainStruct.effectList,  swapchainStruct.commandBufferList);
+    std::cout << "after write CommandBuffer" << std::endl;
+    
+    swapchainStruct.semaphoreList = vkBasalt::createSemaphores(device, device_dispatch[GetKey(device)], swapchainStruct.imageCount);
+    std::cout << "after create semaphores" << std::endl;
     for(unsigned int i=0;i<swapchainStruct.imageCount;i++)
     {
         std::cout << i << "writen commandbuffer" << swapchainStruct.commandBufferList[i] << std::endl;
     }
-    
+    std::cout << "after getswapchainimages " << std::endl;
     
     return result;
 }
@@ -503,8 +410,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
 VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPresentInfoKHR* pPresentInfo)
 {
     scoped_lock l(globalLock);
-    //std::cout << "Interrupted QueuePresentKHR" << std::endl;
-
+    
     std::vector<VkSemaphore> presentSemaphores;
     presentSemaphores.reserve(pPresentInfo->swapchainCount);
 

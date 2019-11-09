@@ -59,6 +59,7 @@ namespace vkBasalt
             
             for(uint32_t j=0;j<effects.size();j++)
             {
+                std::cout << "before applying effect " << effects[j] << std::endl; 
                 effects[j]->applyEffect(i,commandBuffers[i]);
             }
 
