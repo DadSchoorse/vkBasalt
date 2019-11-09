@@ -10,7 +10,7 @@
 
 namespace vkBasalt
 {
-    VkSampler createSampler(VkDevice& device, VkLayerDispatchTable dispatchTable)
+    VkSampler createSampler(VkDevice device, VkLayerDispatchTable dispatchTable)
     {
         VkSampler sampler;
         

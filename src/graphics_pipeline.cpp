@@ -27,7 +27,7 @@ namespace vkBasalt
         return pipelineLayout;
     }
     
-    VkPipeline createGraphicsPipeline(VkDevice device, VkLayerDispatchTable dispatchTable, VkShaderModule& vertexModule, VkShaderModule fragmentModule, VkExtent2D extent, VkRenderPass renderPass, VkPipelineLayout pipelineLayout)
+    VkPipeline createGraphicsPipeline(VkDevice device, VkLayerDispatchTable dispatchTable, VkShaderModule vertexModule, VkShaderModule fragmentModule, VkExtent2D extent, VkRenderPass renderPass, VkPipelineLayout pipelineLayout)
     {
         VkResult result;
         
