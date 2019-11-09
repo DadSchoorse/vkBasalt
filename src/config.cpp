@@ -31,7 +31,6 @@ namespace vkBasalt
         while (std::getline(stream, line))
         {
             readConfigLine(line);
-            std::cout << line << std::endl;
         }
     }
     void Config::readConfigLine(std::string line)
