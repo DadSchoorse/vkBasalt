@@ -37,9 +37,21 @@ namespace vkBasalt
     void Config::readConfigLine(std::string line)
     {
         //TODO this needs to die in flames
-        if(line.substr(0,1)==std::string("#"))
+        if(line.find("#")!=std::string::npos)
         {
-            return;
+            line = line.erase(line.find("#"),std::string::npos);
+        }
+        size_t space = line.find(" ");
+        while(space!=std::string::npos)
+        {
+            line = line.erase(space,1);
+            space = line.find(" ");
+        }
+        space = line.find("\t");
+        while(space!=std::string::npos)
+        {
+            line = line.erase(space,1);
+            space = line.find("\t");
         }
         size_t equal = line.find("=");
         if(equal==std::string::npos)
