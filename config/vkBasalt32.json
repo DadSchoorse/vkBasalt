@@ -12,10 +12,10 @@
       "vkGetDeviceProcAddr": "vkBasalt_GetDeviceProcAddr"
     },
     "enable_environment": {
-      "ENABLE_VKBASALT32": "1"
+      "ENABLE_VKBASALT": "1"
     },
     "disable_environment": {
-      "DISABLE_VKBASALT32": "1"
+      "DISABLE_VKBASALT": "1"
     }
   }
 }
