@@ -30,7 +30,7 @@ namespace vkBasalt
     
     CasEffect::CasEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config)
     {
-        std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_rect.vert.spv";
+        std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_triangle.vert.spv";
         std::string casFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.frag.spv";
         std::cout << "in creating CasEffect " << std::endl;
         
@@ -178,7 +178,7 @@ namespace vkBasalt
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
         std::cout << "after bind pipeliene" << std::endl;
         
-        dispatchTable.CmdDraw(commandBuffer, 6, 1, 0, 0);
+        dispatchTable.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
         dispatchTable.CmdEndRenderPass(commandBuffer);
