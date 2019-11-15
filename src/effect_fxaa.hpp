@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"
@@ -18,7 +19,7 @@ namespace vkBasalt{
     class FxaaEffect : public Effect
     {
     public:
-        FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config);
+        FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
         void applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override; 
         ~FxaaEffect();
     private:
@@ -46,7 +47,7 @@ namespace vkBasalt{
         VkBuffer uniformBuffer;
         VkDeviceMemory uniformBufferMemory;
         VkSampler sampler;
-        Config config;
+        std::shared_ptr<vkBasalt::Config> pConfig;
     };
 }
 

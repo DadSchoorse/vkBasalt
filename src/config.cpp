@@ -24,6 +24,10 @@ namespace vkBasalt
         }
         readConfigFile(configFile);
     }
+    Config::Config(const Config& other)
+    {
+        this->options = other.options;
+    }
     void Config::readConfigFile(std::ifstream& stream)
     {
         std::string line;

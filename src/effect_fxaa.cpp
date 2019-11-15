@@ -29,7 +29,7 @@ namespace vkBasalt
     
     
     
-    FxaaEffect::FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config)
+    FxaaEffect::FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_triangle.vert.spv";
         std::string fxaaFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/fxaa.frag.spv";
@@ -43,7 +43,7 @@ namespace vkBasalt
         this->imageExtent = imageExtent;
         this->inputImages = inputImages;
         this->outputImages = outputImages;
-        this->config = config;
+        this->pConfig = pConfig;
         
         inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
@@ -79,25 +79,25 @@ namespace vkBasalt
         
         //get config options
         FxaaBufferObject fbo;
-        if(config.getOption("fxaaQualitySubpix")!=std::string(""))
+        if(pConfig->getOption("fxaaQualitySubpix")!=std::string(""))
         {
-            fbo.fxaaQualitySubpix = std::stod(config.getOption("fxaaQualitySubpix"));
+            fbo.fxaaQualitySubpix = std::stod(pConfig->getOption("fxaaQualitySubpix"));
         }
         else
         {
             fbo.fxaaQualitySubpix = 0.75f;
         }
-        if(config.getOption("fxaaQualityEdgeThreshold")!=std::string(""))
+        if(pConfig->getOption("fxaaQualityEdgeThreshold")!=std::string(""))
         {
-            fbo.fxaaQualityEdgeThreshold = std::stod(config.getOption("fxaaQualityEdgeThreshold"));
+            fbo.fxaaQualityEdgeThreshold = std::stod(pConfig->getOption("fxaaQualityEdgeThreshold"));
         }
         else
         {
             fbo.fxaaQualityEdgeThreshold = 0.125f;
         }
-        if(config.getOption("fxaaQualityEdgeThresholdMin")!=std::string(""))
+        if(pConfig->getOption("fxaaQualityEdgeThresholdMin")!=std::string(""))
         {
-            fbo.fxaaQualityEdgeThresholdMin = std::stod(config.getOption("fxaaQualityEdgeThresholdMin"));
+            fbo.fxaaQualityEdgeThresholdMin = std::stod(pConfig->getOption("fxaaQualityEdgeThresholdMin"));
         }
         else
         {

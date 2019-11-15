@@ -79,7 +79,7 @@ void *GetKey(DispatchableType inst)
     return *(void **)inst;
 }
 
-vkBasalt::Config config;
+std::shared_ptr<vkBasalt::Config> pConfig = nullptr;
 
 
 
@@ -173,6 +173,10 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     {
         scoped_lock l(globalLock);
         instance_dispatch[GetKey(*pInstance)] = dispatchTable;
+        if(pConfig==nullptr)
+        {
+            pConfig = std::shared_ptr<vkBasalt::Config>(new vkBasalt::Config());
+        }
     }
 
     return ret;
@@ -363,7 +367,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << "device " << swapchainStruct.device << std::endl;
     
     
-    std::string effectOption = config.getOption("effects");
+    std::string effectOption = pConfig->getOption("effects");
     std::vector<std::string> effectStrings;
     while(effectOption!=std::string(""))
     {
@@ -429,7 +433,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
                                                          swapchainStruct.imageExtent,
                                                          firstImages,
                                                          secondImages,
-                                                         config)));
+                                                         pConfig)));
             std::cout << "after creating FxaaEffect " << std::endl;
         }
         else if(effectStrings[i] == std::string("cas"))
@@ -442,7 +446,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
                                                          swapchainStruct.imageExtent,
                                                          firstImages,
                                                          secondImages,
-                                                         config)));
+                                                         pConfig)));
             std::cout << "after creating CasEffect " << std::endl;
         }
         else

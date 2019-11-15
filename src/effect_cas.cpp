@@ -28,7 +28,7 @@ namespace vkBasalt
     
 
     
-    CasEffect::CasEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, Config config)
+    CasEffect::CasEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_triangle.vert.spv";
         std::string casFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/cas.frag.spv";
@@ -42,7 +42,7 @@ namespace vkBasalt
         this->imageExtent = imageExtent;
         this->inputImages = inputImages;
         this->outputImages = outputImages;
-        this->config = config;
+        this->pConfig = pConfig;
         
         inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
@@ -78,9 +78,9 @@ namespace vkBasalt
         
         //get config options
         CasBufferObject cbo;
-        if(config.getOption("casSharpness")!=std::string(""))
+        if(pConfig->getOption("casSharpness")!=std::string(""))
         {
-            cbo.sharpness = std::stod(config.getOption("casSharpness"));
+            cbo.sharpness = std::stod(pConfig->getOption("casSharpness"));
         }
         else
         {
