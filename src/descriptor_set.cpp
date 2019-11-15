@@ -120,23 +120,28 @@ namespace vkBasalt
         return descriptorSet;
     }
     
-    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable)
+    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t count)
     {
         VkDescriptorSetLayout descriptorSetLayout;
         
-        VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
-        descriptorSetLayoutBinding.binding = 0;
-        descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorSetLayoutBinding.descriptorCount = 1;
-        descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+        std::vector<VkDescriptorSetLayoutBinding> bindigs(count);
+        for(uint32_t i=0;i<count;i++)
+        {
+            VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
+            descriptorSetLayoutBinding.binding = i;
+            descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorSetLayoutBinding.descriptorCount = 1;
+            descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+            bindigs[i] = descriptorSetLayoutBinding;
+        }
 
         VkDescriptorSetLayoutCreateInfo descriptorSetCreateInfo;
         descriptorSetCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptorSetCreateInfo.pNext = nullptr;
         descriptorSetCreateInfo.flags = 0;
-        descriptorSetCreateInfo.bindingCount = 1;
-        descriptorSetCreateInfo.pBindings = &descriptorSetLayoutBinding;
+        descriptorSetCreateInfo.bindingCount = count;
+        descriptorSetCreateInfo.pBindings = bindigs.data();
 
         
         VkResult result = dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&descriptorSetLayout);

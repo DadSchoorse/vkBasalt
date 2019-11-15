@@ -52,7 +52,7 @@ namespace vkBasalt
         std::cout << "after creating sampler" << std::endl;
         
         uniformBufferDescriptorSetLayout = createUniformBufferDescriptorSetLayout(device, dispatchTable);
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 1);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
