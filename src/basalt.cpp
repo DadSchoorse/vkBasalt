@@ -57,6 +57,7 @@
 #include "effect.hpp"
 #include "effect_fxaa.hpp"
 #include "effect_cas.hpp"
+#include "effect_smaa.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -448,6 +449,20 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
                                                          secondImages,
                                                          pConfig)));
             std::cout << "after creating CasEffect " << std::endl;
+        }
+        else if(effectStrings[i] == std::string("smaa"))
+        {
+            swapchainStruct.effectList.push_back(std::shared_ptr<vkBasalt::Effect>(new vkBasalt::SmaaEffect(deviceStruct.physicalDevice,
+                                                         instance_dispatch[GetKey(deviceStruct.physicalDevice)],
+                                                         device,
+                                                         device_dispatch[GetKey(device)],
+                                                         swapchainStruct.format,
+                                                         swapchainStruct.imageExtent,
+                                                         firstImages,
+                                                         secondImages,
+                                                         pConfig,
+                                                         deviceStruct.queue,
+                                                         deviceStruct.commandPool)));
         }
         else
         {
