@@ -338,6 +338,7 @@ namespace vkBasalt
         
         dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
         dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
+        dispatchTable.DestroyRenderPass(device,unormRenderPass,nullptr);
         dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
         
         dispatchTable.DestroyShaderModule(device, edgeVertexModule,       nullptr);
@@ -351,6 +352,9 @@ namespace vkBasalt
         dispatchTable.FreeMemory(device,uniformBufferMemory,nullptr);
         dispatchTable.DestroyDescriptorSetLayout(device,uniformBufferDescriptorSetLayout,nullptr);
         dispatchTable.DestroyBuffer(device,uniformBuffer,nullptr);
+        dispatchTable.FreeMemory(device,imageMemory,nullptr);
+        dispatchTable.FreeMemory(device,areaMemory,nullptr);
+        dispatchTable.FreeMemory(device,searchMemory,nullptr);
         for(unsigned int i=0;i<edgeFramebuffers.size();i++)
         {
             dispatchTable.DestroyFramebuffer(device,edgeFramebuffers[i],nullptr);
@@ -360,8 +364,15 @@ namespace vkBasalt
             dispatchTable.DestroyImageView(device,edgeImageViews[i],nullptr);
             dispatchTable.DestroyImageView(device,blendImageViews[i],nullptr);
             dispatchTable.DestroyImageView(device,outputImageViews[i],nullptr);
+            dispatchTable.DestroyImage(device,edgeImages[i],nullptr);
+            dispatchTable.DestroyImage(device,blendImages[i],nullptr);
             std::cout << "after DestroyImageView" << std::endl;
         }
+        dispatchTable.DestroyImageView(device,areaImageView,nullptr);
+        dispatchTable.DestroyImage(device,areaImage,nullptr);
+        dispatchTable.DestroyImageView(device,searchImageView,nullptr);
+        dispatchTable.DestroyImage(device,searchImage,nullptr);
+        
         dispatchTable.DestroySampler(device,sampler,nullptr);
     }
 }
