@@ -46,7 +46,7 @@ namespace vkBasalt
         descriptorSetLayoutBinding.binding = 0;
         descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptorSetLayoutBinding.descriptorCount = 1;
-        descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT;
         descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
         VkDescriptorSetLayoutCreateInfo descriptorSetCreateInfo;
