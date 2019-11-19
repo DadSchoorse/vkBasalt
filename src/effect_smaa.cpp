@@ -157,6 +157,10 @@ namespace vkBasalt
         
         //get config options
         SmaaBufferObject sbo;
+        sbo.screenWidth = imageExtent.width;
+        sbo.screenHeight = imageExtent.height;
+        sbo.reverseScreenWidth = 1.0f/imageExtent.width;
+        sbo.reverseScreenHeight = 1.0f/imageExtent.height;
         
         void* data;
         VkResult result = dispatchTable.MapMemory(device, uniformBufferMemory, 0, sizeof(SmaaBufferObject), 0, &data);
