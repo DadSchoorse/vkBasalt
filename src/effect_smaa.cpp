@@ -268,10 +268,6 @@ namespace vkBasalt
         dispatchTable.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
         
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
-        std::cout << "after the second pipeline barrier" << std::endl;
-        
-        secondBarrier.image = edgeImages[imageIndex];
         memoryBarrier.image = edgeImages[imageIndex];
         renderPassBeginInfo.framebuffer = blendFramebuffers[imageIndex];
         //blend renderPass
@@ -296,10 +292,6 @@ namespace vkBasalt
         dispatchTable.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
         
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
-        std::cout << "after the second pipeline barrier" << std::endl;
-        
-        secondBarrier.image = blendImages[imageIndex];
         memoryBarrier.image = blendImages[imageIndex];
         renderPassBeginInfo.framebuffer = neignborFramebuffers[imageIndex];
         renderPassBeginInfo.renderPass = renderPass;

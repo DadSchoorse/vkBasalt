@@ -169,7 +169,7 @@ namespace vkBasalt
         
         dispatchTable.CmdPipelineBarrier(
             commandBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
             0,
             0, nullptr,
             0, nullptr,
