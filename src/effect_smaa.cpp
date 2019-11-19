@@ -36,12 +36,13 @@ namespace vkBasalt
     
     SmaaEffect::SmaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool)
     {
-        std::string smaaEdgeVertexFile       = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_edge.vert.spv";
-        std::string smaaEdgeLumaFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_edge_luma.frag.spv";
-        std::string smaaBlendVertexFile      = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_blend.vert.spv";
-        std::string smaaBlendFragmentFile    = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_blend.frag.spv";
-        std::string smaaNeighborVertexFile   = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_neighbor.vert.spv";
-        std::string smaaNeighborFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_neighbor.frag.spv";
+        std::string smaaEdgeVertexFile        = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_edge.vert.spv";
+        std::string smaaEdgeLumaFragmentFile  = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_edge_luma.frag.spv";
+        std::string smaaEdgeColorFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_edge_color.frag.spv";
+        std::string smaaBlendVertexFile       = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_blend.vert.spv";
+        std::string smaaBlendFragmentFile     = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_blend.frag.spv";
+        std::string smaaNeighborVertexFile    = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_neighbor.vert.spv";
+        std::string smaaNeighborFragmentFile  = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/smaa_neighbor.frag.spv";
         std::cout << "in creating SmaaEffect " << std::endl;
         
         this->physicalDevice = physicalDevice;
@@ -170,7 +171,15 @@ namespace vkBasalt
         
         auto shaderCode = readFile(smaaEdgeVertexFile.c_str());
         createShaderModule(device, dispatchTable, shaderCode, &edgeVertexModule);
-        shaderCode = readFile(smaaEdgeLumaFragmentFile.c_str());
+        if(pConfig->getOption("smaaEdgeDetection")==std::string("color"))
+        {
+            shaderCode = readFile(smaaEdgeColorFragmentFile.c_str());
+        }
+        else
+        {
+            shaderCode = readFile(smaaEdgeLumaFragmentFile.c_str());
+        }
+        
         createShaderModule(device, dispatchTable, shaderCode, &edgeFragmentModule);
         shaderCode = readFile(smaaBlendVertexFile.c_str());
         createShaderModule(device, dispatchTable, shaderCode, &blendVertexModule);
