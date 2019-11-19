@@ -125,7 +125,12 @@ namespace vkBasalt
         
         uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
         
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device, dispatchTable, descriptorPool, imageSamplerDescriptorSetLayout, sampler, inputImageViews);
+        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
+                                                                         dispatchTable,
+                                                                         descriptorPool,
+                                                                         imageSamplerDescriptorSetLayout,
+                                                                         sampler,
+                                                                         std::vector<std::vector<VkImageView>>(1,inputImageViews));
         
         framebuffers = createFramebuffers(device, dispatchTable, renderPass, imageExtent, outputImageViews);
     }

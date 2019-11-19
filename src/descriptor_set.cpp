@@ -174,16 +174,16 @@ namespace vkBasalt
         return descriptorPool;
     }
     
-    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkSampler sampler, std::vector<VkImageView> imageViews)
+    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkSampler sampler, std::vector<std::vector<VkImageView>> imageViewsVectors)
     {
-        std::vector<VkDescriptorSet> descriptorSets(imageViews.size());
+        std::vector<VkDescriptorSet> descriptorSets(imageViewsVectors[0].size());
         
-        std::vector<VkDescriptorSetLayout> layouts(imageViews.size(),descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(descriptorSets.size(),descriptorSetLayout);
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo;
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
         descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = imageViews.size();
+        descriptorSetAllocateInfo.descriptorSetCount = descriptorSets.size();
         descriptorSetAllocateInfo.pSetLayouts = layouts.data();
         
         std::cout << "before allocating descriptor Sets " << 1 << std::endl;
@@ -194,6 +194,7 @@ namespace vkBasalt
         imageInfo.sampler = sampler;
         imageInfo.imageView = VK_NULL_HANDLE;
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        std::vector<VkDescriptorImageInfo> imageInfos(imageViewsVectors.size(), imageInfo);
 
         VkWriteDescriptorSet writeDescriptorSet = {};
         writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -203,16 +204,23 @@ namespace vkBasalt
         writeDescriptorSet.dstArrayElement = 0;
         writeDescriptorSet.descriptorCount = 1;
         writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        writeDescriptorSet.pImageInfo = &imageInfo;
+        writeDescriptorSet.pImageInfo = nullptr;
         writeDescriptorSet.pBufferInfo = nullptr;
         writeDescriptorSet.pTexelBufferView = nullptr;
         
-        for(unsigned int i=0;i<imageViews.size();i++)
+        std::vector<VkWriteDescriptorSet> writeDescriptorSets(imageViewsVectors.size(), writeDescriptorSet);
+        
+        for(unsigned int i=0;i<descriptorSets.size();i++)
         {
-            imageInfo.imageView = imageViews[i];
-            writeDescriptorSet.dstSet = descriptorSets[i];
+            for(uint32_t j=0;j<imageViewsVectors.size();j++)
+            {
+                imageInfos[j].imageView = imageViewsVectors[j][i];
+                writeDescriptorSets[j].dstBinding = j;
+                writeDescriptorSets[j].pImageInfo = &imageInfos[j];
+                writeDescriptorSets[j].dstSet = descriptorSets[i];
+            }
             std::cout << "before writing descriptor Sets " << std::endl;
-            dispatchTable.UpdateDescriptorSets(device,1,&writeDescriptorSet,0,nullptr);
+            dispatchTable.UpdateDescriptorSets(device,writeDescriptorSets.size(),writeDescriptorSets.data(),0,nullptr);
             
         }
         return descriptorSets;
