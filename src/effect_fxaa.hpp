@@ -34,9 +34,7 @@ namespace vkBasalt{
         std::vector<VkDescriptorSet> imageDescriptorSets;
         std::vector<VkFramebuffer> framebuffers;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
-        VkDescriptorSetLayout uniformBufferDescriptorSetLayout;
         VkDescriptorPool descriptorPool;
-        VkDescriptorSet uniformBufferDescriptorSet;
         VkShaderModule vertexModule;
         VkShaderModule fragmentModule;
         VkRenderPass renderPass;
@@ -44,8 +42,6 @@ namespace vkBasalt{
         VkPipeline graphicsPipeline;
         VkExtent2D imageExtent;
         VkFormat format;
-        VkBuffer uniformBuffer;
-        VkDeviceMemory uniformBufferMemory;
         VkSampler sampler;
         std::shared_ptr<vkBasalt::Config> pConfig;
     };
