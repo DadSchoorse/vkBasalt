@@ -100,18 +100,18 @@ namespace vkBasalt
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
-        std::vector<VkSpecializationMapEntry> sharpnessMapEntrys(3);
-        sharpnessMapEntrys[0].constantID = 0;
-        sharpnessMapEntrys[0].offset = sizeof(float) * 0;
-        sharpnessMapEntrys[0].size = sizeof(float);
+        std::vector<VkSpecializationMapEntry> specMapEntrys(3);
+        specMapEntrys[0].constantID = 0;
+        specMapEntrys[0].offset = sizeof(float) * 0;
+        specMapEntrys[0].size = sizeof(float);
         
-        sharpnessMapEntrys[1].constantID = 1;
-        sharpnessMapEntrys[1].offset = sizeof(float) * 1;
-        sharpnessMapEntrys[1].size = sizeof(float);
+        specMapEntrys[1].constantID = 1;
+        specMapEntrys[1].offset = sizeof(float) * 1;
+        specMapEntrys[1].size = sizeof(float);
         
-        sharpnessMapEntrys[1].constantID = 2;
-        sharpnessMapEntrys[1].offset = sizeof(float) * 2;
-        sharpnessMapEntrys[1].size = sizeof(float);
+        specMapEntrys[1].constantID = 2;
+        specMapEntrys[1].offset = sizeof(float) * 2;
+        specMapEntrys[1].size = sizeof(float);
         
         std::vector<float> specData = {fxaaQualitySubpix,
                                        fxaaQualityEdgeThreshold,
@@ -119,8 +119,8 @@ namespace vkBasalt
                                       };
         
         VkSpecializationInfo fragmentSpecializationInfo;
-        fragmentSpecializationInfo.mapEntryCount = sharpnessMapEntrys.size();
-        fragmentSpecializationInfo.pMapEntries = sharpnessMapEntrys.data();
+        fragmentSpecializationInfo.mapEntryCount = specMapEntrys.size();
+        fragmentSpecializationInfo.pMapEntries = specMapEntrys.data();
         fragmentSpecializationInfo.dataSize = sizeof(float)*specData.size();
         fragmentSpecializationInfo.pData = specData.data();
         
