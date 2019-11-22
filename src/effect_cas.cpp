@@ -51,7 +51,6 @@ namespace vkBasalt
         sampler = createSampler(device, dispatchTable);
         std::cout << "after creating sampler" << std::endl;
         
-        uniformBufferDescriptorSetLayout = createUniformBufferDescriptorSetLayout(device, dispatchTable);
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 1);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
@@ -59,39 +58,21 @@ namespace vkBasalt
         imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         imagePoolSize.descriptorCount = inputImages.size()+10;
         
-        VkDescriptorPoolSize bufferPoolSize;
-        bufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        bufferPoolSize.descriptorCount = 10;
-        
-        std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize,bufferPoolSize};
+        std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
         
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        VkDeviceSize bufferSize = sizeof(CasBufferObject);
-        //TODO make buffer device local
-        VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        createBuffer(instanceDispatchTable,device,dispatchTable,physicalDevice,bufferSize,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, memoryFlags, uniformBuffer,uniformBufferMemory);
-        std::cout << "after creating CasEffect buffer" << std::endl;
-        uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
-        
-        
+        float sharpness;
         //get config options
-        CasBufferObject cbo;
         if(pConfig->getOption("casSharpness")!=std::string(""))
         {
-            cbo.sharpness = std::stod(pConfig->getOption("casSharpness"));
+            sharpness = std::stod(pConfig->getOption("casSharpness"));
         }
         else
         {
-            cbo.sharpness = 0.4f;
+            sharpness = 0.4f;
         }
-        
-        void* data;
-        VkResult result = dispatchTable.MapMemory(device, uniformBufferMemory, 0, sizeof(CasBufferObject), 0, &data);
-        ASSERT_VULKAN(result);
-        std::memcpy(data, &cbo, sizeof(CasBufferObject));
-        dispatchTable.UnmapMemory(device, uniformBufferMemory);
         
         auto vertexCode = readFile(fullScreenRectFile.c_str());
         createShaderModule(device, dispatchTable, vertexCode, &vertexModule);
@@ -101,11 +82,21 @@ namespace vkBasalt
         
         renderPass = createRenderPass(device, dispatchTable, format);
         
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout,uniformBufferDescriptorSetLayout};
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
-        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, nullptr, fragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
         
-        uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
+        VkSpecializationMapEntry sharpnessMapEntry;
+        sharpnessMapEntry.constantID = 0;
+        sharpnessMapEntry.offset = 0;
+        sharpnessMapEntry.size = sizeof(float);
+        
+        VkSpecializationInfo fragmentSpecializationInfo;
+        fragmentSpecializationInfo.mapEntryCount = 1;
+        fragmentSpecializationInfo.pMapEntries = &sharpnessMapEntry;
+        fragmentSpecializationInfo.dataSize = sizeof(float);
+        fragmentSpecializationInfo.pData = &sharpness;
+        
+        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, nullptr, fragmentModule, &fragmentSpecializationInfo, imageExtent, renderPass, pipelineLayout);
         
         imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
@@ -177,8 +168,6 @@ namespace vkBasalt
         
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&uniformBufferDescriptorSet,0,nullptr);
-        std::cout << "after binding uniform buffer" << std::endl;
         
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
         std::cout << "after bind pipeliene" << std::endl;
@@ -204,9 +193,6 @@ namespace vkBasalt
         dispatchTable.DestroyShaderModule(device,fragmentModule,nullptr);
         
         dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
-        dispatchTable.FreeMemory(device,uniformBufferMemory,nullptr);
-        dispatchTable.DestroyDescriptorSetLayout(device,uniformBufferDescriptorSetLayout,nullptr);
-        dispatchTable.DestroyBuffer(device,uniformBuffer,nullptr);
         for(unsigned int i=0;i<framebuffers.size();i++)
         {
             dispatchTable.DestroyFramebuffer(device,framebuffers[i],nullptr);
