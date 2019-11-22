@@ -290,9 +290,6 @@ namespace vkBasalt
         dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
         
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
-        std::cout << "after binding image sampler" << std::endl;
-        
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,blendPipeline);
         std::cout << "after bind pipeliene" << std::endl;
         
@@ -312,9 +309,6 @@ namespace vkBasalt
         std::cout << "before beginn neighbor renderpass" << std::endl;
         dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
-        
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
-        std::cout << "after binding image sampler" << std::endl;
         
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,neighborPipeline);
         std::cout << "after bind pipeliene" << std::endl;
