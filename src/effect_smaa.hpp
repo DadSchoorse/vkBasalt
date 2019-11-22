@@ -44,9 +44,7 @@ namespace vkBasalt{
         VkImageView areaImageView;
         VkImageView searchImageView;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
-        VkDescriptorSetLayout uniformBufferDescriptorSetLayout;
         VkDescriptorPool descriptorPool;
-        VkDescriptorSet uniformBufferDescriptorSet;
         VkShaderModule edgeVertexModule;
         VkShaderModule edgeFragmentModule;
         VkShaderModule blendVertexModule;
@@ -61,8 +59,6 @@ namespace vkBasalt{
         VkPipeline neighborPipeline;
         VkExtent2D imageExtent;
         VkFormat format;
-        VkBuffer uniformBuffer;
-        VkDeviceMemory uniformBufferMemory;
         VkDeviceMemory imageMemory;
         VkDeviceMemory areaMemory;
         VkDeviceMemory searchMemory;

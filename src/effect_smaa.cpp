@@ -131,7 +131,6 @@ namespace vkBasalt
         searchImageView = createImageViews(device, dispatchTable, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
         std::cout << "after creating search ImageView" << std::endl;
         
-        uniformBufferDescriptorSetLayout = createUniformBufferDescriptorSetLayout(device, dispatchTable);
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 5);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
@@ -139,35 +138,17 @@ namespace vkBasalt
         imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         imagePoolSize.descriptorCount = inputImages.size()*5;
         
-        VkDescriptorPoolSize bufferPoolSize;
-        bufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        bufferPoolSize.descriptorCount = 10;
-        
-        std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize,bufferPoolSize};
+        std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
         
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        VkDeviceSize bufferSize = sizeof(SmaaBufferObject);
-        //TODO make buffer device local
-        VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        createBuffer(instanceDispatchTable,device,dispatchTable,physicalDevice,bufferSize,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, memoryFlags, uniformBuffer,uniformBufferMemory);
-        std::cout << "after creating Smaa buffer" << std::endl;
-        uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
-        
-        
         //get config options
-        SmaaBufferObject sbo;
-        sbo.screenWidth = imageExtent.width;
-        sbo.screenHeight = imageExtent.height;
-        sbo.reverseScreenWidth = 1.0f/imageExtent.width;
-        sbo.reverseScreenHeight = 1.0f/imageExtent.height;
+        float screenWidth = imageExtent.width;
+        float screenHeight = imageExtent.height;
+        float reverseScreenWidth = 1.0f/imageExtent.width;
+        float reverseScreenHeight = 1.0f/imageExtent.height;
         
-        void* data;
-        VkResult result = dispatchTable.MapMemory(device, uniformBufferMemory, 0, sizeof(SmaaBufferObject), 0, &data);
-        ASSERT_VULKAN(result);
-        std::memcpy(data, &sbo, sizeof(SmaaBufferObject));
-        dispatchTable.UnmapMemory(device, uniformBufferMemory);
         
         auto shaderCode = readFile(smaaEdgeVertexFile.c_str());
         createShaderModule(device, dispatchTable, shaderCode, &edgeVertexModule);
@@ -193,13 +174,33 @@ namespace vkBasalt
         renderPass      = createRenderPass(device, dispatchTable, format);
         unormRenderPass = createRenderPass(device, dispatchTable, VK_FORMAT_B8G8R8A8_UNORM);
         
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout,uniformBufferDescriptorSetLayout};
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
-        edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, nullptr, edgeFragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
-        blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, nullptr, blendFragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
-        neighborPipeline = createGraphicsPipeline(device, dispatchTable, neighborVertexModule, nullptr, neignborFragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
         
-        uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
+        std::vector<VkSpecializationMapEntry> specMapEntrys(4);
+        for(uint32_t i=0;i<specMapEntrys.size();i++)
+        {
+            specMapEntrys[i].constantID = i;
+            specMapEntrys[i].offset = sizeof(float) * i;
+            specMapEntrys[i].size = sizeof(float);
+        }
+        
+        std::vector<float> specData = {screenWidth,
+                                       screenHeight,
+                                       reverseScreenWidth,
+                                       reverseScreenHeight
+                                      };
+        
+        VkSpecializationInfo specializationInfo;
+        specializationInfo.mapEntryCount = specMapEntrys.size();
+        specializationInfo.pMapEntries = specMapEntrys.data();
+        specializationInfo.dataSize = sizeof(float)*specData.size();
+        specializationInfo.pData = specData.data();
+        
+        edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, &specializationInfo, edgeFragmentModule, &specializationInfo, imageExtent, renderPass, pipelineLayout);
+        blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, &specializationInfo, blendFragmentModule, &specializationInfo, imageExtent, renderPass, pipelineLayout);
+        neighborPipeline = createGraphicsPipeline(device, dispatchTable, neighborVertexModule, &specializationInfo, neignborFragmentModule, &specializationInfo, imageExtent, renderPass, pipelineLayout);
+        
         
         std::vector<std::vector<VkImageView>> imageViewsVector = {inputImageViews,
                                                                   edgeImageViews,
@@ -269,8 +270,6 @@ namespace vkBasalt
         
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&uniformBufferDescriptorSet,0,nullptr);
-        std::cout << "after binding uniform buffer" << std::endl;
         
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,edgePipeline);
         std::cout << "after bind pipeliene" << std::endl;
@@ -293,8 +292,6 @@ namespace vkBasalt
         
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&uniformBufferDescriptorSet,0,nullptr);
-        std::cout << "after binding uniform buffer" << std::endl;
         
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,blendPipeline);
         std::cout << "after bind pipeliene" << std::endl;
@@ -318,8 +315,6 @@ namespace vkBasalt
         
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&uniformBufferDescriptorSet,0,nullptr);
-        std::cout << "after binding uniform buffer" << std::endl;
         
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,neighborPipeline);
         std::cout << "after bind pipeliene" << std::endl;
@@ -354,9 +349,6 @@ namespace vkBasalt
         dispatchTable.DestroyShaderModule(device, neignborFragmentModule, nullptr);
         
         dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
-        dispatchTable.FreeMemory(device,uniformBufferMemory,nullptr);
-        dispatchTable.DestroyDescriptorSetLayout(device,uniformBufferDescriptorSetLayout,nullptr);
-        dispatchTable.DestroyBuffer(device,uniformBuffer,nullptr);
         dispatchTable.FreeMemory(device,imageMemory,nullptr);
         dispatchTable.FreeMemory(device,areaMemory,nullptr);
         dispatchTable.FreeMemory(device,searchMemory,nullptr);
