@@ -12,13 +12,15 @@ layout(set=0, binding=0) uniform sampler2D img;
 layout (constant_id = 0) const float fxaaQualitySubpix = 0.75;
 layout (constant_id = 1) const float fxaaQualityEdgeThreshold = 0.125;
 layout (constant_id = 2) const float fxaaQualityEdgeThresholdMin = 0.0312;
+layout (constant_id = 3) const float screenWidth = 1920;
+layout (constant_id = 4) const float screenHeight = 1080;
 
 layout(location = 0) in vec2 textureCoord;
 layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-    vec2 size = vec2(textureSize(img,0));
+    vec2 size = vec2(screenWidth,screenHeight);
     vec2 fxaaQualityRcpFrame = vec2(1.0)/size;
     
     vec4 zero = vec4(0.0);
