@@ -60,8 +60,8 @@ void main()
     
     // Smooth minimum distance to signal limit divided by smooth max.
     
-    vec3 rcpMxRGB = -vec3(1)/mxRGB;
-    vec3 ampRGB = clamp((min(mnRGB,2.0-mxRGB)-rcpMxRGB),0,1);
+    vec3 rcpMxRGB = vec3(1)/mxRGB;
+    vec3 ampRGB = clamp((min(mnRGB,2.0-mxRGB) * rcpMxRGB),0,1);
     
     // Shaping amount of sharpening.
     ampRGB = inversesqrt(ampRGB);
