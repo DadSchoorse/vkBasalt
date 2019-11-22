@@ -195,9 +195,9 @@ namespace vkBasalt
         
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout,uniformBufferDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
-        edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, edgeFragmentModule, imageExtent, renderPass, pipelineLayout);
-        blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, blendFragmentModule, imageExtent, renderPass, pipelineLayout);
-        neighborPipeline = createGraphicsPipeline(device, dispatchTable, neighborVertexModule, neignborFragmentModule, imageExtent, renderPass, pipelineLayout);
+        edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, nullptr, edgeFragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
+        blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, nullptr, blendFragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
+        neighborPipeline = createGraphicsPipeline(device, dispatchTable, neighborVertexModule, nullptr, neignborFragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
         
         uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
         

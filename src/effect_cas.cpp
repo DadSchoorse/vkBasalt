@@ -103,7 +103,7 @@ namespace vkBasalt
         
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout,uniformBufferDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
-        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, fragmentModule, imageExtent, renderPass, pipelineLayout);
+        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, nullptr, fragmentModule, nullptr, imageExtent, renderPass, pipelineLayout);
         
         uniformBufferDescriptorSet = writeCasBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformBufferDescriptorSetLayout, uniformBuffer);
         

@@ -27,7 +27,15 @@ namespace vkBasalt
         return pipelineLayout;
     }
     
-    VkPipeline createGraphicsPipeline(VkDevice device, VkLayerDispatchTable dispatchTable, VkShaderModule vertexModule, VkShaderModule fragmentModule, VkExtent2D extent, VkRenderPass renderPass, VkPipelineLayout pipelineLayout)
+    VkPipeline createGraphicsPipeline(VkDevice device,
+                                      VkLayerDispatchTable dispatchTable,
+                                      VkShaderModule vertexModule,
+                                      VkSpecializationInfo* vertexSpecializationInfo,
+                                      VkShaderModule fragmentModule,
+                                      VkSpecializationInfo* fragmentSpecializationInfo,
+                                      VkExtent2D extent,
+                                      VkRenderPass renderPass,
+                                      VkPipelineLayout pipelineLayout)
     {
         VkResult result;
         
@@ -40,7 +48,7 @@ namespace vkBasalt
         shaderStageCreateInfoVert.stage = VK_SHADER_STAGE_VERTEX_BIT;
         shaderStageCreateInfoVert.module = vertexModule;
         shaderStageCreateInfoVert.pName = "main";
-        shaderStageCreateInfoVert.pSpecializationInfo = nullptr;
+        shaderStageCreateInfoVert.pSpecializationInfo = vertexSpecializationInfo;
 
         VkPipelineShaderStageCreateInfo shaderStageCreateInfoFrag;
         shaderStageCreateInfoFrag.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -49,7 +57,7 @@ namespace vkBasalt
         shaderStageCreateInfoFrag.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         shaderStageCreateInfoFrag.module = fragmentModule;
         shaderStageCreateInfoFrag.pName = "main";
-        shaderStageCreateInfoFrag.pSpecializationInfo = nullptr;
+        shaderStageCreateInfoFrag.pSpecializationInfo = fragmentSpecializationInfo;
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {shaderStageCreateInfoVert,shaderStageCreateInfoFrag};
 
