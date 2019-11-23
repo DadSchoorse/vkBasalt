@@ -101,26 +101,13 @@ namespace vkBasalt
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
         std::vector<VkSpecializationMapEntry> specMapEntrys(5);
-        specMapEntrys[0].constantID = 0;
-        specMapEntrys[0].offset = sizeof(float) * 0;
-        specMapEntrys[0].size = sizeof(float);
         
-        specMapEntrys[1].constantID = 1;
-        specMapEntrys[1].offset = sizeof(float) * 1;
-        specMapEntrys[1].size = sizeof(float);
-        
-        specMapEntrys[2].constantID = 2;
-        specMapEntrys[2].offset = sizeof(float) * 2;
-        specMapEntrys[2].size = sizeof(float);
-        
-        specMapEntrys[3].constantID = 3;
-        specMapEntrys[3].offset = sizeof(float) * 3;
-        specMapEntrys[3].size = sizeof(float);
-        
-        specMapEntrys[4].constantID = 4;
-        specMapEntrys[4].offset = sizeof(float) * 4;
-        specMapEntrys[4].size = sizeof(float);
-        
+        for(uint32_t i=0;i<specMapEntrys.size();i++)
+        {
+            specMapEntrys[i].constantID = i;
+            specMapEntrys[i].offset = sizeof(float) * i;
+            specMapEntrys[i].size = sizeof(float);
+        }
         std::vector<float> specData = {fxaaQualitySubpix,
                                        fxaaQualityEdgeThreshold,
                                        fxaaQualityEdgeThresholdMin,

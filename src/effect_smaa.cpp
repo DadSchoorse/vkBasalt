@@ -144,12 +144,6 @@ namespace vkBasalt
         std::cout << "after creating descriptorPool" << std::endl;
         
         //get config options
-        float screenWidth = imageExtent.width;
-        float screenHeight = imageExtent.height;
-        float reverseScreenWidth = 1.0f/imageExtent.width;
-        float reverseScreenHeight = 1.0f/imageExtent.height;
-        
-        
         auto shaderCode = readFile(smaaEdgeVertexFile.c_str());
         createShaderModule(device, dispatchTable, shaderCode, &edgeVertexModule);
         if(pConfig->getOption("smaaEdgeDetection")==std::string("color"))
@@ -185,10 +179,10 @@ namespace vkBasalt
             specMapEntrys[i].size = sizeof(float);
         }
         
-        std::vector<float> specData = {screenWidth,
-                                       screenHeight,
-                                       reverseScreenWidth,
-                                       reverseScreenHeight
+        std::vector<float> specData = {(float) imageExtent.width,
+                                       (float) imageExtent.height,
+                                       1.0f/imageExtent.width,
+                                       1.0f/imageExtent.height
                                       };
         
         VkSpecializationInfo specializationInfo;
