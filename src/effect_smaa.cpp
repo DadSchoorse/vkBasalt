@@ -148,6 +148,22 @@ namespace vkBasalt
         int32_t maxSearchSteps = 32;
         int32_t maxSearchStepsDiag = 16;
         int32_t cornerRounding = 25;
+        if(pConfig->getOption("smaaThreshold")!=std::string(""))
+        {
+            threshold = std::stod(pConfig->getOption("smaaThreshold"));
+        }
+        if(pConfig->getOption("smaaMaxSearchSteps")!=std::string(""))
+        {
+            maxSearchSteps = std::stoi(pConfig->getOption("smaaMaxSearchSteps"));
+        }
+        if(pConfig->getOption("smaaMaxSearchStepsDiag")!=std::string(""))
+        {
+            maxSearchStepsDiag = std::stoi(pConfig->getOption("smaaMaxSearchStepsDiag"));
+        }
+        if(pConfig->getOption("smaaCornerRounding")!=std::string(""))
+        {
+            cornerRounding = std::stoi(pConfig->getOption("smaaCornerRounding"));
+        }
         
         auto shaderCode = readFile(smaaEdgeVertexFile.c_str());
         createShaderModule(device, dispatchTable, shaderCode, &edgeVertexModule);
