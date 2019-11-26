@@ -30,7 +30,11 @@ namespace vkBasalt
         float screenHeight;
         float reverseScreenWidth;
         float reverseScreenHeight;
-    } SmaaBufferObject;
+        float threshold = 0.05;
+        int32_t maxSearchSteps = 32;
+        int32_t maxSearchStepsDiag = 16;
+        int32_t cornerRounding = 25;
+    } SmaaOptions;
     
     
     
@@ -144,25 +148,22 @@ namespace vkBasalt
         std::cout << "after creating descriptorPool" << std::endl;
         
         //get config options
-        float   threshold = 0.05f;
-        int32_t maxSearchSteps = 32;
-        int32_t maxSearchStepsDiag = 16;
-        int32_t cornerRounding = 25;
+        SmaaOptions smaaOptions;
         if(pConfig->getOption("smaaThreshold")!=std::string(""))
         {
-            threshold = std::stod(pConfig->getOption("smaaThreshold"));
+            smaaOptions.threshold = std::stod(pConfig->getOption("smaaThreshold"));
         }
         if(pConfig->getOption("smaaMaxSearchSteps")!=std::string(""))
         {
-            maxSearchSteps = std::stoi(pConfig->getOption("smaaMaxSearchSteps"));
+            smaaOptions.maxSearchSteps = std::stoi(pConfig->getOption("smaaMaxSearchSteps"));
         }
         if(pConfig->getOption("smaaMaxSearchStepsDiag")!=std::string(""))
         {
-            maxSearchStepsDiag = std::stoi(pConfig->getOption("smaaMaxSearchStepsDiag"));
+            smaaOptions.maxSearchStepsDiag = std::stoi(pConfig->getOption("smaaMaxSearchStepsDiag"));
         }
         if(pConfig->getOption("smaaCornerRounding")!=std::string(""))
         {
-            cornerRounding = std::stoi(pConfig->getOption("smaaCornerRounding"));
+            smaaOptions.cornerRounding = std::stoi(pConfig->getOption("smaaCornerRounding"));
         }
         
         auto shaderCode = readFile(smaaEdgeVertexFile.c_str());
@@ -199,22 +200,16 @@ namespace vkBasalt
             specMapEntrys[i].offset = sizeof(float) * i;//TODO not clean to assume that sizeof(int32_t) == sizeof(float)
             specMapEntrys[i].size = sizeof(float);
         }
-        
-        std::vector<float> specData = {(float) imageExtent.width,
-                                       (float) imageExtent.height,
-                                       1.0f/imageExtent.width,
-                                       1.0f/imageExtent.height,
-                                       threshold,
-                                       *reinterpret_cast<float*>(&maxSearchSteps),//TODO bad behavior reinterpret_cast from int32_t to float
-                                       *reinterpret_cast<float*>(&maxSearchStepsDiag),
-                                       *reinterpret_cast<float*>(&cornerRounding)
-                                      };
+        smaaOptions.screenWidth = (float) imageExtent.width,
+        smaaOptions.screenHeight = (float) imageExtent.height,
+        smaaOptions.reverseScreenWidth = 1.0f/imageExtent.width;
+        smaaOptions.reverseScreenHeight = 1.0f/imageExtent.height;
         
         VkSpecializationInfo specializationInfo;
         specializationInfo.mapEntryCount = specMapEntrys.size();
         specializationInfo.pMapEntries = specMapEntrys.data();
-        specializationInfo.dataSize = sizeof(float)*specData.size();
-        specializationInfo.pData = specData.data();
+        specializationInfo.dataSize = sizeof(smaaOptions);
+        specializationInfo.pData = &smaaOptions;
         
         edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, &specializationInfo, edgeFragmentModule, &specializationInfo, imageExtent, renderPass, pipelineLayout);
         blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, &specializationInfo, blendFragmentModule, &specializationInfo, imageExtent, renderPass, pipelineLayout);
