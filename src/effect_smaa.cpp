@@ -144,6 +144,11 @@ namespace vkBasalt
         std::cout << "after creating descriptorPool" << std::endl;
         
         //get config options
+        float   threshold = 0.05f;
+        int32_t maxSearchSteps = 32;
+        int32_t maxSearchStepsDiag = 16;
+        int32_t cornerRounding = 25;
+        
         auto shaderCode = readFile(smaaEdgeVertexFile.c_str());
         createShaderModule(device, dispatchTable, shaderCode, &edgeVertexModule);
         if(pConfig->getOption("smaaEdgeDetection")==std::string("color"))
@@ -171,18 +176,22 @@ namespace vkBasalt
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
-        std::vector<VkSpecializationMapEntry> specMapEntrys(4);
+        std::vector<VkSpecializationMapEntry> specMapEntrys(8);
         for(uint32_t i=0;i<specMapEntrys.size();i++)
         {
             specMapEntrys[i].constantID = i;
-            specMapEntrys[i].offset = sizeof(float) * i;
+            specMapEntrys[i].offset = sizeof(float) * i;//TODO not clean to assume that sizeof(int32_t) == sizeof(float)
             specMapEntrys[i].size = sizeof(float);
         }
         
         std::vector<float> specData = {(float) imageExtent.width,
                                        (float) imageExtent.height,
                                        1.0f/imageExtent.width,
-                                       1.0f/imageExtent.height
+                                       1.0f/imageExtent.height,
+                                       threshold,
+                                       *reinterpret_cast<float*>(&maxSearchSteps),//TODO bad behavior reinterpret_cast from int32_t to float
+                                       *reinterpret_cast<float*>(&maxSearchStepsDiag),
+                                       *reinterpret_cast<float*>(&cornerRounding)
                                       };
         
         VkSpecializationInfo specializationInfo;
