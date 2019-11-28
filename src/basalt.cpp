@@ -58,6 +58,7 @@
 #include "effect_fxaa.hpp"
 #include "effect_cas.hpp"
 #include "effect_smaa.hpp"
+#include "effect_deband.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -449,6 +450,19 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
                                                          secondImages,
                                                          pConfig)));
             std::cout << "after creating CasEffect " << std::endl;
+        }
+        else if(effectStrings[i] == std::string("deband"))
+        {
+            swapchainStruct.effectList.push_back(std::shared_ptr<vkBasalt::Effect>(new vkBasalt::DebandEffect(deviceStruct.physicalDevice,
+                                                         instance_dispatch[GetKey(deviceStruct.physicalDevice)],
+                                                         device,
+                                                         device_dispatch[GetKey(device)],
+                                                         swapchainStruct.format,
+                                                         swapchainStruct.imageExtent,
+                                                         firstImages,
+                                                         secondImages,
+                                                         pConfig)));
+            std::cout << "after creating DebandEffect " << std::endl;
         }
         else if(effectStrings[i] == std::string("smaa"))
         {
