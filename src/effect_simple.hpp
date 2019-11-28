@@ -19,16 +19,14 @@ namespace vkBasalt{
     struct SimpleShaderInfo{
         std::vector<char> vertexCode;
         std::vector<char> fragmentCode;
-        VkSpecializationInfo vertexSpecInfo;
-        VkSpecializationInfo fragmentSpecInfo;
+        VkSpecializationInfo* pVertexSpecInfo;
+        VkSpecializationInfo* pFragmentSpecInfo;
     };
     class SimpleEffect : public Effect
     {
     public:
         SimpleEffect();
-        void init(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
         void applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
-        SimpleShaderInfo virtual getShaderInfo() = 0;
         ~SimpleEffect();
     protected:
         VkPhysicalDevice physicalDevice;
@@ -52,6 +50,9 @@ namespace vkBasalt{
         VkFormat format;
         VkSampler sampler;
         std::shared_ptr<vkBasalt::Config> pConfig;
+        SimpleShaderInfo shaderInfo;
+        
+        void init(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
     };
 }
 
