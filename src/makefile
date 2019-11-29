@@ -1,6 +1,6 @@
 CPPC := g++
-CFLAGS := -std=c++17 -lstdc++fs -O3 -fPIC -Wall -Wextra -Wno-unused-parameter
-LINKER :=  -shared -fvisibility=hidden
+CFLAGS := -std=c++17 -O3 -fPIC -Wall -Wextra -Wno-unused-parameter
+LINKER :=  -shared  -lstdc++fs -fvisibility=hidden
 
 BUILD_DIR := ../build
 INSTALL_DIR := $(HOME)/.local/share/vkBasalt
