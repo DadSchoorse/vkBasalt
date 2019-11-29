@@ -3,12 +3,13 @@ A Vulkan post processing layer. Currently, the only effects are:
 - Contrast Adaptive Sharpening 
 - Fast Approximate Anti-Aliasing
 - Enhanced Subpixel Morphological Anti-Aliasing
+- Deband/Dithering
 
 # Disclaimer
 This one of my first projects ever. Look at the code at your own risk.
 
 # Build
-You need the Vulkan SDK to build this, and glslangValidator to compile the shader.
+You need the Vulkan SDK to build this, and glslangValidator to compile the shader. GCC version 7 or higher is required.
 
 On Arch-based distributions, they can be installed with:
 ```
@@ -48,6 +49,13 @@ ENABLE_VKBASALT=1 %command%
 
 # Configure
 
-Settings like the CAS sharpening strength can be changed in `~/.local/share/vkBasalt/vkBasalt.conf` for all games.
-If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the value there.
+Settings like the CAS sharpening strength can be changed in the config file.
+The config file will be searched for in the following locations:
+* a file set with the environment variable`VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf`
+* `vkBasalt.conf` in the working directory of the game
+* `$XDG_DATA_HOME/vkBasalt/vkBasalt.conf` or `~/.local/share/vkBasalt/vkBasalt.conf` if `XDG_DATA_HOME` is not set
+* `/usr/share/vkBasalt/vkBasalt.conf`
+* `/usr/local/share/vkBasalt/vkBasalt.conf`
+
+If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the values there.
 
