@@ -25,21 +25,10 @@ namespace vkBasalt
     {
         std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
         std::string fxaaFragmentFile = "fxaa.frag.spv";
-        float fxaaQualitySubpix = 0.75f;
-        float fxaaQualityEdgeThreshold = 0.125f;
-        float fxaaQualityEdgeThresholdMin = 0.0312f;
-        if(pConfig->getOption("fxaaQualitySubpix")!=std::string(""))
-        {
-            fxaaQualitySubpix = std::stod(pConfig->getOption("fxaaQualitySubpix"));
-        }
-        if(pConfig->getOption("fxaaQualityEdgeThreshold")!=std::string(""))
-        {
-            fxaaQualityEdgeThreshold = std::stod(pConfig->getOption("fxaaQualityEdgeThreshold"));
-        }
-        if(pConfig->getOption("fxaaQualityEdgeThresholdMin")!=std::string(""))
-        {
-            fxaaQualityEdgeThresholdMin = std::stod(pConfig->getOption("fxaaQualityEdgeThresholdMin"));
-        }
+
+        float fxaaQualitySubpix = std::stod(pConfig->getOption("fxaaQualitySubpix", "0.75"));
+        float fxaaQualityEdgeThreshold = std::stod(pConfig->getOption("fxaaQualityEdgeThreshold", "0.125"));
+        float fxaaQualityEdgeThresholdMin = std::stod(pConfig->getOption("fxaaQualityEdgeThresholdMin", "0.0312"));
 
         shaderInfo.vertexCode   = readFile(fullScreenRectFile);
         shaderInfo.fragmentCode = readFile(fxaaFragmentFile);

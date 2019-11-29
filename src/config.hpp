@@ -17,7 +17,7 @@ namespace vkBasalt{
     public:
         Config();
         Config(const Config& other);
-        std::string getOption(std::string option);
+        std::string getOption(const std::string& option, const std::string& defaultValue = "");
     private:
         std::unordered_map<std::string,std::string> options;
         void readConfigLine(std::string line);

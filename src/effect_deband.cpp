@@ -34,38 +34,24 @@ namespace vkBasalt
             float     screenHeight;
             float     reverseScreenWidth;
             float     reverseScreenHeight;
-            float     debandAvgdiff = 3.4;
-            float     debandMaxdiff = 6.8;
-            float     debandMiddiff = 3.3;
-            float     range = 16.0;
-            int32_t   iterations = 4;
-        } debandOptions;
+            float     debandAvgdiff;
+            float     debandMaxdiff;
+            float     debandMiddiff;
+            float     range;
+            int32_t   iterations;
+        } debandOptions {};
 
         debandOptions.screenWidth = (float) imageExtent.width;
         debandOptions.screenHeight = (float) imageExtent.height;
         debandOptions.reverseScreenWidth = 1.0f / imageExtent.width;
         debandOptions.reverseScreenHeight = 1.0f / imageExtent.height;
+
         //get Options
-        if(pConfig->getOption("debandAvgdiff")!=std::string(""))
-        {
-            debandOptions.debandAvgdiff = std::stod(pConfig->getOption("debandAvgdiff"));
-        }
-        if(pConfig->getOption("debandMaxdiff")!=std::string(""))
-        {
-            debandOptions.debandMaxdiff = std::stod(pConfig->getOption("debandMaxdiff"));
-        }
-        if(pConfig->getOption("debandMiddiff")!=std::string(""))
-        {
-            debandOptions.debandMiddiff = std::stod(pConfig->getOption("debandMiddiff"));
-        }
-        if(pConfig->getOption("debandRange")!=std::string(""))
-        {
-            debandOptions.range = std::stod(pConfig->getOption("debandRange"));
-        }
-        if(pConfig->getOption("debandIterations")!=std::string(""))
-        {
-            debandOptions.iterations = std::stod(pConfig->getOption("debandIterations"));
-        }
+        debandOptions.debandAvgdiff = std::stod(pConfig->getOption("debandAvgdiff", "3.4"));
+        debandOptions.debandMaxdiff = std::stod(pConfig->getOption("debandMaxdiff", "6.8"));
+        debandOptions.debandMiddiff = std::stod(pConfig->getOption("debandMiddiff", "3.3"));
+        debandOptions.range         = std::stod(pConfig->getOption("debandRange", "16.0"));
+        debandOptions.iterations    = std::stoi(pConfig->getOption("debandIterations", "4"));
 
         std::vector<VkSpecializationMapEntry> specMapEntrys(9);
         for(uint32_t i=0;i<specMapEntrys.size();i++)

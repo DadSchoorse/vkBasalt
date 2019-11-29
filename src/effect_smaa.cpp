@@ -30,10 +30,10 @@ namespace vkBasalt
         float screenHeight;
         float reverseScreenWidth;
         float reverseScreenHeight;
-        float threshold = 0.05;
-        int32_t maxSearchSteps = 32;
-        int32_t maxSearchStepsDiag = 16;
-        int32_t cornerRounding = 25;
+        float threshold;
+        int32_t maxSearchSteps;
+        int32_t maxSearchStepsDiag;
+        int32_t cornerRounding;
     } SmaaOptions;
 
 
@@ -149,34 +149,16 @@ namespace vkBasalt
 
         //get config options
         SmaaOptions smaaOptions;
-        if(pConfig->getOption("smaaThreshold")!=std::string(""))
-        {
-            smaaOptions.threshold = std::stod(pConfig->getOption("smaaThreshold"));
-        }
-        if(pConfig->getOption("smaaMaxSearchSteps")!=std::string(""))
-        {
-            smaaOptions.maxSearchSteps = std::stoi(pConfig->getOption("smaaMaxSearchSteps"));
-        }
-        if(pConfig->getOption("smaaMaxSearchStepsDiag")!=std::string(""))
-        {
-            smaaOptions.maxSearchStepsDiag = std::stoi(pConfig->getOption("smaaMaxSearchStepsDiag"));
-        }
-        if(pConfig->getOption("smaaCornerRounding")!=std::string(""))
-        {
-            smaaOptions.cornerRounding = std::stoi(pConfig->getOption("smaaCornerRounding"));
-        }
+        smaaOptions.threshold           = std::stod(pConfig->getOption("smaaThreshold", "0.05"));
+        smaaOptions.maxSearchSteps      = std::stoi(pConfig->getOption("smaaMaxSearchSteps", "32"));
+        smaaOptions.maxSearchStepsDiag  = std::stoi(pConfig->getOption("smaaMaxSearchStepsDiag", "16"));
+        smaaOptions.cornerRounding      = std::stoi(pConfig->getOption("smaaCornerRounding", "25"));
 
-        auto shaderCode = readFile(smaaEdgeVertexFile.c_str());
+        auto shaderCode = readFile(smaaEdgeVertexFile);
         createShaderModule(device, dispatchTable, shaderCode, &edgeVertexModule);
-        if(pConfig->getOption("smaaEdgeDetection")==std::string("color"))
-        {
-            shaderCode = readFile(smaaEdgeColorFragmentFile.c_str());
-        }
-        else
-        {
-            shaderCode = readFile(smaaEdgeLumaFragmentFile.c_str());
-        }
-
+        shaderCode = pConfig->getOption("smaaEdgeDetection", "luma") == "color"
+            ? readFile(smaaEdgeColorFragmentFile)
+            : readFile(smaaEdgeLumaFragmentFile);
         createShaderModule(device, dispatchTable, shaderCode, &edgeFragmentModule);
         shaderCode = readFile(smaaBlendVertexFile);
         createShaderModule(device, dispatchTable, shaderCode, &blendVertexModule);

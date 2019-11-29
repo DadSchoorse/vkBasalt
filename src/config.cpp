@@ -74,7 +74,10 @@ namespace vkBasalt
         std::cout  << "set option " << line.substr(0,equal) << " equal to " << line.substr(equal+1) << std::endl;
         options[line.substr(0,equal)] = line.substr(equal+1);
     }
-    std::string Config::getOption(std::string option){
-        return options[option];
+    std::string Config::getOption(const std::string& option, const std::string& defaultValue) {
+        auto found = options.find(option);
+        return found != options.end()
+            ? found->second
+            : defaultValue;
     }
 }

@@ -26,12 +26,7 @@ namespace vkBasalt
         std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
         std::string casFragmentFile = "cas.frag.spv";
 
-        float sharpness = 0.4f;
-        //get config options
-        if(pConfig->getOption("casSharpness")!=std::string(""))
-        {
-            sharpness = std::stod(pConfig->getOption("casSharpness"));
-        }
+        float sharpness = std::stod(pConfig->getOption("casSharpness", "0.4"));
 
         shaderInfo.vertexCode = readFile(fullScreenRectFile);
         shaderInfo.fragmentCode = readFile(casFragmentFile);
