@@ -23,8 +23,8 @@ namespace vkBasalt
 {
     FxaaEffect::FxaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
-        std::string fullScreenRectFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/full_screen_triangle.vert.spv";
-        std::string fxaaFragmentFile = std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader/fxaa.frag.spv";
+        std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
+        std::string fxaaFragmentFile = "fxaa.frag.spv";
         float fxaaQualitySubpix = 0.75f;
         float fxaaQualityEdgeThreshold = 0.125f;
         float fxaaQualityEdgeThresholdMin = 0.0312f;
@@ -40,12 +40,12 @@ namespace vkBasalt
         {
             fxaaQualityEdgeThresholdMin = std::stod(pConfig->getOption("fxaaQualityEdgeThresholdMin"));
         }
-        
-        shaderInfo.vertexCode   = readFile(fullScreenRectFile.c_str());
-        shaderInfo.fragmentCode = readFile(fxaaFragmentFile.c_str());
-        
+
+        shaderInfo.vertexCode   = readFile(fullScreenRectFile);
+        shaderInfo.fragmentCode = readFile(fxaaFragmentFile);
+
         std::vector<VkSpecializationMapEntry> specMapEntrys(5);
-        
+
         for(uint32_t i=0;i<specMapEntrys.size();i++)
         {
             specMapEntrys[i].constantID = i;
@@ -58,20 +58,20 @@ namespace vkBasalt
                                        (float) imageExtent.width,
                                        (float) imageExtent.height
                                       };
-        
+
         VkSpecializationInfo fragmentSpecializationInfo;
         fragmentSpecializationInfo.mapEntryCount = specMapEntrys.size();
         fragmentSpecializationInfo.pMapEntries = specMapEntrys.data();
         fragmentSpecializationInfo.dataSize = sizeof(float)*specData.size();
         fragmentSpecializationInfo.pData = specData.data();
-        
+
         shaderInfo.pVertexSpecInfo = nullptr;
         shaderInfo.pFragmentSpecInfo = &fragmentSpecializationInfo;
-        
+
         init(physicalDevice, instanceDispatchTable, device, dispatchTable, format,  imageExtent, inputImages, outputImages, pConfig);
     }
     FxaaEffect::~FxaaEffect()
     {
-    
+
     }
 }

@@ -1,5 +1,5 @@
 CPPC := g++
-CFLAGS := -O3 -fPIC -Wall -Wextra -Wno-unused-parameter
+CFLAGS := -std=c++17 -lstdc++fs -O3 -fPIC -Wall -Wextra -Wno-unused-parameter
 LINKER :=  -shared -fvisibility=hidden
 
 BUILD_DIR := ../build
