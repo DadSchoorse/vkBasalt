@@ -4,25 +4,35 @@ namespace vkBasalt
 {
     Config::Config()
     {
-        std::ifstream configFile("vkBasalt.conf");//per game config
-        if(!configFile.good())
-        {
-            configFile = std::ifstream(std::string(getenv("HOME")) + "/.local/share/vkBasalt/vkBasalt.conf");//global config file
-            if(!configFile.good())
-            {
-                std::cout << "no good config file" << std::endl;
-                return;
-            }
-            else
-            {
-                std::cout << std::string(getenv("HOME")) + "/.local/share/vkBasalt/vkBasalt.conf" << std::endl;
-            }
+        // Custom config file path
+        const char* tmpConfEnv = getenv("VKBASALT_CONFIG_FILE");
+        std::string customConfigFile = tmpConfEnv ? std::string(tmpConfEnv) : "";
+
+        // User config file path
+        const char* tmpHomeEnv = getenv("XDG_DATA_HOME");
+        std::string userConfigFile = tmpHomeEnv
+            ? std::string(tmpHomeEnv) + "/vkBasalt/vkBasalt.conf"
+            : std::string(getenv("HOME")) + "/.local/share/vkBasalt/vkBasalt.conf";
+
+        // Allowed config paths
+        const std::array<std::string, 5> configPath = {
+            customConfigFile,                          // custom config (VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf)
+            "vkBasalt.conf",                           // per game config
+            userConfigFile,                            // default config
+            "/usr/share/vkBasalt/vkBasalt.conf",       // system-wide config
+            "/usr/local/share/vkBasalt/vkBasalt.conf", // system-wide config (alternative)
+        };
+
+        for(const auto& cFile: configPath){
+            std::ifstream configFile(cFile);
+            if (!configFile.good()) continue;
+
+            std::cout << cFile << std::endl;
+            readConfigFile(configFile);
+            return;
         }
-        else
-        {
-            std::cout << "vkBasalt.conf" << std::endl;
-        }
-        readConfigFile(configFile);
+
+        std::cout << "no good config file" << std::endl;
     }
     Config::Config(const Config& other)
     {
