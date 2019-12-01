@@ -369,7 +369,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << "device " << swapchainStruct.device << std::endl;
     
     
-    std::string effectOption = pConfig->getOption("effects");
+    std::string effectOption = pConfig->getOption("effects", "cas");
     std::vector<std::string> effectStrings;
     while(effectOption!=std::string(""))
     {
