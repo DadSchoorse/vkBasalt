@@ -23,14 +23,14 @@ namespace vkBasalt{
 
         if (shaderDir.empty()) {
             // Custom shader directory path
-            const char* tmpShaderEnv = getenv("VKBASALT_SHADER_PATH");
+            const char* tmpShaderEnv = std::getenv("VKBASALT_SHADER_PATH");
             std::string customShaderDir = tmpShaderEnv ? std::string(tmpShaderEnv) : "";
 
             // User shader directory path
-            const char* tmpHomeEnv = getenv("XDG_DATA_HOME");
+            const char* tmpHomeEnv = std::getenv("XDG_DATA_HOME");
             std::string userShaderDir = tmpHomeEnv
                 ? std::string(tmpHomeEnv) + "/vkBasalt/shader"
-                : std::string(getenv("HOME")) + "/.local/share/vkBasalt/shader";
+                : std::string(std::getenv("HOME")) + "/.local/share/vkBasalt/shader";
 
             // Allowed config paths
             const std::array<std::string, 4> shaderPath = {

@@ -26,7 +26,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"

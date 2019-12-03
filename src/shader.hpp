@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"

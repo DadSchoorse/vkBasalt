@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <cstdlib>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"

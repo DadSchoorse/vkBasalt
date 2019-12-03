@@ -5,14 +5,14 @@ namespace vkBasalt
     Config::Config()
     {
         // Custom config file path
-        const char* tmpConfEnv = getenv("VKBASALT_CONFIG_FILE");
+        const char* tmpConfEnv = std::getenv("VKBASALT_CONFIG_FILE");
         std::string customConfigFile = tmpConfEnv ? std::string(tmpConfEnv) : "";
 
         // User config file path
-        const char* tmpHomeEnv = getenv("XDG_DATA_HOME");
+        const char* tmpHomeEnv = std::getenv("XDG_DATA_HOME");
         std::string userConfigFile = tmpHomeEnv
             ? std::string(tmpHomeEnv) + "/vkBasalt/vkBasalt.conf"
-            : std::string(getenv("HOME")) + "/.local/share/vkBasalt/vkBasalt.conf";
+            : std::string(std::getenv("HOME")) + "/.local/share/vkBasalt/vkBasalt.conf";
 
         // Allowed config paths
         const std::array<std::string, 5> configPath = {
