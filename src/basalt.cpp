@@ -24,7 +24,7 @@
 //OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
+#include <assert.h>//vulkan/vk_dispatch_table_helper.h needs this
 #include <string.h>
 
 #include "vulkan/vulkan.h"
