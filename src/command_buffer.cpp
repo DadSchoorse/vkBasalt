@@ -22,17 +22,12 @@ namespace vkBasalt
         allocInfo.commandPool = commandPool;
         allocInfo.commandBufferCount = count;
         
-        for(unsigned int i=0;i<count;i++)
-        {
-            std::cout << commandBuffers[i] << std::endl;
-        }
         VkResult result = dispatchTable.AllocateCommandBuffers(device,&allocInfo,commandBuffers.data());
         ASSERT_VULKAN(result);
         for(unsigned int i=0;i<count;i++)
         {
             //initialize dispatch tables for commandBuffers since the are dispatchable objects
             *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(device);
-            std::cout << commandBuffers[i] << std::endl;
         }
         
         return commandBuffers;
@@ -45,11 +40,6 @@ namespace vkBasalt
         beginInfo.pNext = nullptr;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         beginInfo.pInheritanceInfo = nullptr;
-        
-        for(unsigned int i=0;i<commandBuffers.size();i++)
-        {
-            std::cout << commandBuffers[i] << std::endl;
-        }
         
         for(unsigned int i=0;i<commandBuffers.size();i++)
         {

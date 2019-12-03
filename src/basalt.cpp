@@ -26,7 +26,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
 
 #include "vulkan/vulkan.h"
@@ -188,7 +187,6 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyInstance(VkInstance instance, co
 {
     scoped_lock l(globalLock);
     VkLayerInstanceDispatchTable dispatchTable = instance_dispatch[GetKey(instance)];
-    std::cout << "before destroy instance " << dispatchTable.DestroyInstance << std::endl;
     dispatchTable.DestroyInstance(instance, pAllocator);
     std::cout << "afer destroy instance" << std::endl;
     instance_dispatch.erase(GetKey(instance));
@@ -255,7 +253,6 @@ VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const Vk
     }
     
     VkLayerDispatchTable dispatchTable = device_dispatch[GetKey(device)];
-    std::cout << "before Destroy Device" << dispatchTable.DestroyDevice << std::endl;
     dispatchTable.DestroyDevice(device,pAllocator);
     
     device_dispatch.erase(GetKey(device));
@@ -308,9 +305,6 @@ VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t que
         device_dispatch[GetKey(device)].CreateCommandPool(device,&commandPoolCreateInfo,nullptr,&deviceStruct.commandPool);
         deviceStruct.queue = *pQueue;
         deviceStruct.queueFamilyIndex = queueFamilyIndex;
-        std::cout << (deviceMap[device].queue == *pQueue) << std::endl;
-        std::cout << "queue " << *pQueue << std::endl; 
-        std::cout << "queue " << deviceMap[device].queue << std::endl;
     }
 }
 
@@ -359,15 +353,10 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     
     
     DeviceStruct& deviceStruct = deviceMap[device];
-    std::cout << "queue " << deviceStruct.queue << std::endl;
-    std::cout << "swapchain " << swapchain << std::endl;
     SwapchainStruct& swapchainStruct = swapchainMap[swapchain];
     swapchainStruct.imageCount = *pCount;
     swapchainStruct.imageList.reserve(*pCount);
     swapchainStruct.commandBufferList.reserve(*pCount);
-    std::cout << "format " << swapchainStruct.format << std::endl;
-    std::cout << "device " << swapchainStruct.device << std::endl;
-    
     
     std::string effectOption = pConfig->getOption("effects", "cas");
     std::vector<std::string> effectStrings;
@@ -487,8 +476,6 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
     std::cout << "effect string count: " << effectStrings.size() << std::endl;
     std::cout << "effect count: " << swapchainStruct.effectList.size() << std::endl;
     
-    
-    
     swapchainStruct.commandBufferList = vkBasalt::allocateCommandBuffer(device, device_dispatch[GetKey(device)], deviceStruct.commandPool, swapchainStruct.imageCount);
     std::cout << "after allocateCommandBuffer " << std::endl;
     
@@ -522,14 +509,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         SwapchainStruct& swapchainStruct = swapchainMap[swapchain];
         VkDevice device = swapchainStruct.device;
         DeviceStruct& deviceStruct = deviceMap[device];
-        
-        //device_dispatch[GetKey(device)].QueueWaitIdle(queue);
-        //device_dispatch[GetKey(device)].DeviceWaitIdle(device);
-        //std::cout << (*pPresentInfo).pImageIndices[i] << std::endl;
-        
-        //std::cout << &(swapchainStruct.commandBufferList[index]) << std::endl;
-        //std::cout << swapchainStruct.commandBufferList[index] << std::endl;
-        
+
         waitStages.resize(pPresentInfo->waitSemaphoreCount, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
         VkSubmitInfo submitInfo;
@@ -555,13 +535,10 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         VkResult vr = device_dispatch[GetKey(device)].QueueSubmit(deviceStruct.queue, 1, &submitInfo, VK_NULL_HANDLE);
 
         if (vr != VK_SUCCESS)
+        {
             return vr;
-        //device_dispatch[GetKey(device)].QueueWaitIdle(deviceStruct.queue);
-        //device_dispatch[GetKey(device)].DeviceWaitIdle(device);
-        
-        
+        }
     }
-    //usleep(1000000);
     VkPresentInfoKHR presentInfo = *pPresentInfo;
     presentInfo.waitSemaphoreCount = presentSemaphores.size();
     presentInfo.pWaitSemaphores = presentSemaphores.data();
@@ -608,11 +585,15 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceExtensionPropertie
     const char *pLayerName, uint32_t *pPropertyCount, VkExtensionProperties *pProperties)
 {
     if(pLayerName == NULL || strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
-    return VK_ERROR_LAYER_NOT_PRESENT;
+    {
+        return VK_ERROR_LAYER_NOT_PRESENT;
+    }
 
     // don't expose any extensions
     if(pPropertyCount) *pPropertyCount = 0;
-    return VK_SUCCESS;
+    {
+        return VK_SUCCESS;
+    }
 }
 
 VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(
@@ -623,14 +604,19 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(
     if(pLayerName == NULL || strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
     {
         if(physicalDevice == VK_NULL_HANDLE)
-          return VK_SUCCESS;
+        {
+            return VK_SUCCESS;
+        }
 
         scoped_lock l(globalLock);
         return instance_dispatch[GetKey(physicalDevice)].EnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pPropertyCount, pProperties);
     }
 
     // don't expose any extensions
-    if(pPropertyCount) *pPropertyCount = 0;
+    if(pPropertyCount) 
+    {
+        *pPropertyCount = 0;
+    }
     return VK_SUCCESS;
 }
 
