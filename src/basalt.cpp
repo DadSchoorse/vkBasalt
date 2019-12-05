@@ -57,6 +57,7 @@
 #include "effect_cas.hpp"
 #include "effect_smaa.hpp"
 #include "effect_deband.hpp"
+#include "effect_lut.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -455,6 +456,20 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
         else if(effectStrings[i] == std::string("smaa"))
         {
             swapchainStruct.effectList.push_back(std::shared_ptr<vkBasalt::Effect>(new vkBasalt::SmaaEffect(deviceStruct.physicalDevice,
+                                                         instance_dispatch[GetKey(deviceStruct.physicalDevice)],
+                                                         device,
+                                                         device_dispatch[GetKey(device)],
+                                                         swapchainStruct.format,
+                                                         swapchainStruct.imageExtent,
+                                                         firstImages,
+                                                         secondImages,
+                                                         pConfig,
+                                                         deviceStruct.queue,
+                                                         deviceStruct.commandPool)));
+        }
+        else if(effectStrings[i] == std::string("lut"))
+        {
+            swapchainStruct.effectList.push_back(std::shared_ptr<vkBasalt::Effect>(new vkBasalt::LutEffect(deviceStruct.physicalDevice,
                                                          instance_dispatch[GetKey(deviceStruct.physicalDevice)],
                                                          device,
                                                          device_dispatch[GetKey(device)],
