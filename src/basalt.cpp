@@ -565,8 +565,12 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceLayerProperties(ui
 
     if(pProperties)
     {
-        std::strcpy(pProperties->layerName, "VK_LAYER_SAMPLE_SampleLayer");
-        std::strcpy(pProperties->description, "Sample layer - https://renderdoc.org/vulkan-layer-guide.html");
+        #ifdef __x86_64__
+        std::strcpy(pProperties->layerName, "VK_LAYER_VKBASALT_PostProcess64");
+        #else
+        std::strcpy(pProperties->layerName, "VK_LAYER_VKBASALT_PostProcess32");
+        #endif
+        std::strcpy(pProperties->description, "a post processing layer");
         pProperties->implementationVersion = 1;
         pProperties->specVersion = VK_API_VERSION_1_0;
     }
@@ -583,16 +587,17 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceLayerProperties(
 VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceExtensionProperties(
     const char *pLayerName, uint32_t *pPropertyCount, VkExtensionProperties *pProperties)
 {
-    if(pLayerName == NULL || std::strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
+    if(pLayerName == NULL || (std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess32") && std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess64")))
     {
         return VK_ERROR_LAYER_NOT_PRESENT;
     }
 
     // don't expose any extensions
-    if(pPropertyCount) *pPropertyCount = 0;
+    if(pPropertyCount)
     {
-        return VK_SUCCESS;
+        *pPropertyCount = 0;
     }
+    return VK_SUCCESS;
 }
 
 VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(
@@ -600,7 +605,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(
                                      uint32_t *pPropertyCount, VkExtensionProperties *pProperties)
 {
     // pass through any queries that aren't to us
-    if(pLayerName == NULL || std::strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
+    if(pLayerName == NULL || (std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess32") && std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess64")))
     {
         if(physicalDevice == VK_NULL_HANDLE)
         {
