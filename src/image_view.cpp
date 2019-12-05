@@ -10,7 +10,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImageView> createImageViews(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format, std::vector<VkImage> images)
+    std::vector<VkImageView> createImageViews(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType)
     {
         std::vector<VkImageView> imageViews(images.size());
         
@@ -20,7 +20,7 @@ namespace vkBasalt
         imageViewCreateInfo.pNext = nullptr;
         imageViewCreateInfo.flags = 0;
         imageViewCreateInfo.image = VK_NULL_HANDLE;
-        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewCreateInfo.viewType = viewType;
         imageViewCreateInfo.format = format;
         imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
