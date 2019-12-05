@@ -25,7 +25,6 @@
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>//vulkan/vk_dispatch_table_helper.h needs this
-#include <string.h>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"
@@ -39,6 +38,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <cstring>
 
 #include "image_view.hpp"
 #include "sampler.hpp"
@@ -565,8 +565,8 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceLayerProperties(ui
 
     if(pProperties)
     {
-        strcpy(pProperties->layerName, "VK_LAYER_SAMPLE_SampleLayer");
-        strcpy(pProperties->description, "Sample layer - https://renderdoc.org/vulkan-layer-guide.html");
+        std::strcpy(pProperties->layerName, "VK_LAYER_SAMPLE_SampleLayer");
+        std::strcpy(pProperties->description, "Sample layer - https://renderdoc.org/vulkan-layer-guide.html");
         pProperties->implementationVersion = 1;
         pProperties->specVersion = VK_API_VERSION_1_0;
     }
@@ -583,7 +583,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceLayerProperties(
 VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceExtensionProperties(
     const char *pLayerName, uint32_t *pPropertyCount, VkExtensionProperties *pProperties)
 {
-    if(pLayerName == NULL || strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
+    if(pLayerName == NULL || std::strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
     {
         return VK_ERROR_LAYER_NOT_PRESENT;
     }
@@ -600,7 +600,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(
                                      uint32_t *pPropertyCount, VkExtensionProperties *pProperties)
 {
     // pass through any queries that aren't to us
-    if(pLayerName == NULL || strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
+    if(pLayerName == NULL || std::strcmp(pLayerName, "VK_LAYER_SAMPLE_SampleLayer"))
     {
         if(physicalDevice == VK_NULL_HANDLE)
         {
@@ -621,7 +621,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(
 
 extern "C"{// these are the entry points for the layer, so they need to be c-linkeable
 
-#define GETPROCADDR(func) if(!strcmp(pName, "vk" #func)) return (PFN_vkVoidFunction)&vkBasalt_##func;
+#define GETPROCADDR(func) if(!std::strcmp(pName, "vk" #func)) return (PFN_vkVoidFunction)&vkBasalt_##func;
 /*
 Return our funktions for the funktions we want to intercept
 the macro takes the name and returns our vkBasalt_##func, if the name is equal
