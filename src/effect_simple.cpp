@@ -59,15 +59,15 @@ namespace vkBasalt
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        createShaderModule(device, dispatchTable, shaderInfo.vertexCode, &vertexModule);
-        createShaderModule(device, dispatchTable, shaderInfo.fragmentCode, &fragmentModule);
+        createShaderModule(device, dispatchTable, vertexCode, &vertexModule);
+        createShaderModule(device, dispatchTable, fragmentCode, &fragmentModule);
         
         renderPass = createRenderPass(device, dispatchTable, format);
         
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
-        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, shaderInfo.pVertexSpecInfo, fragmentModule, shaderInfo.pFragmentSpecInfo, imageExtent, renderPass, pipelineLayout);
+        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, pVertexSpecInfo, fragmentModule, pFragmentSpecInfo, imageExtent, renderPass, pipelineLayout);
         
         
         imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,

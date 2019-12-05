@@ -28,8 +28,8 @@ namespace vkBasalt
 
         float sharpness = std::stod(pConfig->getOption("casSharpness", "0.4"));
 
-        shaderInfo.vertexCode = readFile(fullScreenRectFile);
-        shaderInfo.fragmentCode = readFile(casFragmentFile);
+        vertexCode = readFile(fullScreenRectFile);
+        fragmentCode = readFile(casFragmentFile);
 
 
         VkSpecializationMapEntry sharpnessMapEntry;
@@ -43,8 +43,8 @@ namespace vkBasalt
         fragmentSpecializationInfo.dataSize = sizeof(float);
         fragmentSpecializationInfo.pData = &sharpness;
 
-        shaderInfo.pVertexSpecInfo = nullptr;
-        shaderInfo.pFragmentSpecInfo = &fragmentSpecializationInfo;
+        pVertexSpecInfo = nullptr;
+        pFragmentSpecInfo = &fragmentSpecializationInfo;
 
         init(physicalDevice, instanceDispatchTable, device, dispatchTable, format,  imageExtent, inputImages, outputImages, pConfig);
     }

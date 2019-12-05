@@ -30,8 +30,8 @@ namespace vkBasalt
         float fxaaQualityEdgeThreshold = std::stod(pConfig->getOption("fxaaQualityEdgeThreshold", "0.125"));
         float fxaaQualityEdgeThresholdMin = std::stod(pConfig->getOption("fxaaQualityEdgeThresholdMin", "0.0312"));
 
-        shaderInfo.vertexCode   = readFile(fullScreenRectFile);
-        shaderInfo.fragmentCode = readFile(fxaaFragmentFile);
+        vertexCode   = readFile(fullScreenRectFile);
+        fragmentCode = readFile(fxaaFragmentFile);
 
         std::vector<VkSpecializationMapEntry> specMapEntrys(5);
 
@@ -54,8 +54,8 @@ namespace vkBasalt
         fragmentSpecializationInfo.dataSize = sizeof(float)*specData.size();
         fragmentSpecializationInfo.pData = specData.data();
 
-        shaderInfo.pVertexSpecInfo = nullptr;
-        shaderInfo.pFragmentSpecInfo = &fragmentSpecializationInfo;
+        pVertexSpecInfo = nullptr;
+        pFragmentSpecInfo = &fragmentSpecializationInfo;
 
         init(physicalDevice, instanceDispatchTable, device, dispatchTable, format,  imageExtent, inputImages, outputImages, pConfig);
     }

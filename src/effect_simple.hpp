@@ -16,17 +16,11 @@
 #include "config.hpp"
 
 namespace vkBasalt{
-    struct SimpleShaderInfo{
-        std::vector<char> vertexCode;
-        std::vector<char> fragmentCode;
-        VkSpecializationInfo* pVertexSpecInfo;
-        VkSpecializationInfo* pFragmentSpecInfo;
-    };
     class SimpleEffect : public Effect
     {
     public:
         SimpleEffect();
-        void applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
+        void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
         ~SimpleEffect();
     protected:
         VkPhysicalDevice physicalDevice;
@@ -50,7 +44,10 @@ namespace vkBasalt{
         VkFormat format;
         VkSampler sampler;
         std::shared_ptr<vkBasalt::Config> pConfig;
-        SimpleShaderInfo shaderInfo;
+        std::vector<char> vertexCode;
+        std::vector<char> fragmentCode;
+        VkSpecializationInfo* pVertexSpecInfo;
+        VkSpecializationInfo* pFragmentSpecInfo;
         
         void init(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
     };

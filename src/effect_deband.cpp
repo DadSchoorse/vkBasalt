@@ -26,8 +26,8 @@ namespace vkBasalt
         std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
         std::string debandFragmentFile = "deband.frag.spv";
 
-        shaderInfo.vertexCode = readFile(fullScreenRectFile);
-        shaderInfo.fragmentCode = readFile(debandFragmentFile);
+        vertexCode = readFile(fullScreenRectFile);
+        fragmentCode = readFile(debandFragmentFile);
 
         struct{
             float     screenWidth;
@@ -67,8 +67,8 @@ namespace vkBasalt
         specializationInfo.dataSize = sizeof(debandOptions);
         specializationInfo.pData = &debandOptions;
 
-        shaderInfo.pVertexSpecInfo = nullptr;
-        shaderInfo.pFragmentSpecInfo = &specializationInfo;
+        pVertexSpecInfo = nullptr;
+        pFragmentSpecInfo = &specializationInfo;
 
         init(physicalDevice, instanceDispatchTable, device, dispatchTable, format,  imageExtent, inputImages, outputImages, pConfig);
     }
