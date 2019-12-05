@@ -64,7 +64,7 @@ namespace vkBasalt
         
         renderPass = createRenderPass(device, dispatchTable, format);
         
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
+        descriptorSetLayouts.insert(descriptorSetLayouts.begin(),imageSamplerDescriptorSetLayout);
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
         graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, pVertexSpecInfo, fragmentModule, pFragmentSpecInfo, imageExtent, renderPass, pipelineLayout);

@@ -21,7 +21,7 @@ namespace vkBasalt{
     public:
         SimpleEffect();
         void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
-        ~SimpleEffect();
+        virtual ~SimpleEffect();
     protected:
         VkPhysicalDevice physicalDevice;
         VkLayerInstanceDispatchTable instanceDispatchTable;
@@ -48,6 +48,7 @@ namespace vkBasalt{
         std::vector<char> fragmentCode;
         VkSpecializationInfo* pVertexSpecInfo;
         VkSpecializationInfo* pFragmentSpecInfo;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;//subclasses can put DescriptorSets in here, but the first one will be the input image descriptorSet
         
         void init(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
     };
