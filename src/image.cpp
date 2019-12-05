@@ -17,7 +17,7 @@ namespace vkBasalt
                                       VkLayerDispatchTable dispatchTable,
                                       VkPhysicalDevice physicalDevice,
                                       uint32_t count,
-                                      VkExtent2D extent,
+                                      VkExtent3D extent,
                                       VkFormat format,
                                       VkImageUsageFlags usage,
                                       VkMemoryPropertyFlags properties,
@@ -28,11 +28,16 @@ namespace vkBasalt
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageCreateInfo.pNext = nullptr;
         imageCreateInfo.flags = 0;
-        imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+        if(extent.depth == 1)
+        {
+            imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+        }
+        else
+        {
+            imageCreateInfo.imageType = VK_IMAGE_TYPE_3D;
+        }
         imageCreateInfo.format = format;
-        imageCreateInfo.extent.width = extent.width;
-        imageCreateInfo.extent.height = extent.height;
-        imageCreateInfo.extent.depth = 1;
+        imageCreateInfo.extent = extent;
         imageCreateInfo.mipLevels = 1;
         imageCreateInfo.arrayLayers = 1;
         imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -80,7 +85,7 @@ namespace vkBasalt
                        VkLayerDispatchTable dispatchTable,
                        VkPhysicalDevice physicalDevice,
                        VkImage image,
-                       VkExtent2D extent,
+                       VkExtent3D extent,
                        uint32_t size,
                        VkQueue queue,
                        VkCommandPool commandPool,
@@ -156,9 +161,7 @@ namespace vkBasalt
         region.imageSubresource.baseArrayLayer = 0;
         region.imageSubresource.layerCount = 1;
         region.imageOffset = {0,0,0};
-        region.imageExtent.width = extent.width;
-        region.imageExtent.height = extent.height;
-        region.imageExtent.depth = 1;
+        region.imageExtent = extent;
         
         dispatchTable.CmdCopyBufferToImage(commandBuffer,stagingBuffer,image,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,1,&region);
         

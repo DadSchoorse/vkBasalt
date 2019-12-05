@@ -65,7 +65,7 @@ namespace vkBasalt
                                                                dispatchTable,
                                                                physicalDevice,
                                                                inputImages.size()*2,
-                                                               imageExtent,
+                                                               {imageExtent.width, imageExtent.height, 1},
                                                                VK_FORMAT_B8G8R8A8_UNORM,//TODO search for format and save it
                                                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -85,7 +85,7 @@ namespace vkBasalt
         sampler = createSampler(device, dispatchTable);
         std::cout << "after creating sampler" << std::endl;
 
-        VkExtent2D areaImageExtent = {AREATEX_WIDTH,AREATEX_HEIGHT};
+        VkExtent3D areaImageExtent = {AREATEX_WIDTH, AREATEX_HEIGHT, 1};
         areaImage = createImages(instanceDispatchTable,
                                  device,
                                  dispatchTable,
@@ -96,7 +96,7 @@ namespace vkBasalt
                                  VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                  areaMemory)[0];
-        VkExtent2D searchImageExtent = {SEARCHTEX_WIDTH,SEARCHTEX_HEIGHT};
+        VkExtent3D searchImageExtent = {SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1};
         searchImage = createImages(instanceDispatchTable,
                                    device,
                                    dispatchTable,
