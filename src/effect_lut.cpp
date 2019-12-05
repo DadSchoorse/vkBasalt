@@ -33,7 +33,7 @@ namespace vkBasalt
         fragmentCode = readFile(lutFragmentFile);
         
         int channels, width, height;
-        stbi_uc* pixels = stbi_load(pConfig->getOption("lutFile"), &width, &height, &channels, STBI_rgb_alpha);
+        stbi_uc* pixels = stbi_load(pConfig->getOption("lutFile").c_str(), &width, &height, &channels, STBI_rgb_alpha);
         if(width != height * height)
         {
             throw std::runtime_error("bad lut");
