@@ -11,6 +11,7 @@
 #include "shader.hpp"
 #include "sampler.hpp"
 #include "image.hpp"
+#include "lut_cube.hpp"
 
 #include "stb_image.h"
 
@@ -32,25 +33,40 @@ namespace vkBasalt
         vertexCode = readFile(fullScreenRectFile);
         fragmentCode = readFile(lutFragmentFile);
         
-        int channels, width, height;
-        stbi_uc* pixels = stbi_load(pConfig->getOption("lutFile").c_str(), &width, &height, &channels, STBI_rgb_alpha);
-        if(width != height * height)
+        int height;
+        LutCube lutCube;
+        stbi_uc* pixels;
+        int32_t usingPNG = (pConfig->getOption("lutFile").find(".cube") != std::string::npos || pConfig->getOption("lutFile").find(".CUBE") != std::string::npos) ? 0 : 1;  
+        if(!usingPNG)
         {
-            throw std::runtime_error("bad lut");
+            lutCube = LutCube(pConfig->getOption("lutFile"));
+            pixels = lutCube.colorCube.data();
+            height = lutCube.size;
+        }
+        else
+        {
+            int channels, width;
+            pixels = stbi_load(pConfig->getOption("lutFile").c_str(), &width, &height, &channels, STBI_rgb_alpha);
+            if(width != height * height)
+            {
+                throw std::runtime_error("bad lut");
+            }
         }
         
-        int32_t size = width;
-
-        VkSpecializationMapEntry specMapEntry;
-        specMapEntry.constantID = 0;
-        specMapEntry.offset = 0;
-        specMapEntry.size = sizeof(int32_t);
+        std::vector<VkSpecializationMapEntry> specMapEntrys(2);
+        for(uint32_t i=0;i<specMapEntrys.size();i++)
+        {
+            specMapEntrys[i].constantID = i;
+            specMapEntrys[i].offset = sizeof(int32_t) * i;
+            specMapEntrys[i].size = sizeof(int32_t);
+        }
+        std::vector<int32_t> specData = {height, usingPNG};
 
         VkSpecializationInfo fragmentSpecializationInfo;
-        fragmentSpecializationInfo.mapEntryCount = 1;
-        fragmentSpecializationInfo.pMapEntries = &specMapEntry;
-        fragmentSpecializationInfo.dataSize = sizeof(int32_t);
-        fragmentSpecializationInfo.pData = &size;
+        fragmentSpecializationInfo.mapEntryCount = specMapEntrys.size();
+        fragmentSpecializationInfo.pMapEntries = specMapEntrys.data();
+        fragmentSpecializationInfo.dataSize = specMapEntrys.size() * sizeof(int32_t);
+        fragmentSpecializationInfo.pData = specData.data();
 
         pVertexSpecInfo = nullptr;
         pFragmentSpecInfo = &fragmentSpecializationInfo;
@@ -73,7 +89,7 @@ namespace vkBasalt
                        physicalDevice,
                        lutImage,
                        lutImageExtent,
-                       32*32*32*4,
+                       height*height*height*4,
                        queue,
                        commandPool,
                        pixels);
