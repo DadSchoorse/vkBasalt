@@ -32,6 +32,7 @@ namespace vkBasalt
         int size;
         
         LutCube(const std::string& file);
+        LutCube();
     private:
         float minX = 0.0f;
         float minY = 0.0f;

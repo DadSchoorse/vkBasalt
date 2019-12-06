@@ -2,6 +2,10 @@
 
 namespace vkBasalt
 {
+    LutCube::LutCube()
+    {
+    
+    }
     LutCube::LutCube(const std::string& file)
     {
         std::ifstream cubeStream(file);
