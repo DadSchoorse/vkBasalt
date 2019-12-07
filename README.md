@@ -4,6 +4,7 @@ A Vulkan post processing layer. Currently, the only effects are:
 - Fast Approximate Anti-Aliasing
 - Enhanced Subpixel Morphological Anti-Aliasing
 - Deband/Dithering
+- 3D color LookUp Table
 
 # Disclaimer
 This one of my first projects ever. Look at the code at your own risk.
