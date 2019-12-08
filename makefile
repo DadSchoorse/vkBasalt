@@ -13,6 +13,7 @@ install:
 
 uninstall:
 	rm -rf $(DESTDIR)$(PREFIX)/share/vkBasalt
+	$(MAKE) uninstall -C config
 
 clean:
 	rm -rf build
