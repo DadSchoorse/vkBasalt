@@ -1,7 +1,7 @@
 BUILD_DIR := ../build/shader
 BUILD_DIR_TMP := ../build/tmp
 
-INSTALL_DIR := $(HOME)/.local/share/vkBasalt/shader/
+INSTALL_DIR := $(DESTDIR)$(PREFIX)/share/vkBasalt/shader/
 
 SRC_FILES := $(wildcard *.glsl)
 TMP_FILES := $(foreach file,$(patsubst %.glsl,%.spv,$(SRC_FILES)),$(BUILD_DIR_TMP)/$(file))
@@ -20,9 +20,7 @@ $(BUILD_DIR_TMP)/%.spv: %.glsl $(BUILD_DIR_TMP)
 
 $(BUILD_DIR_TMP):
 	mkdir -p $(BUILD_DIR_TMP)
-	
-	
+
 install:
 	mkdir -p $(INSTALL_DIR)
 	install -m 0644 -t  $(INSTALL_DIR)  $(SPV_FILES)
-	
