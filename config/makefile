@@ -8,7 +8,11 @@ install:
 	mkdir -p $(INSTALL_DIR)
 	$(SED) 's+@lib+$(LIB32)+g' vkBasalt32.json > $(INSTALL_DIR)/vkBasalt32.json
 	$(SED) 's+@lib+$(LIB64)+g' vkBasalt64.json > $(INSTALL_DIR)/vkBasalt64.json
+ifeq ($(wildcard $(CONFIG)),)
 	install -m 0644 -D -T vkBasalt.conf $(CONFIG)
+else
+	@echo '$(CONFIG) already exists. Not overwriting...'
+endif
 
 uninstall:
 	rm $(INSTALL_DIR)/vkBasalt64.json
