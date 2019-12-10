@@ -93,6 +93,11 @@ namespace vkBasalt
                        queue,
                        commandPool,
                        pixels);
+        
+        if(usingPNG)
+        {
+            stbi_image_free(pixels);
+        }
                        
         lutImageView = createImageViews(device, dispatchTable, VK_FORMAT_R8G8B8A8_UNORM, std::vector<VkImage>(1,lutImage), VK_IMAGE_VIEW_TYPE_3D)[0];
         
