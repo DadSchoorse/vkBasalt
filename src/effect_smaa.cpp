@@ -193,9 +193,9 @@ namespace vkBasalt
         specializationInfo.dataSize = sizeof(smaaOptions);
         specializationInfo.pData = &smaaOptions;
 
-        edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, &specializationInfo, edgeFragmentModule, &specializationInfo, imageExtent, unormRenderPass, pipelineLayout);
-        blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, &specializationInfo, blendFragmentModule, &specializationInfo, imageExtent, unormRenderPass, pipelineLayout);
-        neighborPipeline = createGraphicsPipeline(device, dispatchTable, neighborVertexModule, &specializationInfo, neignborFragmentModule, &specializationInfo, imageExtent, renderPass, pipelineLayout);
+        edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, &specializationInfo, "main", edgeFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, &specializationInfo, "main", blendFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        neighborPipeline = createGraphicsPipeline(device, dispatchTable, neighborVertexModule, &specializationInfo, "main", neignborFragmentModule, &specializationInfo, "main", imageExtent, renderPass, pipelineLayout);
 
 
         std::vector<std::vector<VkImageView>> imageViewsVector = {inputImageViews,

@@ -31,8 +31,10 @@ namespace vkBasalt
                                       VkLayerDispatchTable dispatchTable,
                                       VkShaderModule vertexModule,
                                       VkSpecializationInfo* vertexSpecializationInfo,
+                                      std::string vertexEntryPoint,
                                       VkShaderModule fragmentModule,
                                       VkSpecializationInfo* fragmentSpecializationInfo,
+                                      std::string fragmentEntryPoint,
                                       VkExtent2D extent,
                                       VkRenderPass renderPass,
                                       VkPipelineLayout pipelineLayout)
@@ -47,7 +49,7 @@ namespace vkBasalt
         shaderStageCreateInfoVert.flags = 0;
         shaderStageCreateInfoVert.stage = VK_SHADER_STAGE_VERTEX_BIT;
         shaderStageCreateInfoVert.module = vertexModule;
-        shaderStageCreateInfoVert.pName = "main";
+        shaderStageCreateInfoVert.pName = vertexEntryPoint.c_str();
         shaderStageCreateInfoVert.pSpecializationInfo = vertexSpecializationInfo;
 
         VkPipelineShaderStageCreateInfo shaderStageCreateInfoFrag;
@@ -56,7 +58,7 @@ namespace vkBasalt
         shaderStageCreateInfoFrag.flags = 0;
         shaderStageCreateInfoFrag.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         shaderStageCreateInfoFrag.module = fragmentModule;
-        shaderStageCreateInfoFrag.pName = "main";
+        shaderStageCreateInfoFrag.pName = fragmentEntryPoint.c_str();
         shaderStageCreateInfoFrag.pSpecializationInfo = fragmentSpecializationInfo;
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {shaderStageCreateInfoVert,shaderStageCreateInfoFrag};

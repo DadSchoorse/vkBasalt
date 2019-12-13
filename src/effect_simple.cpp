@@ -67,7 +67,7 @@ namespace vkBasalt
         descriptorSetLayouts.insert(descriptorSetLayouts.begin(),imageSamplerDescriptorSetLayout);
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
-        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, pVertexSpecInfo, fragmentModule, pFragmentSpecInfo, imageExtent, renderPass, pipelineLayout);
+        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, pVertexSpecInfo, "main", fragmentModule, pFragmentSpecInfo, "main", imageExtent, renderPass, pipelineLayout);
         
         
         imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
