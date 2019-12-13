@@ -37,7 +37,8 @@ namespace vkBasalt
                                       std::string fragmentEntryPoint,
                                       VkExtent2D extent,
                                       VkRenderPass renderPass,
-                                      VkPipelineLayout pipelineLayout)
+                                      VkPipelineLayout pipelineLayout,
+                                      bool flip)
     {
         VkResult result;
         
@@ -81,9 +82,9 @@ namespace vkBasalt
 
         VkViewport viewport;
         viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = extent.width;
-        viewport.height = extent.height;
+        viewport.y = flip? static_cast<float>(extent.height) : 0.0f;
+        viewport.width = static_cast<float>(extent.width);
+        viewport.height = flip? -static_cast<float>(extent.height) : static_cast<float>(extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -107,8 +108,8 @@ namespace vkBasalt
         rasterizationCreateInfo.depthClampEnable = VK_FALSE;
         rasterizationCreateInfo.rasterizerDiscardEnable = VK_FALSE;
         rasterizationCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
-        rasterizationCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizationCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizationCreateInfo.cullMode = VK_CULL_MODE_NONE;
+        rasterizationCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizationCreateInfo.depthBiasEnable = VK_FALSE;
         rasterizationCreateInfo.depthBiasConstantFactor = 0.0f;
         rasterizationCreateInfo.depthBiasClamp = 0.0f;
