@@ -1,0 +1,3 @@
+[submodule "reshade"]
+	path = reshade
+	url = https://github.com/DadSchoorse/reshade.git
