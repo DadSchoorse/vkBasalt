@@ -17,8 +17,10 @@ namespace vkBasalt
                                       VkLayerDispatchTable dispatchTable,
                                       VkShaderModule vertexModule,
                                       VkSpecializationInfo* vertexSpecializationInfo,
+                                      std::string vertexEntryPoint,
                                       VkShaderModule fragmentModule,
                                       VkSpecializationInfo* fragmentSpecializationInfo,
+                                      std::string fragmentEntryPoint,
                                       VkExtent2D extent,
                                       VkRenderPass renderPass,
                                       VkPipelineLayout pipelineLayout);
