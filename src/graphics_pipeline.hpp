@@ -23,7 +23,8 @@ namespace vkBasalt
                                       std::string fragmentEntryPoint,
                                       VkExtent2D extent,
                                       VkRenderPass renderPass,
-                                      VkPipelineLayout pipelineLayout);
+                                      VkPipelineLayout pipelineLayout,
+                                      bool flip = false);
 
 }
 
