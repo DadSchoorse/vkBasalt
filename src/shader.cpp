@@ -48,9 +48,17 @@ namespace vkBasalt{
                 break;
             }
         }
-
-        std::ifstream file(shaderDir + filename, std::ios::binary | std::ios::ate);
-
+        std::ifstream file;
+        
+        if(filename[0]!='/')
+        {
+            file = std::ifstream(shaderDir + filename, std::ios::binary | std::ios::ate);
+        }
+        else
+        {
+            file = std::ifstream(filename, std::ios::binary | std::ios::ate);
+        }
+        
         if(file)
         {
             size_t fileSize = (size_t) file.tellg();

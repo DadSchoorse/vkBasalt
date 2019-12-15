@@ -23,7 +23,7 @@ namespace vkBasalt{
     class ReshadeEffect : public Effect
     {
     public:
-        ReshadeEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool);
+        ReshadeEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool, std::string effectName);
         void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
         virtual ~ReshadeEffect();
     private:
@@ -38,9 +38,9 @@ namespace vkBasalt{
         std::vector<VkDescriptorSet> imageDescriptorSets;
         std::vector<VkFramebuffer> framebuffers;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
+        std::vector<std::vector<char>> shaderCode;
+        std::vector<VkShaderModule> shaderModules;
         VkDescriptorPool descriptorPool;
-        VkShaderModule shaderModule;
-        VkShaderModule fragmentModule;
         VkRenderPass renderPass;
         VkPipelineLayout pipelineLayout;
         VkPipeline graphicsPipeline;
@@ -48,6 +48,8 @@ namespace vkBasalt{
         VkFormat format;
         VkSampler sampler;
         std::shared_ptr<vkBasalt::Config> pConfig;
+        std::string effectName;
+        reshadefx::module module;
         
         void createReshadeModule(reshadefx::module& module);
     };

@@ -482,7 +482,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
                                                          deviceStruct.queue,
                                                          deviceStruct.commandPool)));
         }
-        else if(effectStrings[i] == std::string("reshade"))
+        else
         {
             swapchainStruct.effectList.push_back(std::shared_ptr<vkBasalt::Effect>(new vkBasalt::ReshadeEffect(deviceStruct.physicalDevice,
                                                          instance_dispatch[GetKey(deviceStruct.physicalDevice)],
@@ -494,13 +494,9 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_GetSwapchainImagesKHR(VkDevice device, V
                                                          secondImages,
                                                          pConfig,
                                                          deviceStruct.queue,
-                                                         deviceStruct.commandPool)));
+                                                         deviceStruct.commandPool,
+                                                         effectStrings[i])));
         }
-        else
-        {
-            throw std::runtime_error("unknown effect" + effectStrings[i]);
-        }    
-        
     }
     std::cout << "effect string count: " << effectStrings.size() << std::endl;
     std::cout << "effect count: " << swapchainStruct.effectList.size() << std::endl;
