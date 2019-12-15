@@ -2,6 +2,8 @@
 
 #include <cstring>
 #include <climits>
+#include <cstdlib>
+#include <cassert>
 
 #include "image_view.hpp"
 #include "descriptor_set.hpp"
@@ -22,12 +24,9 @@
 
 namespace vkBasalt
 {
-    ReshadeEffect::ReshadeEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool)
+    ReshadeEffect::ReshadeEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool, std::string effectName)
     {
         std::cout << "in creating ReshadeEffect " << std::endl;
-        
-        std::string shaderFile = "reshade.spv";
-        std::string fragmentFile = "reshade2.spv";
         
         this->physicalDevice = physicalDevice;
         this->instanceDispatchTable = instanceDispatchTable;
@@ -38,6 +37,7 @@ namespace vkBasalt
         this->inputImages = inputImages;
         this->outputImages = outputImages;
         this->pConfig = pConfig;
+        this->effectName = effectName;
         
         inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
@@ -59,10 +59,11 @@ namespace vkBasalt
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        std::vector<char> shaderCode = readFile(shaderFile);
-        createShaderModule(device, dispatchTable, shaderCode, &shaderModule);
-        shaderCode = readFile(fragmentFile);
-        createShaderModule(device, dispatchTable, shaderCode, &fragmentModule);
+        createReshadeModule(module);
+        shaderModules = std::vector<VkShaderModule>(2);
+        
+        createShaderModule(device, dispatchTable, shaderCode[0], &shaderModules[0]);
+        createShaderModule(device, dispatchTable, shaderCode[1], &shaderModules[1]);
         
         std::cout << "after creating shaderModule" << std::endl;
         
@@ -73,7 +74,7 @@ namespace vkBasalt
         
         std::cout << "after creating Pipeline layout" << std::endl;
         
-        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, shaderModule, nullptr, "F__PostProcessVS", fragmentModule, nullptr, "F__Colourfulness", imageExtent, renderPass, pipelineLayout, true);
+        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, shaderModules[0], nullptr, "main", shaderModules[1], nullptr, "main", imageExtent, renderPass, pipelineLayout, true);
         
         std::cout << "after creating Pipeline" << std::endl;
         
@@ -174,8 +175,10 @@ namespace vkBasalt
         dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
         dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
         dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
-        dispatchTable.DestroyShaderModule(device,shaderModule,nullptr);
-        dispatchTable.DestroyShaderModule(device,fragmentModule,nullptr);
+        for(size_t i = 0;i < shaderModules.size(); i++)
+        {
+            dispatchTable.DestroyShaderModule(device,shaderModules[i],nullptr);
+        }
         
         dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
         for(unsigned int i=0;i<framebuffers.size();i++)
@@ -190,6 +193,9 @@ namespace vkBasalt
     
     void ReshadeEffect::createReshadeModule(reshadefx::module& module)
     {
+        std::string tempFile = "/tmp/vkBasalt.spv";
+        std::string tempFile2 = "/tmp/vkBasalt.spv";
+        
         reshadefx::preprocessor preprocessor;
         preprocessor.add_macro_definition("__RESHADE__", std::to_string(INT_MAX));
         preprocessor.add_macro_definition("__RESHADE_PERFORMANCE_MODE__", "1");
@@ -198,8 +204,8 @@ namespace vkBasalt
         preprocessor.add_macro_definition("BUFFER_HEIGHT", std::to_string(imageExtent.height));
         preprocessor.add_macro_definition("BUFFER_RCP_WIDTH", "(1.0 / BUFFER_WIDTH)");
         preprocessor.add_macro_definition("BUFFER_RCP_HEIGHT", "(1.0 / BUFFER_HEIGHT)");
-        preprocessor.add_include_path(includePath);
-        preprocessor.append_file(shaderFile);
+        preprocessor.add_include_path(pConfig->getOption("reshadeIncludePath"));
+        preprocessor.append_file(pConfig->getOption(effectName));
 
         reshadefx::parser parser;
 
@@ -222,5 +228,17 @@ namespace vkBasalt
             std::cout << errors << std::endl;
         }
         codegen->write_result(module);
+        
+        std::ofstream(tempFile, std::ios::binary).write(reinterpret_cast<const char *>(module.spirv.data()), module.spirv.size() * sizeof(uint32_t));
+    
+        for(size_t i = 0; i < module.entry_points.size(); i++)
+        {
+            std::string stage = module.entry_points[i].is_pixel_shader ? "frag" : "vert";
+            std::string command = "spirv-cross " + tempFile + " --vulkan-semantics --entry " + module.entry_points[i].name;
+            command += " | glslangValidator -V --stdin -S " + stage + " -o " + tempFile2 + std::to_string(i);
+            assert(!std::system(command.c_str()));
+            shaderCode.push_back(readFile(tempFile2 + std::to_string(i)));
+            std::cout << shaderCode[i].size() << std::endl;
+        }
     }
 }
