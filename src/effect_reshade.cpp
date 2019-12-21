@@ -47,6 +47,7 @@ namespace vkBasalt
         std::cout << "after creating sampler" << std::endl;
         
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 2);
+        emptyDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 0);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
@@ -69,7 +70,7 @@ namespace vkBasalt
         
         renderPass = createRenderPass(device, dispatchTable, format);
         
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout,imageSamplerDescriptorSetLayout};
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {emptyDescriptorSetLayout,imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
         std::cout << "after creating Pipeline layout" << std::endl;
@@ -152,7 +153,6 @@ namespace vkBasalt
         std::cout << "after beginn renderpass" << std::endl;
         
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
         
         dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
