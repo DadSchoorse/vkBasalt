@@ -52,7 +52,7 @@ namespace vkBasalt{
         std::string effectName;
         reshadefx::module module;
         
-        void createReshadeModule(reshadefx::module& module);
+        void createReshadeModule();
     };
 }
 
