@@ -46,27 +46,30 @@ namespace vkBasalt
         sampler = createSampler(device, dispatchTable);
         std::cout << "after creating sampler" << std::endl;
         
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 2);
+        createReshadeModule();
+        
+        for(size_t i = 0; i < module.textures.size(); i++)
+        {
+            std::cout << module.textures[i].unique_name << " | " << module.textures[i].semantic << std::endl;
+            for(size_t j = 0; j < module.textures[i].annotations.size(); j++)
+            {
+                std::cout << module.textures[i].annotations[j].name << " | " << module.textures[i].annotations[j].value.string_data << std::endl;
+            }
+        }
+        
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, module.samplers.size());
         emptyDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 0);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
         imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imagePoolSize.descriptorCount = inputImages.size()+10;
+        imagePoolSize.descriptorCount = inputImages.size() * module.samplers.size();
         
         
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
         
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
-        
-        createReshadeModule(module);
-        shaderModules = std::vector<VkShaderModule>(2);
-        
-        createShaderModule(device, dispatchTable, shaderCode[0], &shaderModules[0]);
-        createShaderModule(device, dispatchTable, shaderCode[1], &shaderModules[1]);
-        
-        std::cout << "after creating shaderModule" << std::endl;
         
         renderPass = createRenderPass(device, dispatchTable, format);
         
@@ -79,7 +82,7 @@ namespace vkBasalt
         
         std::cout << "after creating Pipeline" << std::endl;
         
-        std::vector<std::vector<VkImageView>> imageViewVector = {inputImageViews,inputImageViews};
+        std::vector<std::vector<VkImageView>> imageViewVector(module.samplers.size(), inputImageViews);
         imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
                                                                          descriptorPool,
@@ -175,6 +178,7 @@ namespace vkBasalt
         dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
         dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
         dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
+        dispatchTable.DestroyDescriptorSetLayout(device,emptyDescriptorSetLayout,nullptr);
         for(size_t i = 0;i < shaderModules.size(); i++)
         {
             dispatchTable.DestroyShaderModule(device,shaderModules[i],nullptr);
@@ -191,7 +195,7 @@ namespace vkBasalt
         dispatchTable.DestroySampler(device,sampler,nullptr);
     }
     
-    void ReshadeEffect::createReshadeModule(reshadefx::module& module)
+    void ReshadeEffect::createReshadeModule()
     {
         std::string tempFile = "/tmp/vkBasalt.spv";
         std::string tempFile2 = "/tmp/vkBasalt.spv";
@@ -230,6 +234,8 @@ namespace vkBasalt
         codegen->write_result(module);
         
         std::ofstream(tempFile, std::ios::binary).write(reinterpret_cast<const char *>(module.spirv.data()), module.spirv.size() * sizeof(uint32_t));
+        
+        shaderModules = std::vector<VkShaderModule>(module.entry_points.size());
     
         for(size_t i = 0; i < module.entry_points.size(); i++)
         {
@@ -239,6 +245,9 @@ namespace vkBasalt
             assert(!std::system(command.c_str()));
             shaderCode.push_back(readFile(tempFile2 + std::to_string(i)));
             std::cout << shaderCode[i].size() << std::endl;
+        
+            createShaderModule(device, dispatchTable, shaderCode[i], &shaderModules[i]);
         }
+        std::cout << "after creating shaderModule" << std::endl;
     }
 }
