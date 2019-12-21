@@ -1,12 +1,7 @@
 #include "shader.hpp"
 
 #include <array>
-#if __GNUC__ == 7
-#include <experimental/filesystem>
-#define filesystem experimental::filesystem
-#else
 #include <filesystem>
-#endif
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
