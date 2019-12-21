@@ -37,6 +37,7 @@ namespace vkBasalt{
         std::vector<VkImageView> outputImageViews;
         std::vector<VkDescriptorSet> imageDescriptorSets;
         std::vector<VkFramebuffer> framebuffers;
+        VkDescriptorSetLayout emptyDescriptorSetLayout;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
         std::vector<std::vector<char>> shaderCode;
         std::vector<VkShaderModule> shaderModules;
