@@ -1,6 +1,6 @@
 CXX ?= g++
 CXXFLAGS ?= -O3 -fPIC -Wall -Wextra -Wno-unused-parameter
-CXXFLAGS += -std=c++2a
+CXXFLAGS += -std=c++2a -I/usr/include/spirv/1.0
 LDFLAGS +=  -shared -lstdc++fs -fvisibility=hidden
 
 BUILD_DIR := ../build
