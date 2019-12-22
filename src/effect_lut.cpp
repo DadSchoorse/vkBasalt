@@ -118,7 +118,7 @@ namespace vkBasalt
                                                                          dispatchTable,
                                                                          lutDescriptorPool,
                                                                          lutDescriptorSetLayout,
-                                                                         sampler,
+                                                                         {sampler},
                                                                          std::vector<std::vector<VkImageView>>(1,std::vector<VkImageView>(1,lutImageView)))[0];
     }
     LutEffect::~LutEffect()

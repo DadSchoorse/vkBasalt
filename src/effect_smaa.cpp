@@ -203,7 +203,7 @@ namespace vkBasalt
                                                                   std::vector<VkImageView>(inputImageViews.size(), areaImageView),
                                                                   std::vector<VkImageView>(inputImageViews.size(), searchImageView),
                                                                   blendImageViews};
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device, dispatchTable, descriptorPool, imageSamplerDescriptorSetLayout, sampler, imageViewsVector);
+        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device, dispatchTable, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
 
         edgeFramebuffers     = createFramebuffers(device, dispatchTable, unormRenderPass, imageExtent,   edgeImageViews);
         blendFramebuffers    = createFramebuffers(device, dispatchTable, unormRenderPass, imageExtent,  blendImageViews);

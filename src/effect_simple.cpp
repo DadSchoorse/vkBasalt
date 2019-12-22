@@ -74,7 +74,7 @@ namespace vkBasalt
                                                                          dispatchTable,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
-                                                                         sampler,
+                                                                         {sampler},
                                                                          std::vector<std::vector<VkImageView>>(1,inputImageViews));
         
         framebuffers = createFramebuffers(device, dispatchTable, renderPass, imageExtent, outputImageViews);
