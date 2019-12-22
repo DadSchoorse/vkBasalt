@@ -17,6 +17,9 @@
 #include "sampler.hpp"
 #include "image.hpp"
 
+#include "stb_image.h"
+#include "stb_image_dds.h"
+
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
         if(val!=VK_SUCCESS)\
@@ -83,6 +86,51 @@ namespace vkBasalt
                std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertReshadeFormat(module.textures[i].format), images);
                textureImageViews[module.textures[i].unique_name] = imageViews;
                continue;
+            }
+            else
+            {
+                textureMemory.push_back(VK_NULL_HANDLE);
+                std::vector<VkImage> images = createImages(instanceDispatchTable,
+                                   device,
+                                   dispatchTable,
+                                   physicalDevice,
+                                   1,
+                                   textureExtent,
+                                   convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
+                                   VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                                   textureMemory.back());
+                textureImages[module.textures[i].unique_name] = images;
+                std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertReshadeFormat(module.textures[i].format), images);
+                imageViews = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
+                textureImageViews[module.textures[i].unique_name] = imageViews;
+                std::string filePath = pConfig->getOption("reshadeTexturePath") + "/" + module.textures[i].annotations[0].value.string_data;
+                stbi_uc* pixels;
+                uint32_t size;
+                if(filePath.find(".dds") != std::string::npos)
+                {
+                    int channels, width, height;
+                    pixels = stbi_dds_load(filePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+                    size = width * height * 4;
+                }
+                else
+                {
+                    int channels, width, height;
+                    pixels = stbi_load(filePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+                    size = width * height * 4;
+                }
+                //TODO make sure the image has the right size
+                uploadToImage(instanceDispatchTable,
+                       device,
+                       dispatchTable,
+                       physicalDevice,
+                       images[0],
+                       textureExtent,
+                       size,
+                       queue,
+                       commandPool,
+                       pixels);
+                stbi_image_free(pixels);
             }
         }
         
@@ -257,6 +305,11 @@ namespace vkBasalt
         for(auto& sampler: samplers)
         {
             dispatchTable.DestroySampler(device,sampler,nullptr);
+        }
+        
+        for(auto& memory: textureMemory)
+        {
+            dispatchTable.FreeMemory(device,memory,nullptr);
         }
     }
     

@@ -86,6 +86,7 @@ namespace vkBasalt
             case reshadefx::texture_address_mode::border:
                 return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
         }
+        return VK_SAMPLER_ADDRESS_MODE_REPEAT;
     }
     
     void convertReshadeFilter(const reshadefx::texture_filter& textureFilter, VkFilter& minFilter, VkFilter& magFilter, VkSamplerMipmapMode& mipmapMode)
