@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <cassert>
 
+#include <set>
+
 #include "image_view.hpp"
 #include "descriptor_set.hpp"
 #include "buffer.hpp"
@@ -13,6 +15,7 @@
 #include "framebuffer.hpp"
 #include "shader.hpp"
 #include "sampler.hpp"
+#include "image.hpp"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -39,22 +42,57 @@ namespace vkBasalt
         this->pConfig = pConfig;
         this->effectName = effectName;
         
-        inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
+        std::vector<VkImageView> inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
         outputImageViews = createImageViews(device, dispatchTable, format, outputImages);
         std::cout << "after creating ImageViews" << std::endl;
-        sampler = createSampler(device, dispatchTable);
-        std::cout << "after creating sampler" << std::endl;
         
         createReshadeModule();
         
+        
+        
+        std::vector<std::vector<VkImageView>> imageViewVector;
+        
         for(size_t i = 0; i < module.textures.size(); i++)
         {
-            std::cout << module.textures[i].unique_name << " | " << module.textures[i].semantic << std::endl;
-            for(size_t j = 0; j < module.textures[i].annotations.size(); j++)
+            if(module.textures[i].semantic == "COLOR")
             {
-                std::cout << module.textures[i].annotations[j].name << " | " << module.textures[i].annotations[j].value.string_data << std::endl;
+                textureImageViews[module.textures[i].unique_name] = inputImageViews;
+                continue;
             }
+            if(module.textures[i].semantic == "DEPTH")
+            {
+                textureImageViews[module.textures[i].unique_name] = inputImageViews;;//TODO Depth buffer access
+                continue;
+            }
+            VkExtent3D textureExtent = {module.textures[i].width, module.textures[i].height, module.textures[i].levels};
+            if(module.textures[i].annotations.size() == 0)
+            {
+                textureMemory.push_back(VK_NULL_HANDLE);
+                std::vector<VkImage> images = createImages(instanceDispatchTable,
+                                   device,
+                                   dispatchTable,
+                                   physicalDevice,
+                                   inputImages.size(),
+                                   textureExtent,
+                                   convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
+                                   VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                                   textureMemory.back());
+               textureImages[module.textures[i].unique_name] = images;
+               std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertReshadeFormat(module.textures[i].format), images);
+               textureImageViews[module.textures[i].unique_name] = imageViews;
+               continue;
+            }
+        }
+        
+        
+        for(size_t i = 0; i < module.samplers.size(); i++)
+        {
+            reshadefx::sampler_info info = module.samplers[i];
+            VkSampler sampler = createReshadeSampler(device, dispatchTable, info);
+            samplers.push_back(sampler);
+            imageViewVector.push_back(textureImageViews[info.texture_name]);
         }
         
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, module.samplers.size());
@@ -82,12 +120,13 @@ namespace vkBasalt
         
         std::cout << "after creating Pipeline" << std::endl;
         
-        std::vector<std::vector<VkImageView>> imageViewVector(module.samplers.size(), inputImageViews);
+        
+        std::cout << samplers.size() << " | " << imageViewVector.size() << std::endl;
         imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
-                                                                         sampler,
+                                                                         samplers,
                                                                          imageViewVector);
         
         std::cout << "after writing ImageSamplerDescriptorSets" << std::endl;
@@ -188,11 +227,37 @@ namespace vkBasalt
         for(unsigned int i=0;i<framebuffers.size();i++)
         {
             dispatchTable.DestroyFramebuffer(device,framebuffers[i],nullptr);
-            dispatchTable.DestroyImageView(device,inputImageViews[i],nullptr);
             dispatchTable.DestroyImageView(device,outputImageViews[i],nullptr);
             std::cout << "after DestroyImageView" << std::endl;
         }
-        dispatchTable.DestroySampler(device,sampler,nullptr);
+        
+        std::set<VkImageView> imageViewSet;
+        
+        for(auto& it: textureImageViews)
+        {
+            for(auto imageView: it.second)
+            {
+                imageViewSet.insert(imageView);
+            }
+        }
+        
+        for(auto imageView: imageViewSet)
+        {
+            dispatchTable.DestroyImageView(device, imageView, nullptr);
+        }
+        
+        for(auto& it: textureImages)
+        {
+            for(auto image: it.second)
+            {
+                dispatchTable.DestroyImage(device, image, nullptr);
+            }
+        }
+        
+        for(auto& sampler: samplers)
+        {
+            dispatchTable.DestroySampler(device,sampler,nullptr);
+        }
     }
     
     void ReshadeEffect::createReshadeModule()
@@ -249,5 +314,38 @@ namespace vkBasalt
             createShaderModule(device, dispatchTable, shaderCode[i], &shaderModules[i]);
         }
         std::cout << "after creating shaderModule" << std::endl;
+    }
+    
+    VkFormat ReshadeEffect::convertReshadeFormat(reshadefx::texture_format texFormat)
+    {
+        switch(texFormat)
+        {
+            case reshadefx::texture_format::r8:
+                return VK_FORMAT_R8_UNORM;
+            case reshadefx::texture_format::r16f:
+                return VK_FORMAT_R16_SFLOAT;
+            case reshadefx::texture_format::r32f:
+                return VK_FORMAT_R32_SFLOAT;
+            case reshadefx::texture_format::rg8:
+                return VK_FORMAT_R8G8_UNORM;
+            case reshadefx::texture_format::rg16:
+                return VK_FORMAT_R16G16_UNORM;
+            case reshadefx::texture_format::rg16f:
+                return VK_FORMAT_R16G16_SFLOAT;
+            case reshadefx::texture_format::rg32f:
+                return VK_FORMAT_R32G32_SFLOAT;
+            case reshadefx::texture_format::rgba8:
+                return VK_FORMAT_R8G8B8A8_UNORM;
+            case reshadefx::texture_format::rgba16:
+                return VK_FORMAT_R16G16B16A16_UNORM;
+            case reshadefx::texture_format::rgba16f:
+                return VK_FORMAT_R16G16B16A16_SFLOAT;
+            case reshadefx::texture_format::rgba32f:
+                return VK_FORMAT_R32G32B32A32_SFLOAT;
+            case reshadefx::texture_format::rgb10a2:
+                return VK_FORMAT_A2R10G10B10_UNORM_PACK32;
+            default:
+                return VK_FORMAT_UNDEFINED;
+        }
     }
 }
