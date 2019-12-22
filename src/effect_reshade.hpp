@@ -33,8 +33,9 @@ namespace vkBasalt{
         VkLayerDispatchTable dispatchTable;
         std::vector<VkImage> inputImages;
         std::vector<VkImage> outputImages;
-        std::vector<VkImageView> inputImageViews;
         std::vector<VkImageView> outputImageViews;
+        std::unordered_map<std::string, std::vector<VkImage>> textureImages;
+        std::unordered_map<std::string, std::vector<VkImageView>> textureImageViews;
         std::vector<VkDescriptorSet> imageDescriptorSets;
         std::vector<VkFramebuffer> framebuffers;
         VkDescriptorSetLayout emptyDescriptorSetLayout;
@@ -47,12 +48,14 @@ namespace vkBasalt{
         VkPipeline graphicsPipeline;
         VkExtent2D imageExtent;
         VkFormat format;
-        VkSampler sampler;
+        std::vector<VkSampler> samplers;
         std::shared_ptr<vkBasalt::Config> pConfig;
         std::string effectName;
         reshadefx::module module;
+        std::vector<VkDeviceMemory> textureMemory;
         
         void createReshadeModule();
+        VkFormat convertReshadeFormat(reshadefx::texture_format texFormat);
     };
 }
 
