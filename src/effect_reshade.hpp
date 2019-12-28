@@ -37,15 +37,15 @@ namespace vkBasalt{
         std::unordered_map<std::string, std::vector<VkImage>> textureImages;
         std::unordered_map<std::string, std::vector<VkImageView>> textureImageViews;
         std::vector<VkDescriptorSet> imageDescriptorSets;
-        std::vector<VkFramebuffer> framebuffers;
+        std::vector<std::vector<VkFramebuffer>> framebuffers;
         VkDescriptorSetLayout emptyDescriptorSetLayout;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
         std::vector<std::vector<char>> shaderCode;
-        std::vector<VkShaderModule> shaderModules;
+        std::unordered_map<std::string, VkShaderModule> shaderModules;
         VkDescriptorPool descriptorPool;
         VkRenderPass renderPass;
         VkPipelineLayout pipelineLayout;
-        VkPipeline graphicsPipeline;
+        std::vector<VkPipeline> graphicsPipelines;
         VkExtent2D imageExtent;
         VkFormat format;
         std::vector<VkSampler> samplers;
