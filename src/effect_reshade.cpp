@@ -164,8 +164,6 @@ namespace vkBasalt
         
         std::cout << "after creating Pipeline layout" << std::endl;
         
-        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, shaderModules[0], nullptr, "main", shaderModules[1], nullptr, "main", imageExtent, renderPass, pipelineLayout, true);
-        
         std::cout << "after creating Pipeline" << std::endl;
         
         
@@ -178,10 +176,35 @@ namespace vkBasalt
                                                                          imageViewVector);
         
         std::cout << "after writing ImageSamplerDescriptorSets" << std::endl;
-        
-        framebuffers = createFramebuffers(device, dispatchTable, renderPass, imageExtent, outputImageViews);
-        
         std::cout << "finished creating Reshade effect" << std::endl;
+        
+        std::cout << "technique_info annotations" << module.techniques[0].annotations.size() << std::endl;
+        
+        for(auto& pass: module.techniques[0].passes)
+        {
+            for(auto& target: pass.render_target_names)
+            {
+                std::cout << target << std::endl;
+            }
+            if(pass.render_target_names[0] == "")
+            {
+                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, outputImageViews));
+            }
+            else
+            {
+                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, textureImageViews[pass.render_target_names[0]]));
+            }
+            
+            graphicsPipelines.push_back(createGraphicsPipeline(device,
+                                                               dispatchTable,
+                                                               shaderModules[pass.vs_entry_point], nullptr, "main",
+                                                               shaderModules[pass.ps_entry_point], nullptr, "main",
+                                                               imageExtent, renderPass, pipelineLayout, true));
+            
+            std::cout << pass.vs_entry_point << std::endl;
+            std::cout << pass.ps_entry_point << std::endl;
+            
+        }
     }
     void ReshadeEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
@@ -223,37 +246,35 @@ namespace vkBasalt
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
         
-        std::cout << "framebuffer " << framebuffers.size() << std::endl;
-        
-        std::cout << "framebuffer " << framebuffers[imageIndex] << std::endl;
+        for(size_t i = 0; i < graphicsPipelines.size(); i++)
+        {
+            VkRenderPassBeginInfo renderPassBeginInfo;
+            renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassBeginInfo.pNext = nullptr;
+            renderPassBeginInfo.renderPass = renderPass;
+            renderPassBeginInfo.framebuffer = framebuffers[i][imageIndex];
+            renderPassBeginInfo.renderArea.offset = {0,0};
+            renderPassBeginInfo.renderArea.extent = imageExtent;
+            VkClearValue clearValue = {0.0f, 0.0f, 0.0f, 1.0f};
+            renderPassBeginInfo.clearValueCount = 1;
+            renderPassBeginInfo.pClearValues = &clearValue;
+            
+            std::cout << "before beginn renderpass" << std::endl;
+            dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+            std::cout << "after beginn renderpass" << std::endl;
+            
+            dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
+            std::cout << "after binding image sampler" << std::endl;
+            
+            dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipelines[i]);
+            std::cout << "after bind pipeliene" << std::endl;
+            
+            dispatchTable.CmdDraw(commandBuffer, module.techniques[0].passes[i].num_vertices, 1, 0, 0);
+            std::cout << "after draw" << std::endl;
 
-        VkRenderPassBeginInfo renderPassBeginInfo;
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.pNext = nullptr;
-        renderPassBeginInfo.renderPass = renderPass;
-        renderPassBeginInfo.framebuffer = framebuffers[imageIndex];
-        renderPassBeginInfo.renderArea.offset = {0,0};
-        renderPassBeginInfo.renderArea.extent = imageExtent;
-        VkClearValue clearValue = {0.0f, 0.0f, 0.0f, 1.0f};
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearValue;
-        
-        std::cout << "before beginn renderpass" << std::endl;
-        dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
-        std::cout << "after beginn renderpass" << std::endl;
-        
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
-        std::cout << "after binding image sampler" << std::endl;
-        
-        dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
-        std::cout << "after bind pipeliene" << std::endl;
-        
-        dispatchTable.CmdDraw(commandBuffer, 3, 1, 0, 0);
-        std::cout << "after draw" << std::endl;
-
-        dispatchTable.CmdEndRenderPass(commandBuffer);
-        std::cout << "after end renderpass" << std::endl;
-        
+            dispatchTable.CmdEndRenderPass(commandBuffer);
+            std::cout << "after end renderpass" << std::endl;
+        }
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         std::cout << "after the second pipeline barrier" << std::endl;
 
@@ -261,22 +282,32 @@ namespace vkBasalt
     ReshadeEffect::~ReshadeEffect()
     {
         std::cout << "destroying ReshadeEffect" << this << std::endl;
-        dispatchTable.DestroyPipeline(device, graphicsPipeline, nullptr);
+        for(auto& pipeline: graphicsPipelines)
+        {
+            dispatchTable.DestroyPipeline(device, pipeline, nullptr);
+        }
+        
         dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
         dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
         dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
         dispatchTable.DestroyDescriptorSetLayout(device,emptyDescriptorSetLayout,nullptr);
-        for(size_t i = 0;i < shaderModules.size(); i++)
+        for(auto& it: shaderModules)
         {
-            dispatchTable.DestroyShaderModule(device,shaderModules[i],nullptr);
+            dispatchTable.DestroyShaderModule(device, it.second, nullptr);
         }
         
         dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
-        for(unsigned int i=0;i<framebuffers.size();i++)
+        for(unsigned int i=0;i<outputImageViews.size();i++)
         {
-            dispatchTable.DestroyFramebuffer(device,framebuffers[i],nullptr);
             dispatchTable.DestroyImageView(device,outputImageViews[i],nullptr);
-            std::cout << "after DestroyImageView" << std::endl;
+        }
+        
+        for(auto& fbs: framebuffers)
+        {
+            for(auto& fb: fbs)
+            {
+                dispatchTable.DestroyFramebuffer(device, fb, nullptr);
+            }
         }
         
         std::set<VkImageView> imageViewSet;
@@ -352,8 +383,6 @@ namespace vkBasalt
         codegen->write_result(module);
         
         std::ofstream(tempFile, std::ios::binary).write(reinterpret_cast<const char *>(module.spirv.data()), module.spirv.size() * sizeof(uint32_t));
-        
-        shaderModules = std::vector<VkShaderModule>(module.entry_points.size());
     
         for(size_t i = 0; i < module.entry_points.size(); i++)
         {
@@ -364,7 +393,7 @@ namespace vkBasalt
             shaderCode.push_back(readFile(tempFile2 + std::to_string(i)));
             std::cout << shaderCode[i].size() << std::endl;
         
-            createShaderModule(device, dispatchTable, shaderCode[i], &shaderModules[i]);
+            createShaderModule(device, dispatchTable, shaderCode[i], &shaderModules[module.entry_points[i].name]);
         }
         std::cout << "after creating shaderModule" << std::endl;
     }

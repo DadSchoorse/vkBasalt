@@ -8,10 +8,6 @@
         }
 #endif
 
-typedef struct {
-    float sharpness;
-} CasBufferObject;
-
 namespace vkBasalt
 {
         
