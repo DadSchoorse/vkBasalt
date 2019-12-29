@@ -68,7 +68,8 @@ namespace vkBasalt
                 textureImageViews[module.textures[i].unique_name] = inputImageViews;;//TODO Depth buffer access
                 continue;
             }
-            VkExtent3D textureExtent = {module.textures[i].width, module.textures[i].height, module.textures[i].levels};
+            VkExtent3D textureExtent = {module.textures[i].width, module.textures[i].height, 1};
+            //TODO handel mip map levels correctly
             if(module.textures[i].annotations.size() == 0)
             {
                 textureMemory.push_back(VK_NULL_HANDLE);
