@@ -200,7 +200,7 @@ namespace vkBasalt
                                                                dispatchTable,
                                                                shaderModules[pass.vs_entry_point], nullptr, "main",
                                                                shaderModules[pass.ps_entry_point], nullptr, "main",
-                                                               imageExtent, renderPass, pipelineLayout, true));
+                                                               imageExtent, renderPass, pipelineLayout));
             
             std::cout << pass.vs_entry_point << std::endl;
             std::cout << pass.ps_entry_point << std::endl;
@@ -370,7 +370,7 @@ namespace vkBasalt
         }
         
          std::unique_ptr<reshadefx::codegen> codegen(
-        reshadefx::create_codegen_spirv(true /* vulkan semantics */, false /* debug info */, true /* uniforms to spec constants */));
+        reshadefx::create_codegen_spirv(true /* vulkan semantics */, false /* debug info */, true /* uniforms to spec constants */, true /*flip vertex shader*/));
         if (!parser.parse(std::move(preprocessor.output()), codegen.get()))
         {
             throw std::runtime_error("reshade shader creation failed");
