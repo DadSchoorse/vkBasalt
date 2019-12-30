@@ -36,6 +36,7 @@ namespace vkBasalt{
         std::vector<VkImageView> outputImageViews;
         std::unordered_map<std::string, std::vector<VkImage>> textureImages;
         std::unordered_map<std::string, std::vector<VkImageView>> textureImageViews;
+        std::unordered_map<std::string, VkFormat> textureFormats;
         std::vector<VkDescriptorSet> imageDescriptorSets;
         std::vector<std::vector<VkFramebuffer>> framebuffers;
         VkDescriptorSetLayout emptyDescriptorSetLayout;
@@ -43,19 +44,24 @@ namespace vkBasalt{
         std::vector<std::vector<char>> shaderCode;
         std::unordered_map<std::string, VkShaderModule> shaderModules;
         VkDescriptorPool descriptorPool;
-        VkRenderPass renderPass;
+        std::vector<VkRenderPass> renderPasses;
+        std::vector<VkRenderPassBeginInfo> renderPassBeginInfos;
         VkPipelineLayout pipelineLayout;
         std::vector<VkPipeline> graphicsPipelines;
         VkExtent2D imageExtent;
-        VkFormat format;
         std::vector<VkSampler> samplers;
         std::shared_ptr<vkBasalt::Config> pConfig;
         std::string effectName;
         reshadefx::module module;
         std::vector<VkDeviceMemory> textureMemory;
+        VkFormat inputOutputFormat;
         
         void createReshadeModule();
-        VkFormat convertReshadeFormat(reshadefx::texture_format texFormat);
+        VkFormat      convertReshadeFormat(reshadefx::texture_format texFormat);
+        VkCompareOp   convertReshadeCompareOp(uint32_t compareOp);
+        VkStencilOp   convertReshadeStencilOp(uint32_t stencilOp);
+        VkBlendOp     convertReshadeBlendOp(uint32_t blendOp);
+        VkBlendFactor convertReshadeBlendFactor(uint32_t blendFactor);
     };
 }
 
