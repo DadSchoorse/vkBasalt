@@ -116,7 +116,7 @@ namespace vkBasalt
                 if(filePath.find(".dds") != std::string::npos)
                 {
                     int channels, width, height;
-                    pixels = stbi_dds_load(filePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);//TODO fix SMAA
+                    pixels = stbi_dds_load(filePath.c_str(), &width, &height, &channels, STBI_default);//TODO reshade uses STBI_rgb_alpha
                     size = width * height * 4;
                 }
                 else
@@ -589,6 +589,9 @@ namespace vkBasalt
         reshadefx::preprocessor preprocessor;
         preprocessor.add_macro_definition("__RESHADE__", std::to_string(INT_MAX));
         preprocessor.add_macro_definition("__RESHADE_PERFORMANCE_MODE__", "1");
+        preprocessor.add_macro_definition("__RENDERER__", "0x20000");
+        //TODO add more macros
+        
         
         preprocessor.add_macro_definition("BUFFER_WIDTH", std::to_string(imageExtent.width));
         preprocessor.add_macro_definition("BUFFER_HEIGHT", std::to_string(imageExtent.height));
