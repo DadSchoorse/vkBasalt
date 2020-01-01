@@ -32,6 +32,14 @@ namespace vkBasalt
                        VkQueue queue,
                        VkCommandPool commandPool,
                        const unsigned char* writeData);
+    
+    void changeImageLayout(VkLayerInstanceDispatchTable instanceDispatchTable,
+                       VkDevice device,
+                       VkLayerDispatchTable dispatchTable,
+                       VkPhysicalDevice physicalDevice,
+                       std::vector<VkImage> images,
+                       VkQueue queue,
+                       VkCommandPool commandPool);
 }
 
 
