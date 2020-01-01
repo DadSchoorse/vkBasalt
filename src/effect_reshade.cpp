@@ -324,8 +324,8 @@ namespace vkBasalt
             shaderStageCreateInfoVert.pNext = nullptr;
             shaderStageCreateInfoVert.flags = 0;
             shaderStageCreateInfoVert.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            shaderStageCreateInfoVert.module = shaderModules[pass.vs_entry_point];
-            shaderStageCreateInfoVert.pName = "main";
+            shaderStageCreateInfoVert.module = (pConfig->getOption("disableSpirvWorkaround") != "1") ? shaderModules[pass.vs_entry_point] : shaderModule;
+            shaderStageCreateInfoVert.pName = (pConfig->getOption("disableSpirvWorkaround") != "1") ? "main" : pass.vs_entry_point.c_str();
             shaderStageCreateInfoVert.pSpecializationInfo = nullptr;
 
             VkPipelineShaderStageCreateInfo shaderStageCreateInfoFrag;
@@ -333,8 +333,8 @@ namespace vkBasalt
             shaderStageCreateInfoFrag.pNext = nullptr;
             shaderStageCreateInfoFrag.flags = 0;
             shaderStageCreateInfoFrag.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            shaderStageCreateInfoFrag.module = shaderModules[pass.ps_entry_point];
-            shaderStageCreateInfoFrag.pName = "main";
+            shaderStageCreateInfoFrag.module = (pConfig->getOption("disableSpirvWorkaround") != "1") ? shaderModules[pass.ps_entry_point] : shaderModule;
+            shaderStageCreateInfoFrag.pName =  (pConfig->getOption("disableSpirvWorkaround") != "1") ? "main" : pass.ps_entry_point.c_str();
             shaderStageCreateInfoFrag.pSpecializationInfo = nullptr;
 
             VkPipelineShaderStageCreateInfo shaderStages[] = {shaderStageCreateInfoVert,shaderStageCreateInfoFrag};
@@ -533,6 +533,11 @@ namespace vkBasalt
             dispatchTable.DestroyShaderModule(device, it.second, nullptr);
         }
         
+        if(pConfig->getOption("disableSpirvWorkaround") == "1")
+        {
+            dispatchTable.DestroyShaderModule(device, shaderModule, nullptr);
+        }
+        
         dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
         for(unsigned int i=0;i<outputImageViews.size();i++)
         {
@@ -622,18 +627,33 @@ namespace vkBasalt
         }
         codegen->write_result(module);
         
-        std::ofstream(tempFile, std::ios::binary).write(reinterpret_cast<const char *>(module.spirv.data()), module.spirv.size() * sizeof(uint32_t));
-    
-        for(size_t i = 0; i < module.entry_points.size(); i++)
+        if(pConfig->getOption("disableSpirvWorkaround") != "1")
         {
-            std::string stage = module.entry_points[i].is_pixel_shader ? "frag" : "vert";
-            std::string command = "spirv-cross " + tempFile + " --vulkan-semantics --entry " + module.entry_points[i].name;
-            command += " | glslangValidator -V --stdin -S " + stage + " -o " + tempFile2 + std::to_string(i);
-            assert(!std::system(command.c_str()));
-            shaderCode.push_back(readFile(tempFile2 + std::to_string(i)));
-            std::cout << shaderCode[i].size() << std::endl;
+            std::ofstream(tempFile, std::ios::binary).write(reinterpret_cast<const char *>(module.spirv.data()), module.spirv.size() * sizeof(uint32_t));
         
-            createShaderModule(device, dispatchTable, shaderCode[i], &shaderModules[module.entry_points[i].name]);
+            for(size_t i = 0; i < module.entry_points.size(); i++)
+            {
+                std::string stage = module.entry_points[i].is_pixel_shader ? "frag" : "vert";
+                std::string command = "spirv-cross " + tempFile + " --vulkan-semantics --entry " + module.entry_points[i].name;
+                command += " | glslangValidator -V --stdin -S " + stage + " -o " + tempFile2 + std::to_string(i);
+                assert(!std::system(command.c_str()));
+                shaderCode.push_back(readFile(tempFile2 + std::to_string(i)));
+                std::cout << shaderCode[i].size() << std::endl;
+            
+                createShaderModule(device, dispatchTable, shaderCode[i], &shaderModules[module.entry_points[i].name]);
+            }
+        }
+        else
+        {
+            VkShaderModuleCreateInfo shaderCreateInfo;
+            shaderCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            shaderCreateInfo.pNext = nullptr;
+            shaderCreateInfo.flags = 0;
+            shaderCreateInfo.codeSize = module.spirv.size() * sizeof(uint32_t);
+            shaderCreateInfo.pCode = module.spirv.data();
+
+            VkResult result = dispatchTable.CreateShaderModule(device, &shaderCreateInfo, nullptr, &shaderModule);
+            ASSERT_VULKAN(result);
         }
         std::cout << "after creating shaderModule" << std::endl;
     }
