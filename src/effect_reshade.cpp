@@ -86,10 +86,18 @@ namespace vkBasalt
                                    VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back());
+               
                textureImages[module.textures[i].unique_name] = images;
                std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertReshadeFormat(module.textures[i].format), images);
                textureImageViews[module.textures[i].unique_name] = imageViews;
                textureFormats[module.textures[i].unique_name] = convertReshadeFormat(module.textures[i].format);
+               changeImageLayout(instanceDispatchTable,
+                               device,
+                               dispatchTable,
+                               physicalDevice,
+                               images,
+                               queue,
+                               commandPool);
                continue;
             }
             else

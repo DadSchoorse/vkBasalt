@@ -193,4 +193,69 @@ namespace vkBasalt
         dispatchTable.FreeMemory(device,stagingMemory,nullptr);
         dispatchTable.DestroyBuffer(device,stagingBuffer,nullptr);
     }
+    
+    void changeImageLayout(VkLayerInstanceDispatchTable instanceDispatchTable,
+                       VkDevice device,
+                       VkLayerDispatchTable dispatchTable,
+                       VkPhysicalDevice physicalDevice,
+                       std::vector<VkImage> images,
+                       VkQueue queue,
+                       VkCommandPool commandPool)
+    {
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = commandPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        dispatchTable.AllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+        //initialize dispatch table for commandBuffer since it is a dispatchable object
+        *reinterpret_cast<void**>(commandBuffer) = *reinterpret_cast<void**>(device);
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        
+        dispatchTable.BeginCommandBuffer(commandBuffer, &beginInfo);
+        
+        VkImageMemoryBarrier memoryBarrier;
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        memoryBarrier.pNext = nullptr;
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        memoryBarrier.srcAccessMask = 0;
+        memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        memoryBarrier.subresourceRange.baseMipLevel = 0;
+        memoryBarrier.subresourceRange.levelCount = 1;
+        memoryBarrier.subresourceRange.baseArrayLayer = 0;
+        memoryBarrier.subresourceRange.layerCount = 1;
+        
+        for(auto& image : images)
+        {
+            memoryBarrier.image = image;
+            dispatchTable.CmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &memoryBarrier);
+        }
+        
+        dispatchTable.EndCommandBuffer(commandBuffer);
+        
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        dispatchTable.QueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+        dispatchTable.QueueWaitIdle(queue);
+
+        dispatchTable.FreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+    }
 }
