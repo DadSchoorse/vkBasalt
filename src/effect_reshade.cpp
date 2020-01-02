@@ -125,7 +125,7 @@ namespace vkBasalt
                 {
                     int channels, width, height;
                     pixels = stbi_dds_load(filePath.c_str(), &width, &height, &channels, STBI_default);//TODO reshade uses STBI_rgb_alpha
-                    size = width * height * 4;
+                    size = width * height * channels;
                 }
                 else
                 {
@@ -218,6 +218,10 @@ namespace vkBasalt
                 if(target == "" && i == 0)
                 {
                     attachmentDescription.format = inputOutputFormat;
+                    attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		            attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		            attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
                 }
                 else if(target == "")
                 {
@@ -491,6 +495,7 @@ namespace vkBasalt
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         memoryBarrier.image = outputImages[imageIndex];
         memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
         
@@ -514,8 +519,6 @@ namespace vkBasalt
             dispatchTable.CmdEndRenderPass(commandBuffer);
             std::cout << "after end renderpass" << std::endl;
         }
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
-        secondBarrier.image = outputImages[imageIndex];
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         std::cout << "after the second pipeline barrier" << std::endl;
 
