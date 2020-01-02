@@ -320,13 +320,14 @@ namespace vkBasalt
             
             //framebuffers
             
+            //TODO fix framebuffers
             if(pass.render_target_names[0] == "")
             {
                 framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, outputImageViews));
             }
             else
             {
-                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, textureImageViews[pass.render_target_names[0]]));
+                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, scissor.extent, textureImageViews[pass.render_target_names[0]]));
             }
             
             //pipeline
