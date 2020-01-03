@@ -164,16 +164,8 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     layerCreateInfo->u.pLayerInfo = layerCreateInfo->u.pLayerInfo->pNext;
 
     PFN_vkCreateInstance createFunc = (PFN_vkCreateInstance)gpa(VK_NULL_HANDLE, "vkCreateInstance");
-    
-    VkInstanceCreateInfo modifiedCreateInfo = *pCreateInfo;
-    VkApplicationInfo appInfo = *(modifiedCreateInfo.pApplicationInfo);
-    
-    //change the engine name to work around nvidia bug with dxvk
-    appInfo.pEngineName = "vkbasalt";
-    
-    modifiedCreateInfo.pApplicationInfo = &appInfo;
-    
-    VkResult ret = createFunc(&modifiedCreateInfo, pAllocator, pInstance);
+
+    VkResult ret = createFunc(pCreateInfo, pAllocator, pInstance);
 
     // fetch our own dispatch table for the functions we need, into the next layer
     VkLayerInstanceDispatchTable dispatchTable;
