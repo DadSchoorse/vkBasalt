@@ -41,8 +41,6 @@ namespace vkBasalt{
         std::vector<std::vector<VkFramebuffer>> framebuffers;
         VkDescriptorSetLayout emptyDescriptorSetLayout;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
-        std::vector<std::vector<char>> shaderCode;
-        std::unordered_map<std::string, VkShaderModule> shaderModules;
         VkShaderModule shaderModule;
         VkDescriptorPool descriptorPool;
         std::vector<VkRenderPass> renderPasses;
