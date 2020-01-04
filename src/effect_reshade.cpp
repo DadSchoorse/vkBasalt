@@ -332,6 +332,70 @@ namespace vkBasalt
             
             //pipeline
             
+	    // Configure effect
+            std::vector<VkSpecializationMapEntry> specMapEntrys;
+            std::vector<char> specData;
+
+            uint32_t spec_id = 0;
+            uint32_t offset = 0;
+
+            uint32_t bvalue, uvalue;
+            int32_t ivalue;
+            float fvalue;
+
+            for (auto& opt : module.spec_constants)
+            {
+                if (!opt.name.empty())
+                {
+                    auto val = pConfig->getOption(opt.name);
+                    if (!val.empty())
+                    {
+                        offset = static_cast<uint32_t>(specData.size());
+                        switch(opt.type.base)
+                        {
+                            case reshadefx::type::t_bool:
+                                bvalue = (val == "true" || val == "1") ? 1 : 0;
+                                specData.resize(offset + sizeof(VkBool32));
+                                std::memcpy(specData.data() + offset, &bvalue, sizeof(VkBool32));
+                                specMapEntrys.push_back({spec_id, offset, sizeof(VkBool32)});
+                                break;
+                            case reshadefx::type::t_int:
+                                ivalue = std::stoi(val);
+                                specData.resize(offset + sizeof(int32_t));
+                                std::memcpy(specData.data() + offset, &ivalue, sizeof(int32_t));
+                                specMapEntrys.push_back({spec_id, offset, sizeof(int32_t)});
+                                break;
+                            case reshadefx::type::t_uint:
+                                uvalue = std::stoul(val);
+                                specData.resize(offset + sizeof(uint32_t));
+                                std::memcpy(specData.data() + offset, &uvalue, sizeof(uint32_t));
+                                specMapEntrys.push_back({spec_id, offset, sizeof(uint32_t)});
+                                break;
+                            case reshadefx::type::t_float:
+                                fvalue = std::stof(val);
+                                specData.resize(offset + sizeof(float));
+                                std::memcpy(specData.data() + offset, &fvalue, sizeof(float));
+                                specMapEntrys.push_back({spec_id, offset, sizeof(float)});
+                                break;
+                            default:
+                                // do nothing
+                                break;
+                        }
+                    }
+                }
+                spec_id++;
+            }
+
+            VkSpecializationInfo specializationInfo;
+            if (specMapEntrys.size() > 0) {
+                specializationInfo = {
+                    .mapEntryCount = static_cast<uint32_t>(specMapEntrys.size()),
+                    .pMapEntries = specMapEntrys.data(),
+                    .dataSize = specData.size(),
+                    .pData = specData.data()
+                };
+            }
+
             VkPipelineShaderStageCreateInfo shaderStageCreateInfoVert;
             shaderStageCreateInfoVert.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             shaderStageCreateInfoVert.pNext = nullptr;
@@ -339,7 +403,7 @@ namespace vkBasalt
             shaderStageCreateInfoVert.stage = VK_SHADER_STAGE_VERTEX_BIT;
             shaderStageCreateInfoVert.module = shaderModule;
             shaderStageCreateInfoVert.pName = pass.vs_entry_point.c_str();
-            shaderStageCreateInfoVert.pSpecializationInfo = nullptr;
+            shaderStageCreateInfoVert.pSpecializationInfo = (specMapEntrys.size() > 0) ? &specializationInfo : nullptr;
 
             VkPipelineShaderStageCreateInfo shaderStageCreateInfoFrag;
             shaderStageCreateInfoFrag.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -348,7 +412,7 @@ namespace vkBasalt
             shaderStageCreateInfoFrag.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
             shaderStageCreateInfoFrag.module =  shaderModule;
             shaderStageCreateInfoFrag.pName =  pass.ps_entry_point.c_str();
-            shaderStageCreateInfoFrag.pSpecializationInfo = nullptr;
+            shaderStageCreateInfoFrag.pSpecializationInfo = (specMapEntrys.size() > 0) ? &specializationInfo : nullptr;
 
             VkPipelineShaderStageCreateInfo shaderStages[] = {shaderStageCreateInfoVert,shaderStageCreateInfoFrag};
 
