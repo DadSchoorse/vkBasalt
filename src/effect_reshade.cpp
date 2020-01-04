@@ -314,9 +314,9 @@ namespace vkBasalt
             renderPassBeginInfo.renderPass = renderPass;
             renderPassBeginInfo.framebuffer = VK_NULL_HANDLE;//changed at apply time
             renderPassBeginInfo.renderArea = scissor;
-            renderPassBeginInfo.clearValueCount = attachmentDescriptions.size();
+            renderPassBeginInfo.clearValueCount = pass.clear_render_targets ? attachmentDescriptions.size() : 0;
             VkClearValue clearValues[8] = {};
-            renderPassBeginInfo.pClearValues = clearValues;
+            renderPassBeginInfo.pClearValues = pass.clear_render_targets ? clearValues : nullptr;
             
             renderPassBeginInfos.push_back(renderPassBeginInfo);
             
