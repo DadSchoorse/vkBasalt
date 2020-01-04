@@ -205,6 +205,8 @@ namespace vkBasalt
         
         std::cout << "technique_info annotations" << module.techniques[0].annotations.size() << std::endl;
         
+        bool firstTimeStencilAccess = true;//Used to clear the sttencil attachment on the first time
+        
         for(auto& pass: module.techniques[0].passes)
         {
             std::vector<VkAttachmentReference>               attachmentReferences;
@@ -267,6 +269,51 @@ namespace vkBasalt
                 
             }
             
+            VkRect2D scissor;
+            scissor.offset = {0,0};
+            scissor.extent.width = pass.viewport_width ? pass.viewport_width : imageExtent.width;
+            scissor.extent.height = pass.viewport_height ? pass.viewport_height : imageExtent.height;
+            
+            std::cout << scissor.extent.width << " x " << scissor.extent.height << std::endl;
+
+            VkViewport viewport;
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(scissor.extent.width);
+            viewport.height = static_cast<float>(scissor.extent.height);
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+            
+            uint32_t depthAttachmentCount = 0;
+            
+            if(scissor.extent.width == imageExtent.width && scissor.extent.height == imageExtent.height)
+            {
+                depthAttachmentCount = 1;
+                
+                attachmentImageViews.push_back(std::vector<VkImageView>(inputImages.size(), stencilImageView));
+                
+                VkAttachmentReference attachmentReference;
+                attachmentReference.attachment = attachmentReferences.size();
+                attachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                
+                attachmentReferences.push_back(attachmentReference);
+                
+                VkAttachmentDescription attachmentDescription;
+                attachmentDescription.flags = 0;
+                attachmentDescription.format = VK_FORMAT_D24_UNORM_S8_UINT;
+                attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+                attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                attachmentDescription.stencilLoadOp = firstTimeStencilAccess ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+                attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                
+                firstTimeStencilAccess = false;
+                
+                attachmentDescriptions.push_back(attachmentDescription);
+            }
+            
             //renderpass
 
             VkSubpassDescription subpassDescription;
@@ -274,10 +321,10 @@ namespace vkBasalt
             subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
             subpassDescription.inputAttachmentCount = 0;
             subpassDescription.pInputAttachments = nullptr;
-            subpassDescription.colorAttachmentCount = attachmentReferences.size();
+            subpassDescription.colorAttachmentCount = attachmentReferences.size() - depthAttachmentCount;
             subpassDescription.pColorAttachments = attachmentReferences.data();
             subpassDescription.pResolveAttachments = nullptr;
-            subpassDescription.pDepthStencilAttachment = nullptr;
+            subpassDescription.pDepthStencilAttachment = depthAttachmentCount ? &attachmentReferences.back() : nullptr;
             subpassDescription.preserveAttachmentCount = 0;
             subpassDescription.pPreserveAttachments = nullptr;
 
@@ -306,30 +353,15 @@ namespace vkBasalt
             ASSERT_VULKAN(result);
             renderPasses.push_back(renderPass);
             
-            VkRect2D scissor;
-            scissor.offset = {0,0};
-            scissor.extent.width = pass.viewport_width ? pass.viewport_width : imageExtent.width;
-            scissor.extent.height = pass.viewport_height ? pass.viewport_height : imageExtent.height;
-            
-            std::cout << scissor.extent.width << " x " << scissor.extent.height << std::endl;
-
-            VkViewport viewport;
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(scissor.extent.width);
-            viewport.height = static_cast<float>(scissor.extent.height);
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            
             VkRenderPassBeginInfo renderPassBeginInfo;
             renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             renderPassBeginInfo.pNext = nullptr;
             renderPassBeginInfo.renderPass = renderPass;
             renderPassBeginInfo.framebuffer = VK_NULL_HANDLE;//changed at apply time
             renderPassBeginInfo.renderArea = scissor;
-            renderPassBeginInfo.clearValueCount = pass.clear_render_targets ? attachmentDescriptions.size() : 0;
-            VkClearValue clearValues[8] = {};
-            renderPassBeginInfo.pClearValues = pass.clear_render_targets ? clearValues : nullptr;
+            renderPassBeginInfo.clearValueCount = attachmentDescriptions.size();
+            VkClearValue clearValues[9] = {};
+            renderPassBeginInfo.pClearValues = clearValues;
             
             renderPassBeginInfos.push_back(renderPassBeginInfo);
             
@@ -337,7 +369,7 @@ namespace vkBasalt
             
             if(pass.render_target_names[0] == "")
             {
-                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputImageViews}));
+                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
             }
             else
             {
@@ -531,6 +563,16 @@ namespace vkBasalt
         memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        
+        //stencil image
+        memoryBarrier.image = stencilImage;
+        memoryBarrier.srcAccessMask = 0;
+        memoryBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT | VK_IMAGE_ASPECT_DEPTH_BIT;
+        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        
         std::cout << "after the first pipeline barrier" << std::endl;
         
         for(size_t i = 0; i < graphicsPipelines.size(); i++)
