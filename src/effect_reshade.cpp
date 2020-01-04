@@ -423,6 +423,24 @@ namespace vkBasalt
             dynamicStateCreateInfo.flags = 0;
             dynamicStateCreateInfo.dynamicStateCount = 0;
             dynamicStateCreateInfo.pDynamicStates = nullptr;
+            
+            VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
+            depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+            depthStencilStateCreateInfo.pNext = nullptr;
+            depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
+            depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
+            depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+            depthStencilStateCreateInfo.stencilTestEnable = pass.stencil_enable;
+            depthStencilStateCreateInfo.front.failOp = convertReshadeStencilOp(pass.stencil_op_fail);
+            depthStencilStateCreateInfo.front.passOp = convertReshadeStencilOp(pass.stencil_op_pass);
+            depthStencilStateCreateInfo.front.depthFailOp = convertReshadeStencilOp(pass.stencil_op_depth_fail);
+            depthStencilStateCreateInfo.front.compareOp = convertReshadeCompareOp(pass.stencil_comparison_func);
+            depthStencilStateCreateInfo.front.compareMask = pass.stencil_read_mask;
+            depthStencilStateCreateInfo.front.writeMask = pass.stencil_write_mask;
+            depthStencilStateCreateInfo.front.reference = pass.stencil_reference_value;
+            depthStencilStateCreateInfo.back = depthStencilStateCreateInfo.front;
+            depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+            depthStencilStateCreateInfo.minDepthBounds = 1.0f;
 
             VkGraphicsPipelineCreateInfo pipelineCreateInfo;
             pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -436,7 +454,7 @@ namespace vkBasalt
             pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
             pipelineCreateInfo.pRasterizationState = &rasterizationCreateInfo;
             pipelineCreateInfo.pMultisampleState = &multisampleCreateInfo;
-            pipelineCreateInfo.pDepthStencilState = nullptr;
+            pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
             pipelineCreateInfo.pColorBlendState = &colorBlendCreateInfo;
             pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
             pipelineCreateInfo.layout = pipelineLayout;
