@@ -54,6 +54,8 @@ namespace vkBasalt{
         reshadefx::module module;
         std::vector<VkDeviceMemory> textureMemory;
         VkFormat inputOutputFormat;
+        VkImage stencilImage;
+        VkImageView stencilImageView;
         
         void createReshadeModule();
         VkFormat      convertReshadeFormat(reshadefx::texture_format texFormat);

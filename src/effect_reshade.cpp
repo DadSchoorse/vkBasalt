@@ -52,6 +52,19 @@ namespace vkBasalt
         std::cout << "after creating ImageViews" << std::endl;
         
         createReshadeModule();
+        textureMemory.push_back(VK_NULL_HANDLE);
+        stencilImage = createImages(instanceDispatchTable,
+                                   device,
+                                   dispatchTable,
+                                   physicalDevice,
+                                   1,
+                                   {imageExtent.width, imageExtent.height, 1},
+                                   VK_FORMAT_D24_UNORM_S8_UINT,//TODO search for format and save it
+                                   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                                   textureMemory.back())[0];
+        
+        stencilImageView = createImageViews(device, dispatchTable, VK_FORMAT_D24_UNORM_S8_UINT, {stencilImage}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)[0];
         
         
         
@@ -430,6 +443,7 @@ namespace vkBasalt
             depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
             depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
             depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+            depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
             depthStencilStateCreateInfo.stencilTestEnable = pass.stencil_enable;
             depthStencilStateCreateInfo.front.failOp = convertReshadeStencilOp(pass.stencil_op_fail);
             depthStencilStateCreateInfo.front.passOp = convertReshadeStencilOp(pass.stencil_op_pass);
@@ -590,6 +604,7 @@ namespace vkBasalt
         {
             dispatchTable.DestroyImageView(device, imageView, nullptr);
         }
+        dispatchTable.DestroyImageView(device, stencilImageView, nullptr);
         
         for(auto& it: textureImages)
         {
@@ -598,6 +613,8 @@ namespace vkBasalt
                 dispatchTable.DestroyImage(device, image, nullptr);
             }
         }
+        
+        dispatchTable.DestroyImage(device, stencilImage, nullptr);
         
         for(auto& sampler: samplers)
         {
