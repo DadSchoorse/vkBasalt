@@ -440,7 +440,7 @@ namespace vkBasalt
             depthStencilStateCreateInfo.front.reference = pass.stencil_reference_value;
             depthStencilStateCreateInfo.back = depthStencilStateCreateInfo.front;
             depthStencilStateCreateInfo.minDepthBounds = 0.0f;
-            depthStencilStateCreateInfo.minDepthBounds = 1.0f;
+            depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
 
             VkGraphicsPipelineCreateInfo pipelineCreateInfo;
             pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
