@@ -197,8 +197,8 @@ namespace vkBasalt
             std::vector<VkAttachmentReference>               attachmentReferences;
             std::vector<VkAttachmentDescription>             attachmentDescriptions;
             std::vector<VkPipelineColorBlendAttachmentState> attachmentBlendStates;
-            
             std::vector<std::vector<VkImageView>>            attachmentImageViews;
+            
             for(int i = 0; i < 8; i++)
             {
                 std::string target = pass.render_target_names[i];
@@ -247,6 +247,8 @@ namespace vkBasalt
                 colorBlendAttachment.colorWriteMask = pass.color_write_mask;
                 
                 attachmentBlendStates.push_back(colorBlendAttachment);
+                
+                attachmentImageViews.push_back(textureImageViews[target]);
                 
                 
                 
@@ -320,14 +322,13 @@ namespace vkBasalt
             
             //framebuffers
             
-            //TODO fix framebuffers
             if(pass.render_target_names[0] == "")
             {
-                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, outputImageViews));
+                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputImageViews}));
             }
             else
             {
-                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, scissor.extent, textureImageViews[pass.render_target_names[0]]));
+                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, scissor.extent, attachmentImageViews));
             }
             
             //pipeline
