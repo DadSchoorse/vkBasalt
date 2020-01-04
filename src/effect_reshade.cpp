@@ -469,7 +469,7 @@ namespace vkBasalt
             dynamicStateCreateInfo.dynamicStateCount = 0;
             dynamicStateCreateInfo.pDynamicStates = nullptr;
             
-            VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
+            VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = {};
             depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
             depthStencilStateCreateInfo.pNext = nullptr;
             depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
