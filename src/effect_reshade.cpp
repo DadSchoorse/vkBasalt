@@ -140,14 +140,19 @@ namespace vkBasalt
                 int channels;
                 int width;
                 int height;
-                if(filePath.find(".dds") != std::string::npos)
+                FILE *const file = fopen(filePath.c_str(), "rb");
+                if(file == nullptr)
                 {
-                    pixels = stbi_dds_load(filePath.c_str(), &width, &height, &channels, STBI_default);//TODO reshade uses STBI_rgb_alpha
+                    throw std::runtime_error("couldn't open texture: " + filePath);
+                }
+                if(stbi_dds_test_file(file))
+                {
+                    pixels = stbi_dds_load_from_file(file, &width, &height, &channels, STBI_default);//TODO reshade uses STBI_rgb_alpha
                     size = width * height * channels;
                 }
                 else
                 {
-                    pixels = stbi_load(filePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+                    pixels = stbi_load_from_file(file, &width, &height, &channels, STBI_rgb_alpha);
                     channels = 4;
                     size = width * height * channels;
                 }
