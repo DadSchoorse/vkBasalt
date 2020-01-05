@@ -6,6 +6,7 @@
 #include <cassert>
 
 #include <set>
+#include <variant>
 
 #include "image_view.hpp"
 #include "descriptor_set.hpp"
@@ -336,45 +337,39 @@ namespace vkBasalt
             std::vector<VkSpecializationMapEntry> specMapEntrys;
             std::vector<char> specData;
 
-            uint32_t spec_id = 0;
-            uint32_t offset = 0;
-
-            uint32_t bvalue, uvalue;
-            int32_t ivalue;
-            float fvalue;
-
-            for (auto& opt : module.spec_constants)
+            for (uint32_t spec_id = 0, offset = 0; auto& opt : module.spec_constants)
             {
                 if (!opt.name.empty())
                 {
                     auto val = pConfig->getOption(opt.name);
                     if (!val.empty())
                     {
+                        std::variant<int32_t,uint32_t,float> converted_value;
                         offset = static_cast<uint32_t>(specData.size());
                         switch(opt.type.base)
                         {
                             case reshadefx::type::t_bool:
-                                bvalue = (val == "true" || val == "1") ? 1 : 0;
+                                converted_value = (val == "true" || val == "1") ? 1 : 0;
                                 specData.resize(offset + sizeof(VkBool32));
-                                std::memcpy(specData.data() + offset, &bvalue, sizeof(VkBool32));
+                                std::memcpy(specData.data() + offset, &converted_value, sizeof(VkBool32));
                                 specMapEntrys.push_back({spec_id, offset, sizeof(VkBool32)});
                                 break;
                             case reshadefx::type::t_int:
-                                ivalue = std::stoi(val);
+                                converted_value = std::stoi(val);
                                 specData.resize(offset + sizeof(int32_t));
-                                std::memcpy(specData.data() + offset, &ivalue, sizeof(int32_t));
+                                std::memcpy(specData.data() + offset, &converted_value, sizeof(int32_t));
                                 specMapEntrys.push_back({spec_id, offset, sizeof(int32_t)});
                                 break;
                             case reshadefx::type::t_uint:
-                                uvalue = std::stoul(val);
+                                converted_value = static_cast<uint32_t>(std::stoul(val));
                                 specData.resize(offset + sizeof(uint32_t));
-                                std::memcpy(specData.data() + offset, &uvalue, sizeof(uint32_t));
+                                std::memcpy(specData.data() + offset, &converted_value, sizeof(uint32_t));
                                 specMapEntrys.push_back({spec_id, offset, sizeof(uint32_t)});
                                 break;
                             case reshadefx::type::t_float:
-                                fvalue = std::stof(val);
+                                converted_value = std::stof(val);
                                 specData.resize(offset + sizeof(float));
-                                std::memcpy(specData.data() + offset, &fvalue, sizeof(float));
+                                std::memcpy(specData.data() + offset, &converted_value, sizeof(float));
                                 specMapEntrys.push_back({spec_id, offset, sizeof(float)});
                                 break;
                             default:
