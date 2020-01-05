@@ -133,13 +133,33 @@ namespace vkBasalt
                 imageViews = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
                 textureImageViews[module.textures[i].unique_name] = imageViews;
                 textureFormats[module.textures[i].unique_name] = convertReshadeFormat(module.textures[i].format);
+                
+                int desiredChannels;
+                switch(textureFormats[module.textures[i].unique_name])
+                {
+                    case VK_FORMAT_R8_UNORM:
+                        desiredChannels = STBI_grey;
+                        break;
+                    case VK_FORMAT_R8G8_UNORM:
+                        desiredChannels = STBI_grey_alpha;
+                        break;
+                    case VK_FORMAT_R8G8B8A8_UNORM:
+                        desiredChannels = STBI_rgb_alpha;
+                        break;
+                    case VK_FORMAT_R8G8B8A8_SRGB:
+                        desiredChannels = STBI_rgb_alpha;
+                        break;
+                    default:
+                        throw std::runtime_error("unsupported texture upload format");
+                }
+                
                 std::string filePath = pConfig->getOption("reshadeTexturePath") + "/" + module.textures[i].annotations[0].value.string_data;
                 stbi_uc* pixels;
                 std::vector<stbi_uc> resizedPixels;
                 uint32_t size;
-                int channels;
                 int width;
                 int height;
+                size = textureExtent.width * textureExtent.height * desiredChannels;
                 FILE *const file = fopen(filePath.c_str(), "rb");
                 if(file == nullptr)
                 {
@@ -147,21 +167,19 @@ namespace vkBasalt
                 }
                 if(stbi_dds_test_file(file))
                 {
-                    pixels = stbi_dds_load_from_file(file, &width, &height, &channels, STBI_default);//TODO reshade uses STBI_rgb_alpha
-                    size = width * height * channels;
+                    int channels;
+                    pixels = stbi_dds_load_from_file(file, &width, &height, &channels, desiredChannels);
                 }
                 else
                 {
-                    pixels = stbi_load_from_file(file, &width, &height, &channels, STBI_rgb_alpha);
-                    channels = 4;
-                    size = width * height * channels;
+                    int channels;
+                    pixels = stbi_load_from_file(file, &width, &height, &channels, desiredChannels);
                 }
                 
                 if(static_cast<uint32_t>(width) != textureExtent.width || static_cast<uint32_t>(height) != textureExtent.height)
                 {
-                    size = textureExtent.width * textureExtent.height * channels;
                     resizedPixels.resize(size);
-                    stbir_resize_uint8(pixels, width, height, 0, resizedPixels.data(), textureExtent.width, textureExtent.height, 0, channels);
+                    stbir_resize_uint8(pixels, width, height, 0, resizedPixels.data(), textureExtent.width, textureExtent.height, 0, desiredChannels);
                 }
                 
                 uploadToImage(instanceDispatchTable,
