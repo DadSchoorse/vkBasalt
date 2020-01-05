@@ -220,8 +220,19 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     layerCreateInfo->u.pLayerInfo = layerCreateInfo->u.pLayerInfo->pNext;
 
     PFN_vkCreateDevice createFunc = (PFN_vkCreateDevice)gipa(VK_NULL_HANDLE, "vkCreateDevice");
+    
+    //Active needed Features
+    
+    VkDeviceCreateInfo modifiedCreateInfo = *pCreateInfo;
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+    if(modifiedCreateInfo.pEnabledFeatures)
+    {
+        deviceFeatures = *(modifiedCreateInfo.pEnabledFeatures);
+    }
+    deviceFeatures.shaderImageGatherExtended = VK_TRUE;
+    modifiedCreateInfo.pEnabledFeatures = &deviceFeatures;
 
-    VkResult ret = createFunc(physicalDevice, pCreateInfo, pAllocator, pDevice);
+    VkResult ret = createFunc(physicalDevice, &modifiedCreateInfo, pAllocator, pDevice);
     
     // fetch our own dispatch table for the functions we need, into the next layer
     VkLayerDispatchTable dispatchTable;
