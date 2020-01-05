@@ -20,6 +20,7 @@
 
 #include "stb_image.h"
 #include "stb_image_dds.h"
+#include "stb_image_resize.h"
 
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)\
@@ -134,20 +135,30 @@ namespace vkBasalt
                 textureFormats[module.textures[i].unique_name] = convertReshadeFormat(module.textures[i].format);
                 std::string filePath = pConfig->getOption("reshadeTexturePath") + "/" + module.textures[i].annotations[0].value.string_data;
                 stbi_uc* pixels;
+                std::vector<stbi_uc> resizedPixels;
                 uint32_t size;
+                int channels;
+                int width;
+                int height;
                 if(filePath.find(".dds") != std::string::npos)
                 {
-                    int channels, width, height;
                     pixels = stbi_dds_load(filePath.c_str(), &width, &height, &channels, STBI_default);//TODO reshade uses STBI_rgb_alpha
                     size = width * height * channels;
                 }
                 else
                 {
-                    int channels, width, height;
                     pixels = stbi_load(filePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-                    size = width * height * 4;
+                    channels = 4;
+                    size = width * height * channels;
                 }
-                //TODO make sure the image has the right size
+                
+                if(static_cast<uint32_t>(width) != textureExtent.width || static_cast<uint32_t>(height) != textureExtent.height)
+                {
+                    size = textureExtent.width * textureExtent.height * channels;
+                    resizedPixels.resize(size);
+                    stbir_resize_uint8(pixels, width, height, 0, resizedPixels.data(), textureExtent.width, textureExtent.height, 0, channels);
+                }
+                
                 uploadToImage(instanceDispatchTable,
                        device,
                        dispatchTable,
@@ -157,7 +168,7 @@ namespace vkBasalt
                        size,
                        queue,
                        commandPool,
-                       pixels);
+                       resizedPixels.size() ? resizedPixels.data() : pixels);
                 stbi_image_free(pixels);
             }
         }
