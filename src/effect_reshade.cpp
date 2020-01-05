@@ -337,40 +337,40 @@ namespace vkBasalt
             std::vector<VkSpecializationMapEntry> specMapEntrys;
             std::vector<char> specData;
 
-            for (uint32_t spec_id = 0, offset = 0; auto& opt : module.spec_constants)
+            for (uint32_t specId = 0, offset = 0; auto& opt : module.spec_constants)
             {
                 if (!opt.name.empty())
                 {
                     auto val = pConfig->getOption(opt.name);
                     if (!val.empty())
                     {
-                        std::variant<int32_t,uint32_t,float> converted_value;
+                        std::variant<int32_t,uint32_t,float> convertedValue;
                         offset = static_cast<uint32_t>(specData.size());
                         switch(opt.type.base)
                         {
                             case reshadefx::type::t_bool:
-                                converted_value = (val == "true" || val == "1") ? 1 : 0;
+                                convertedValue = (val == "true" || val == "1") ? 1 : 0;
                                 specData.resize(offset + sizeof(VkBool32));
-                                std::memcpy(specData.data() + offset, &converted_value, sizeof(VkBool32));
-                                specMapEntrys.push_back({spec_id, offset, sizeof(VkBool32)});
+                                std::memcpy(specData.data() + offset, &convertedValue, sizeof(VkBool32));
+                                specMapEntrys.push_back({specId, offset, sizeof(VkBool32)});
                                 break;
                             case reshadefx::type::t_int:
-                                converted_value = std::stoi(val);
+                                convertedValue = std::stoi(val);
                                 specData.resize(offset + sizeof(int32_t));
-                                std::memcpy(specData.data() + offset, &converted_value, sizeof(int32_t));
-                                specMapEntrys.push_back({spec_id, offset, sizeof(int32_t)});
+                                std::memcpy(specData.data() + offset, &convertedValue, sizeof(int32_t));
+                                specMapEntrys.push_back({specId, offset, sizeof(int32_t)});
                                 break;
                             case reshadefx::type::t_uint:
-                                converted_value = static_cast<uint32_t>(std::stoul(val));
+                                convertedValue = static_cast<uint32_t>(std::stoul(val));
                                 specData.resize(offset + sizeof(uint32_t));
-                                std::memcpy(specData.data() + offset, &converted_value, sizeof(uint32_t));
-                                specMapEntrys.push_back({spec_id, offset, sizeof(uint32_t)});
+                                std::memcpy(specData.data() + offset, &convertedValue, sizeof(uint32_t));
+                                specMapEntrys.push_back({specId, offset, sizeof(uint32_t)});
                                 break;
                             case reshadefx::type::t_float:
-                                converted_value = std::stof(val);
+                                convertedValue = std::stof(val);
                                 specData.resize(offset + sizeof(float));
-                                std::memcpy(specData.data() + offset, &converted_value, sizeof(float));
-                                specMapEntrys.push_back({spec_id, offset, sizeof(float)});
+                                std::memcpy(specData.data() + offset, &convertedValue, sizeof(float));
+                                specMapEntrys.push_back({specId, offset, sizeof(float)});
                                 break;
                             default:
                                 // do nothing
@@ -378,7 +378,7 @@ namespace vkBasalt
                         }
                     }
                 }
-                spec_id++;
+                specId++;
             }
 
             VkSpecializationInfo specializationInfo;
