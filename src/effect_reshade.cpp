@@ -7,6 +7,7 @@
 
 #include <set>
 #include <variant>
+#include <algorithm>
 
 #include "image_view.hpp"
 #include "descriptor_set.hpp"
@@ -211,7 +212,7 @@ namespace vkBasalt
         
         VkDescriptorPoolSize imagePoolSize;
         imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imagePoolSize.descriptorCount = inputImages.size() * module.samplers.size();
+        imagePoolSize.descriptorCount = inputImages.size() * module.samplers.size() * 3;
         
         
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
@@ -224,21 +225,60 @@ namespace vkBasalt
         
         std::cout << "after creating Pipeline layout" << std::endl;
         
-        std::cout << "after creating Pipeline" << std::endl;
+        std::cout << outputWrites << std::endl;
         
-        
-        std::cout << samplers.size() << " | " << imageViewVector.size() << std::endl;
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
+        inputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          samplers,
                                                                          imageViewVector);
         
-        std::cout << "after writing ImageSamplerDescriptorSets" << std::endl;
-        std::cout << "finished creating Reshade effect" << std::endl;
+        //count the back buffer writes
+        for(auto& pass: module.techniques[0].passes)
+        {
+            if(pass.render_target_names[0] == "")
+            {
+                outputWrites++;
+            }
+        }
         
-        std::cout << "technique_info annotations" << module.techniques[0].annotations.size() << std::endl;
+        //if there is only one outputWrite, we can directly write to outputImages
+        if(outputWrites > 1)
+        {
+            textureMemory.push_back(VK_NULL_HANDLE);
+            backBufferImages = createImages(instanceDispatchTable,
+                               device,
+                               dispatchTable,
+                               physicalDevice,
+                               inputImages.size(),
+                               {imageExtent.width, imageExtent.height, 1},
+                               inputOutputFormat,//TODO search for format and save it
+                               VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                               textureMemory.back());
+            backBufferImageViews = createImageViews(device, dispatchTable, inputOutputFormat, backBufferImages);
+            std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViews, backBufferImageViews);
+            backBufferDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
+                                                                         dispatchTable,
+                                                                         descriptorPool,
+                                                                         imageSamplerDescriptorSetLayout,
+                                                                         samplers,
+                                                                         imageViewVector);
+        }
+        if(outputWrites > 2)
+        {
+            std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViews, outputImageViews);
+            outputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
+                                                                         dispatchTable,
+                                                                         descriptorPool,
+                                                                         imageSamplerDescriptorSetLayout,
+                                                                         samplers,
+                                                                         imageViewVector);
+        }
+        
+        
+        std::cout << "after writing ImageSamplerDescriptorSets" << std::endl;
         
         bool firstTimeStencilAccess = true;//Used to clear the sttencil attachment on the first time
         
@@ -613,6 +653,7 @@ namespace vkBasalt
             std::cout << pass.ps_entry_point << std::endl;
             
         }
+        std::cout << "finished creating Reshade effect" << std::endl;
     }
     void ReshadeEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
@@ -676,7 +717,7 @@ namespace vkBasalt
             dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfos[i],VK_SUBPASS_CONTENTS_INLINE);
             std::cout << "after beginn renderpass" << std::endl;
             
-            dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
+            dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(inputDescriptorSets[imageIndex]),0,nullptr);
             std::cout << "after binding image sampler" << std::endl;
             
             dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipelines[i]);
@@ -712,9 +753,14 @@ namespace vkBasalt
         dispatchTable.DestroyShaderModule(device, shaderModule, nullptr);
         
         dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
-        for(unsigned int i=0;i<outputImageViews.size();i++)
+        for(auto& imageView: outputImageViews)
         {
-            dispatchTable.DestroyImageView(device,outputImageViews[i],nullptr);
+            dispatchTable.DestroyImageView(device,imageView,nullptr);
+        }
+        
+        for(auto& imageView: backBufferImageViews)
+        {
+            dispatchTable.DestroyImageView(device,imageView,nullptr);
         }
         
         for(auto& fbs: framebuffers)
@@ -747,6 +793,11 @@ namespace vkBasalt
             {
                 dispatchTable.DestroyImage(device, image, nullptr);
             }
+        }
+        
+        for(auto& image: backBufferImages)
+        {
+            dispatchTable.DestroyImage(device,image,nullptr);
         }
         
         dispatchTable.DestroyImage(device, stencilImage, nullptr);
