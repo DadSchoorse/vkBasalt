@@ -282,7 +282,7 @@ namespace vkBasalt
         
         bool firstTimeStencilAccess = true;//Used to clear the sttencil attachment on the first time
         
-        for(auto& pass: module.techniques[0].passes)
+        for(bool outputToBackBuffer = outputWrites % 2 == 0;auto& pass: module.techniques[0].passes)
         {
             std::vector<VkAttachmentReference>               attachmentReferences;
             std::vector<VkAttachmentDescription>             attachmentDescriptions;
@@ -444,11 +444,14 @@ namespace vkBasalt
             
             if(pass.render_target_names[0] == "")
             {
-                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
+                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputToBackBuffer ? backBufferImageViews : outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
+                outputToBackBuffer = !outputToBackBuffer;
+                switchSamplers.push_back(true);
             }
             else
             {
                 framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, scissor.extent, attachmentImageViews));
+                switchSamplers.push_back(false);
             }
             
             //pipeline
@@ -709,6 +712,10 @@ namespace vkBasalt
         
         std::cout << "after the first pipeline barrier" << std::endl;
         
+        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(inputDescriptorSets[imageIndex]),0,nullptr);
+        std::cout << "after binding image sampler" << std::endl;
+        
+        bool backBufferNext = outputWrites % 2 == 0;
         for(size_t i = 0; i < graphicsPipelines.size(); i++)
         {
             renderPassBeginInfos[i].framebuffer = framebuffers[i][imageIndex];
@@ -716,9 +723,6 @@ namespace vkBasalt
             std::cout << "before beginn renderpass" << std::endl;
             dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfos[i],VK_SUBPASS_CONTENTS_INLINE);
             std::cout << "after beginn renderpass" << std::endl;
-            
-            dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(inputDescriptorSets[imageIndex]),0,nullptr);
-            std::cout << "after binding image sampler" << std::endl;
             
             dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipelines[i]);
             std::cout << "after bind pipeliene" << std::endl;
@@ -728,6 +732,19 @@ namespace vkBasalt
 
             dispatchTable.CmdEndRenderPass(commandBuffer);
             std::cout << "after end renderpass" << std::endl;
+            
+            if(switchSamplers[i] && outputWrites > 1)
+            {
+                if(backBufferNext)
+                {
+                    dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(backBufferDescriptorSets[imageIndex]),0,nullptr);
+                }
+                else
+                {
+                    dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(outputDescriptorSets[imageIndex]),0,nullptr);
+                }
+                backBufferNext = !backBufferNext;
+            }
         }
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         std::cout << "after the second pipeline barrier" << std::endl;

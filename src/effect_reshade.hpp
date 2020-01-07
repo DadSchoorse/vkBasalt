@@ -49,6 +49,7 @@ namespace vkBasalt{
         std::vector<VkRenderPassBeginInfo> renderPassBeginInfos;
         VkPipelineLayout pipelineLayout;
         std::vector<VkPipeline> graphicsPipelines;
+        std::vector<bool> switchSamplers;
         VkExtent2D imageExtent;
         std::vector<VkSampler> samplers;
         std::shared_ptr<vkBasalt::Config> pConfig;
