@@ -700,8 +700,11 @@ namespace vkBasalt
         memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         memoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
-        memoryBarrier.image = backBufferImages[imageIndex];
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        if(outputWrites > 1)
+        {
+            memoryBarrier.image = backBufferImages[imageIndex];
+            dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        }
         
         //stencil image
         memoryBarrier.image = stencilImage;
@@ -741,7 +744,7 @@ namespace vkBasalt
                 {
                     dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(backBufferDescriptorSets[imageIndex]),0,nullptr);
                 }
-                else
+                else if(outputWrites > 2)
                 {
                     dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(outputDescriptorSets[imageIndex]),0,nullptr);
                 }
