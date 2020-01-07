@@ -37,7 +37,9 @@ namespace vkBasalt{
         std::unordered_map<std::string, std::vector<VkImage>> textureImages;
         std::unordered_map<std::string, std::vector<VkImageView>> textureImageViews;
         std::unordered_map<std::string, VkFormat> textureFormats;
-        std::vector<VkDescriptorSet> imageDescriptorSets;
+        std::vector<VkDescriptorSet> inputDescriptorSets;
+        std::vector<VkDescriptorSet> outputDescriptorSets;
+        std::vector<VkDescriptorSet> backBufferDescriptorSets;
         std::vector<std::vector<VkFramebuffer>> framebuffers;
         VkDescriptorSetLayout emptyDescriptorSetLayout;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
@@ -56,6 +58,11 @@ namespace vkBasalt{
         VkFormat inputOutputFormat;
         VkImage stencilImage;
         VkImageView stencilImageView;
+        //how often the shader writes to the reshade back buffer
+        //we need to flip the "backbuffer" after each write if there is a next one
+        int outputWrites = 0;
+        std::vector<VkImage> backBufferImages;
+        std::vector<VkImageView> backBufferImageViews;
         
         void createReshadeModule();
         VkFormat      convertReshadeFormat(reshadefx::texture_format texFormat);
