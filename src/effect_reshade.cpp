@@ -88,8 +88,9 @@ namespace vkBasalt
                 continue;
             }
             VkExtent3D textureExtent = {module.textures[i].width, module.textures[i].height, 1};
-            //TODO handel mip map levels correctly
-            if(module.textures[i].annotations.size() == 0)
+            //TODO handle mip map levels correctly
+            //TODO handle pooled textures better
+            if(module.textures[i].annotations.size() == 0 || module.textures[i].annotations[0].name == "pooled")
             {
                 textureMemory.push_back(VK_NULL_HANDLE);
                 std::vector<VkImage> images = createImages(instanceDispatchTable,
@@ -151,7 +152,7 @@ namespace vkBasalt
                         desiredChannels = STBI_rgb_alpha;
                         break;
                     default:
-                        throw std::runtime_error("unsupported texture upload format");
+                        throw std::runtime_error(std::string("unsupported texture upload format") + std::to_string(textureFormats[module.textures[i].unique_name]));
                 }
                 
                 std::string filePath = pConfig->getOption("reshadeTexturePath") + "/" + module.textures[i].annotations[0].value.string_data;
