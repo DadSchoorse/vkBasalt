@@ -19,7 +19,7 @@ namespace vkBasalt
     bool isSRGB(VkFormat format);
     //Returns true if format is UNORM
     //TODO currently return false if format is UNORM and not matching sRGB format exist
-    bool isSRGB(VkFormat format);
+    bool isUNORM(VkFormat format);
 }
 
 
