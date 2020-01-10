@@ -18,6 +18,7 @@
 #include "shader.hpp"
 #include "sampler.hpp"
 #include "image.hpp"
+#include "format.hpp"
 
 #include "stb_image.h"
 #include "stb_image_dds.h"
@@ -46,12 +47,15 @@ namespace vkBasalt
         this->outputImages = outputImages;
         this->pConfig = pConfig;
         this->effectName = effectName;
-        inputOutputFormat = format;
+        inputOutputFormatUNORM = convertToUNORM(format);
+        inputOutputFormatSRGB = convertToSRGB(format);
         
         
-        std::vector<VkImageView> inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
+        std::vector<VkImageView> inputImageViewsSRGB = createImageViews(device, dispatchTable, inputOutputFormatSRGB, inputImages);
+        std::vector<VkImageView> inputImageViewsUNORM = createImageViews(device, dispatchTable, inputOutputFormatUNORM, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        outputImageViews = createImageViews(device, dispatchTable, format, outputImages);
+        outputImageViewsSRGB = createImageViews(device, dispatchTable, inputOutputFormatSRGB, outputImages);
+        outputImageViewsUNORM = createImageViews(device, dispatchTable, inputOutputFormatUNORM, outputImages);
         std::cout << "after creating ImageViews" << std::endl;
         
         createReshadeModule();
@@ -77,14 +81,18 @@ namespace vkBasalt
         {
             if(module.textures[i].semantic == "COLOR")
             {
-                textureImageViews[module.textures[i].unique_name] = inputImageViews;
-                textureFormats[module.textures[i].unique_name] = format;
+                textureImageViewsUNORM[module.textures[i].unique_name] = inputImageViewsUNORM;
+                textureImageViewsSRGB[module.textures[i].unique_name] = inputImageViewsSRGB;
+                textureFormatsUNORM[module.textures[i].unique_name] = inputOutputFormatUNORM;
+                textureFormatsSRGB[module.textures[i].unique_name] = inputOutputFormatSRGB;
                 continue;
             }
             if(module.textures[i].semantic == "DEPTH")
             {
-                textureImageViews[module.textures[i].unique_name] = inputImageViews;;//TODO Depth buffer access
-                textureFormats[module.textures[i].unique_name] = format;
+                textureImageViewsUNORM[module.textures[i].unique_name] = inputImageViewsUNORM;
+                textureImageViewsSRGB[module.textures[i].unique_name] = inputImageViewsSRGB;//TODO Depth buffer access
+                textureFormatsUNORM[module.textures[i].unique_name] = inputOutputFormatUNORM;
+                textureFormatsSRGB[module.textures[i].unique_name] = inputOutputFormatSRGB;
                 continue;
             }
             VkExtent3D textureExtent = {module.textures[i].width, module.textures[i].height, 1};
@@ -105,9 +113,12 @@ namespace vkBasalt
                                    textureMemory.back());
                
                textureImages[module.textures[i].unique_name] = images;
-               std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertReshadeFormat(module.textures[i].format), images);
-               textureImageViews[module.textures[i].unique_name] = imageViews;
-               textureFormats[module.textures[i].unique_name] = convertReshadeFormat(module.textures[i].format);
+               std::vector<VkImageView> imageViewsUNORM = createImageViews(device, dispatchTable, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
+               std::vector<VkImageView> imageViewsSRGB = createImageViews(device, dispatchTable, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+               textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
+               textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
+               textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
+               textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
                changeImageLayout(instanceDispatchTable,
                                device,
                                dispatchTable,
@@ -131,13 +142,17 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back());
                 textureImages[module.textures[i].unique_name] = images;
-                std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertReshadeFormat(module.textures[i].format), images);
-                imageViews = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
-                textureImageViews[module.textures[i].unique_name] = imageViews;
-                textureFormats[module.textures[i].unique_name] = convertReshadeFormat(module.textures[i].format);
+                std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
+                std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
+                imageViews = createImageViews(device, dispatchTable, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+                std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
+                textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
+                textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
+                textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
+                textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
                 
                 int desiredChannels;
-                switch(textureFormats[module.textures[i].unique_name])
+                switch(textureFormatsUNORM[module.textures[i].unique_name])
                 {
                     case VK_FORMAT_R8_UNORM:
                         desiredChannels = STBI_grey;
@@ -152,7 +167,7 @@ namespace vkBasalt
                         desiredChannels = STBI_rgb_alpha;
                         break;
                     default:
-                        throw std::runtime_error(std::string("unsupported texture upload format") + std::to_string(textureFormats[module.textures[i].unique_name]));
+                        throw std::runtime_error(std::string("unsupported texture upload format") + std::to_string(textureFormatsUNORM[module.textures[i].unique_name]));
                 }
                 
                 std::string filePath = pConfig->getOption("reshadeTexturePath") + "/" + module.textures[i].annotations[0].value.string_data;
@@ -204,7 +219,7 @@ namespace vkBasalt
             reshadefx::sampler_info info = module.samplers[i];
             VkSampler sampler = createReshadeSampler(device, dispatchTable, info);
             samplers.push_back(sampler);
-            imageViewVector.push_back(textureImageViews[info.texture_name]);
+            imageViewVector.push_back(info.srgb ? textureImageViewsSRGB[info.texture_name] : textureImageViewsUNORM[info.texture_name]);
         }
         
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, module.samplers.size());
@@ -254,12 +269,14 @@ namespace vkBasalt
                                physicalDevice,
                                inputImages.size(),
                                {imageExtent.width, imageExtent.height, 1},
-                               inputOutputFormat,//TODO search for format and save it
+                               format,//TODO search for format and save it
                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                textureMemory.back());
-            backBufferImageViews = createImageViews(device, dispatchTable, inputOutputFormat, backBufferImages);
-            std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViews, backBufferImageViews);
+            backBufferImageViewsSRGB = createImageViews(device, dispatchTable, inputOutputFormatSRGB, backBufferImages);
+            backBufferImageViewsUNORM = createImageViews(device, dispatchTable, inputOutputFormatUNORM, backBufferImages);
+            std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsSRGB, backBufferImageViewsSRGB);
+            std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsUNORM, backBufferImageViewsUNORM);
             backBufferDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
                                                                          descriptorPool,
@@ -269,7 +286,8 @@ namespace vkBasalt
         }
         if(outputWrites > 2)
         {
-            std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViews, outputImageViews);
+            std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViewsSRGB, outputImageViewsSRGB);
+            std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViewsUNORM, outputImageViewsUNORM);
             outputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
                                                                          descriptorPool,
@@ -297,7 +315,7 @@ namespace vkBasalt
                 
                 VkAttachmentDescription attachmentDescription;
                 attachmentDescription.flags = 0;
-                attachmentDescription.format = textureFormats[target];
+                attachmentDescription.format = pass.srgb_write_enable ? textureFormatsSRGB[target] : textureFormatsUNORM[target];
                 attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
                 attachmentDescription.loadOp = pass.clear_render_targets ? VK_ATTACHMENT_LOAD_OP_CLEAR : pass.blend_enable ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                 attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -308,7 +326,7 @@ namespace vkBasalt
                 
                 if(target == "" && i == 0)
                 {
-                    attachmentDescription.format = inputOutputFormat;
+                    attachmentDescription.format = pass.srgb_write_enable ? inputOutputFormatSRGB : inputOutputFormatUNORM;
                     attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		            attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		            attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -339,7 +357,7 @@ namespace vkBasalt
                 
                 attachmentBlendStates.push_back(colorBlendAttachment);
                 
-                attachmentImageViews.push_back(textureImageViews[target]);
+                attachmentImageViews.push_back(pass.srgb_write_enable ? textureImageViewsSRGB[target] : textureImageViewsUNORM[target]);
                 
                 
                 
@@ -445,6 +463,8 @@ namespace vkBasalt
             
             if(pass.render_target_names[0] == "")
             {
+                std::vector<VkImageView> backBufferImageViews = pass.srgb_write_enable ? backBufferImageViewsSRGB : backBufferImageViewsUNORM;
+                std::vector<VkImageView> outputImageViews     = pass.srgb_write_enable ? outputImageViewsSRGB     : outputImageViewsUNORM;
                 framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputToBackBuffer ? backBufferImageViews : outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
                 outputToBackBuffer = !outputToBackBuffer;
                 switchSamplers.push_back(true);
@@ -778,12 +798,20 @@ namespace vkBasalt
         dispatchTable.DestroyShaderModule(device, shaderModule, nullptr);
         
         dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
-        for(auto& imageView: outputImageViews)
+        for(auto& imageView: outputImageViewsSRGB)
+        {
+            dispatchTable.DestroyImageView(device,imageView,nullptr);
+        }
+        for(auto& imageView: outputImageViewsUNORM)
         {
             dispatchTable.DestroyImageView(device,imageView,nullptr);
         }
         
-        for(auto& imageView: backBufferImageViews)
+        for(auto& imageView: backBufferImageViewsSRGB)
+        {
+            dispatchTable.DestroyImageView(device,imageView,nullptr);
+        }
+        for(auto& imageView: backBufferImageViewsUNORM)
         {
             dispatchTable.DestroyImageView(device,imageView,nullptr);
         }
@@ -798,7 +826,14 @@ namespace vkBasalt
         
         std::set<VkImageView> imageViewSet;
         
-        for(auto& it: textureImageViews)
+        for(auto& it: textureImageViewsSRGB)
+        {
+            for(auto imageView: it.second)
+            {
+                imageViewSet.insert(imageView);
+            }
+        }
+        for(auto& it: textureImageViewsUNORM)
         {
             for(auto imageView: it.second)
             {

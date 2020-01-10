@@ -33,10 +33,13 @@ namespace vkBasalt{
         VkLayerDispatchTable dispatchTable;
         std::vector<VkImage> inputImages;
         std::vector<VkImage> outputImages;
-        std::vector<VkImageView> outputImageViews;
+        std::vector<VkImageView> outputImageViewsSRGB;
+        std::vector<VkImageView> outputImageViewsUNORM;
         std::unordered_map<std::string, std::vector<VkImage>> textureImages;
-        std::unordered_map<std::string, std::vector<VkImageView>> textureImageViews;
-        std::unordered_map<std::string, VkFormat> textureFormats;
+        std::unordered_map<std::string, std::vector<VkImageView>> textureImageViewsUNORM;
+        std::unordered_map<std::string, std::vector<VkImageView>> textureImageViewsSRGB;
+        std::unordered_map<std::string, VkFormat> textureFormatsUNORM;
+        std::unordered_map<std::string, VkFormat> textureFormatsSRGB;
         std::vector<VkDescriptorSet> inputDescriptorSets;
         std::vector<VkDescriptorSet> outputDescriptorSets;
         std::vector<VkDescriptorSet> backBufferDescriptorSets;
@@ -56,14 +59,16 @@ namespace vkBasalt{
         std::string effectName;
         reshadefx::module module;
         std::vector<VkDeviceMemory> textureMemory;
-        VkFormat inputOutputFormat;
+        VkFormat inputOutputFormatUNORM;
+        VkFormat inputOutputFormatSRGB;
         VkImage stencilImage;
         VkImageView stencilImageView;
         //how often the shader writes to the reshade back buffer
         //we need to flip the "backbuffer" after each write if there is a next one
         int outputWrites = 0;
         std::vector<VkImage> backBufferImages;
-        std::vector<VkImageView> backBufferImageViews;
+        std::vector<VkImageView> backBufferImageViewsUNORM;
+        std::vector<VkImageView> backBufferImageViewsSRGB;
         
         void createReshadeModule();
         VkFormat      convertReshadeFormat(reshadefx::texture_format texFormat);
