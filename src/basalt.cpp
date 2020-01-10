@@ -51,6 +51,7 @@
 #include "config.hpp"
 #include "fake_swapchain.hpp"
 #include "renderpass.hpp"
+#include "format.hpp"
 
 #include "effect.hpp"
 #include "effect_fxaa.hpp"
@@ -224,6 +225,18 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     //Active needed Features
     
     VkDeviceCreateInfo modifiedCreateInfo = *pCreateInfo;
+    std::vector<const char*> enabledExtensionNames;
+    if(modifiedCreateInfo.enabledExtensionCount)
+    {
+        enabledExtensionNames = std::vector<const char*>(modifiedCreateInfo.ppEnabledExtensionNames, modifiedCreateInfo.ppEnabledExtensionNames + modifiedCreateInfo.enabledExtensionCount);
+    }
+    enabledExtensionNames.push_back("VK_KHR_swapchain_mutable_format");
+    enabledExtensionNames.push_back("VK_KHR_image_format_list");
+    //TODO vulkan 1.0
+    //enabledExtensionNames.push_back("VK_KHR_maintenance2");
+    modifiedCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
+    modifiedCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
+    
     VkPhysicalDeviceFeatures deviceFeatures = {};
     if(modifiedCreateInfo.pEnabledFeatures)
     {
@@ -324,6 +337,25 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, cons
 {
     VkSwapchainCreateInfoKHR modifiedCreateInfo = *pCreateInfo;
     modifiedCreateInfo.imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;//we want to use the swapchain images as output of the graphics pipeline
+    modifiedCreateInfo.flags |= VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
+    //TODO what if the application already uses multiple formats for the swapchain?
+    
+    VkFormat format = modifiedCreateInfo.imageFormat;
+    
+    VkFormat srgbFormat = vkBasalt::isSRGB(format) ? format : vkBasalt::convertToSRGB(format);
+    VkFormat unormFormat = vkBasalt::isSRGB(format) ? vkBasalt::convertToUNORM(format) : format;
+    std::cout << srgbFormat << " " << unormFormat << std::endl;
+    
+    VkFormat formats[] = {unormFormat, srgbFormat};
+    
+    VkImageFormatListCreateInfoKHR imageFormatListCreateInfo;
+    imageFormatListCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO_KHR;
+    imageFormatListCreateInfo.pNext = modifiedCreateInfo.pNext;
+    imageFormatListCreateInfo.viewFormatCount = (srgbFormat == unormFormat) ? 1 : 2;
+    imageFormatListCreateInfo.pViewFormats = formats;
+    
+    modifiedCreateInfo.pNext = &imageFormatListCreateInfo;
+    
     scoped_lock l(globalLock);
     
     if(modifiedCreateInfo.oldSwapchain != VK_NULL_HANDLE)
