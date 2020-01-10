@@ -17,7 +17,7 @@ namespace vkBasalt
         VkImageCreateInfo imageCreateInfo;
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageCreateInfo.pNext = nullptr;
-        imageCreateInfo.flags = 0;
+        imageCreateInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
         imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
         imageCreateInfo.format = swapchainCreateInfo.imageFormat;
         imageCreateInfo.extent.width = swapchainCreateInfo.imageExtent.width;
