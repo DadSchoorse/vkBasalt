@@ -205,6 +205,7 @@ namespace vkBasalt
                         pos++;
                     }
                     size /= 2;
+                    desiredChannels /= 2;
                 }
                 
                 if(static_cast<uint32_t>(width) != textureExtent.width || static_cast<uint32_t>(height) != textureExtent.height)
