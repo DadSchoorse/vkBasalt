@@ -158,7 +158,7 @@ namespace vkBasalt
                         desiredChannels = STBI_grey;
                         break;
                     case VK_FORMAT_R8G8_UNORM:
-                        desiredChannels = STBI_grey_alpha;
+                        desiredChannels = STBI_rgb_alpha;//TODO why doesn't STBI_grey_alpha work?
                         break;
                     case VK_FORMAT_R8G8B8A8_UNORM:
                         desiredChannels = STBI_rgb_alpha;
@@ -191,6 +191,20 @@ namespace vkBasalt
                 {
                     int channels;
                     pixels = stbi_load_from_file(file, &width, &height, &channels, desiredChannels);
+                }
+                
+                //change RGBA to RG
+                if(textureFormatsUNORM[module.textures[i].unique_name] == VK_FORMAT_R8G8_UNORM)
+                {
+                    uint32_t pos = 0;
+                    for(uint32_t j = 0; j < size; j += 4)
+                    {
+                        pixels[pos] = pixels[j];
+                        pos++;
+                        pixels[pos] = pixels[j + 1];
+                        pos++;
+                    }
+                    size /= 2;
                 }
                 
                 if(static_cast<uint32_t>(width) != textureExtent.width || static_cast<uint32_t>(height) != textureExtent.height)
