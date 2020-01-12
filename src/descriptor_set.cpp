@@ -58,7 +58,7 @@ namespace vkBasalt
         
         return descriptorSetLayout;
     }
-    VkDescriptorSet writeCasBufferDescriptorSet(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer)
+    VkDescriptorSet writeBufferDescriptorSet(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer)
     {
         VkDescriptorSet descriptorSet;
         
