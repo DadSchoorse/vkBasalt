@@ -165,8 +165,17 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     layerCreateInfo->u.pLayerInfo = layerCreateInfo->u.pLayerInfo->pNext;
 
     PFN_vkCreateInstance createFunc = (PFN_vkCreateInstance)gpa(VK_NULL_HANDLE, "vkCreateInstance");
+    
+    VkInstanceCreateInfo modifiedCreateInfo = *pCreateInfo;
+    VkApplicationInfo appInfo = *(modifiedCreateInfo.pApplicationInfo);
+    
+    if(appInfo.apiVersion < VK_API_VERSION_1_1)
+    {
+        appInfo.apiVersion = VK_API_VERSION_1_1;
+    }
 
-    VkResult ret = createFunc(pCreateInfo, pAllocator, pInstance);
+    modifiedCreateInfo.pApplicationInfo = &appInfo;
+    VkResult ret = createFunc(&modifiedCreateInfo, pAllocator, pInstance);
 
     // fetch our own dispatch table for the functions we need, into the next layer
     VkLayerInstanceDispatchTable dispatchTable;
@@ -232,8 +241,6 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(
     }
     enabledExtensionNames.push_back("VK_KHR_swapchain_mutable_format");
     enabledExtensionNames.push_back("VK_KHR_image_format_list");
-    //TODO vulkan 1.0
-    //enabledExtensionNames.push_back("VK_KHR_maintenance2");
     modifiedCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
     modifiedCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
     
