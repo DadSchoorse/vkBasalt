@@ -577,6 +577,11 @@ VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue,const VkPr
         SwapchainStruct& swapchainStruct = swapchainMap[swapchain];
         VkDevice device = swapchainStruct.device;
         DeviceStruct& deviceStruct = deviceMap[device];
+        
+        for(auto& effect: swapchainStruct.effectList)
+        {
+            effect->updateEffect();
+        }
 
         waitStages.resize(pPresentInfo->waitSemaphoreCount, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
