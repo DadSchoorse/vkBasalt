@@ -9,7 +9,7 @@
 
 namespace vkBasalt
 {
-    void createReshadeUniforms(reshadefx::module module)
+    void enumerateReshadeUniforms(reshadefx::module module)
     {
         for(auto& uniform: module.uniforms)
         {
@@ -18,6 +18,60 @@ namespace vkBasalt
             std::cout << "size: " << uniform.size << std::endl;
             std::cout << "offset: " << uniform.offset << std::endl;
         }
+    }
+    
+    std::vector<std::shared_ptr<ReshadeUniform>> createReshadeUniforms(reshadefx::module module)
+    {
+        std::vector<std::shared_ptr<ReshadeUniform>> uniforms;
+        for(auto& uniform: module.uniforms)
+        {
+            auto source = std::find_if(uniform.annotations.begin(), uniform.annotations.end(), [](const auto &a) { return a.name == "source"; })->value.string_data;
+            if(source == "frametime")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new FrameTimeUniform(uniform)));
+            }
+            else if (source == "framecount")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new FrameCountUniform(uniform)));
+            }
+            else if (source == "date")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new DateUniform(uniform)));
+            }
+            else if (source == "timer")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new TimerUniform(uniform)));
+            }
+            else if (source == "pingpong")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new PingPongUniform(uniform)));
+            }
+            else if (source == "random")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new RandomUniform(uniform)));
+            }
+            else if (source == "key")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new KeyUniform(uniform)));
+            }
+            else if (source == "mousebutton")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new MouseButtonUniform(uniform)));
+            }
+            else if (source == "mousepoint")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new MousePointUniform(uniform)));
+            }
+            else if (source == "mousedelta")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new MouseDeltaUniform(uniform)));
+            }
+            else if (source == "bufready_depth")
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new DepthUniform(uniform)));
+            }
+        }
+        return uniforms;
     }
     
     ////////////////////////////////////////////////////////////////////////////////////////////////////////// 
