@@ -59,6 +59,15 @@ namespace vkBasalt
         std::cout << "after creating ImageViews" << std::endl;
         
         createReshadeModule();
+        
+        enumerateReshadeUniforms(module);
+        
+        uniforms = createReshadeUniforms(module);
+        
+        bufferSize = 1000;
+        createBuffer(instanceDispatchTable, device, dispatchTable, physicalDevice, bufferSize,  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        
         textureMemory.push_back(VK_NULL_HANDLE);
         stencilImage = createImages(instanceDispatchTable,
                                    device,
@@ -238,25 +247,30 @@ namespace vkBasalt
         }
         
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, module.samplers.size());
-        emptyDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 0);
+        uniformDescriptorSetLayout = createUniformBufferDescriptorSetLayout(device, dispatchTable);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
         imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         imagePoolSize.descriptorCount = inputImages.size() * module.samplers.size() * 3;
         
+        VkDescriptorPoolSize bufferPoolSize;
+        bufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        bufferPoolSize.descriptorCount = 3;
         
-        std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
+        std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize, bufferPoolSize};
         
         descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {emptyDescriptorSetLayout,imageSamplerDescriptorSetLayout};
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {uniformDescriptorSetLayout,imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
         
         std::cout << "after creating Pipeline layout" << std::endl;
         
         std::cout << outputWrites << std::endl;
+        
+        bufferDescriptorSet = writeBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
         
         inputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
@@ -694,6 +708,19 @@ namespace vkBasalt
         }
         std::cout << "finished creating Reshade effect" << std::endl;
     }
+    
+    void ReshadeEffect::updateEffect()
+    {
+        void* data;
+        VkResult result = dispatchTable.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        ASSERT_VULKAN(result);
+        for(auto& uniform: uniforms)
+        {
+            uniform->update(data);
+        }
+        dispatchTable.UnmapMemory(device, stagingBufferMemory);
+    }
+    
     void ReshadeEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
         std::cout << "applying ReshadeEffect" << commandBuffer << std::endl;
@@ -756,6 +783,9 @@ namespace vkBasalt
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(inputDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
         
+        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&bufferDescriptorSet,0,nullptr);
+        std::cout << "after binding uniform buffer" << std::endl;
+        
         bool backBufferNext = outputWrites % 2 == 0;
         for(size_t i = 0; i < graphicsPipelines.size(); i++)
         {
@@ -801,18 +831,21 @@ namespace vkBasalt
             dispatchTable.DestroyPipeline(device, pipeline, nullptr);
         }
         
-        dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        dispatchTable.FreeMemory(device, stagingBufferMemory, nullptr);
+        
+        dispatchTable.DestroyPipelineLayout(device, pipelineLayout, nullptr);
         for(auto& renderPass: renderPasses)
         {
-            dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
+            dispatchTable.DestroyRenderPass(device, renderPass, nullptr);
         }
         
-        dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
-        dispatchTable.DestroyDescriptorSetLayout(device,emptyDescriptorSetLayout,nullptr);
+        dispatchTable.DestroyDescriptorSetLayout(device, imageSamplerDescriptorSetLayout, nullptr);
+        dispatchTable.DestroyDescriptorSetLayout(device, uniformDescriptorSetLayout, nullptr);
         
         dispatchTable.DestroyShaderModule(device, shaderModule, nullptr);
         
-        dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
+        dispatchTable.DestroyDescriptorPool(device, descriptorPool, nullptr);
         for(auto& imageView: outputImageViewsSRGB)
         {
             dispatchTable.DestroyImageView(device,imageView,nullptr);
