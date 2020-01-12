@@ -14,6 +14,7 @@
 
 #include "effect.hpp"
 #include "config.hpp"
+#include "reshade_uniforms.hpp"
 
 #include "../reshade/source/effect_parser.hpp"
 #include "../reshade/source/effect_codegen.hpp"
@@ -25,6 +26,7 @@ namespace vkBasalt{
     public:
         ReshadeEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool, std::string effectName);
         void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
+        void virtual updateEffect() override;
         virtual ~ReshadeEffect();
     private:
         VkPhysicalDevice physicalDevice;
@@ -44,7 +46,7 @@ namespace vkBasalt{
         std::vector<VkDescriptorSet> outputDescriptorSets;
         std::vector<VkDescriptorSet> backBufferDescriptorSets;
         std::vector<std::vector<VkFramebuffer>> framebuffers;
-        VkDescriptorSetLayout emptyDescriptorSetLayout;
+        VkDescriptorSetLayout uniformDescriptorSetLayout;
         VkDescriptorSetLayout imageSamplerDescriptorSetLayout;
         VkShaderModule shaderModule;
         VkDescriptorPool descriptorPool;
@@ -69,6 +71,11 @@ namespace vkBasalt{
         std::vector<VkImage> backBufferImages;
         std::vector<VkImageView> backBufferImageViewsUNORM;
         std::vector<VkImageView> backBufferImageViewsSRGB;
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        uint32_t bufferSize;
+        VkDescriptorSet bufferDescriptorSet;
+        std::vector<std::shared_ptr<ReshadeUniform>> uniforms;
         
         void createReshadeModule();
         VkFormat      convertReshadeFormat(reshadefx::texture_format texFormat);
