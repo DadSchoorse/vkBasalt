@@ -64,9 +64,12 @@ namespace vkBasalt
         
         uniforms = createReshadeUniforms(module);
         
-        bufferSize = 1000;
-        createBuffer(instanceDispatchTable, device, dispatchTable, physicalDevice, bufferSize,  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        bufferSize = module.total_uniform_size;
+        if(bufferSize)
+        {
+            createBuffer(instanceDispatchTable, device, dispatchTable, physicalDevice, bufferSize,  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        }
         
         textureMemory.push_back(VK_NULL_HANDLE);
         stencilImage = createImages(instanceDispatchTable,
@@ -269,8 +272,10 @@ namespace vkBasalt
         std::cout << "after creating Pipeline layout" << std::endl;
         
         std::cout << outputWrites << std::endl;
-        
-        bufferDescriptorSet = writeBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
+        if(bufferSize)
+        {
+            bufferDescriptorSet = writeBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
+        }
         
         inputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
                                                                          dispatchTable,
@@ -711,14 +716,17 @@ namespace vkBasalt
     
     void ReshadeEffect::updateEffect()
     {
-        void* data;
-        VkResult result = dispatchTable.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        ASSERT_VULKAN(result);
-        for(auto& uniform: uniforms)
+        if(bufferSize)
         {
-            uniform->update(data);
+            void* data;
+            VkResult result = dispatchTable.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+            ASSERT_VULKAN(result);
+            for(auto& uniform: uniforms)
+            {
+                uniform->update(data);
+            }
+            dispatchTable.UnmapMemory(device, stagingBufferMemory);
         }
-        dispatchTable.UnmapMemory(device, stagingBufferMemory);
     }
     
     void ReshadeEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
@@ -783,8 +791,11 @@ namespace vkBasalt
         dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(inputDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
         
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&bufferDescriptorSet,0,nullptr);
-        std::cout << "after binding uniform buffer" << std::endl;
+        if(bufferSize)
+        {
+            dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&bufferDescriptorSet,0,nullptr);
+            std::cout << "after binding uniform buffer" << std::endl;
+        }
         
         bool backBufferNext = outputWrites % 2 == 0;
         for(size_t i = 0; i < graphicsPipelines.size(); i++)
@@ -831,8 +842,11 @@ namespace vkBasalt
             dispatchTable.DestroyPipeline(device, pipeline, nullptr);
         }
         
-        dispatchTable.FreeMemory(device, stagingBufferMemory, nullptr);
-        dispatchTable.DestroyBuffer(device, stagingBuffer, nullptr);
+        if(bufferSize)
+        {
+            dispatchTable.FreeMemory(device, stagingBufferMemory, nullptr);
+            dispatchTable.DestroyBuffer(device, stagingBuffer, nullptr);
+        }
         
         dispatchTable.DestroyPipelineLayout(device, pipelineLayout, nullptr);
         for(auto& renderPass: renderPasses)
