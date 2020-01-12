@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <memory>
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"
@@ -15,8 +16,8 @@
 
 namespace vkBasalt
 {
-    void enumerateUniforms(reshadefx::module module);
-    
+    void enumerateReshadeUniforms(reshadefx::module module);
+    std::vector<std::shared_ptr<ReshadeUniform>> createReshadeUniforms(reshadefx::module module);
     class ReshadeUniform
     {
     public:
