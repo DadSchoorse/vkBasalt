@@ -831,8 +831,8 @@ namespace vkBasalt
             dispatchTable.DestroyPipeline(device, pipeline, nullptr);
         }
         
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
         dispatchTable.FreeMemory(device, stagingBufferMemory, nullptr);
+        dispatchTable.DestroyBuffer(device, stagingBuffer, nullptr);
         
         dispatchTable.DestroyPipelineLayout(device, pipelineLayout, nullptr);
         for(auto& renderPass: renderPasses)
