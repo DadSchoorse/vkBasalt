@@ -167,10 +167,23 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(
     PFN_vkCreateInstance createFunc = (PFN_vkCreateInstance)gpa(VK_NULL_HANDLE, "vkCreateInstance");
     
     VkInstanceCreateInfo modifiedCreateInfo = *pCreateInfo;
-    VkApplicationInfo appInfo = *(modifiedCreateInfo.pApplicationInfo);
-    
-    if(appInfo.apiVersion < VK_API_VERSION_1_1)
+    VkApplicationInfo appInfo;
+    if(modifiedCreateInfo.pApplicationInfo)
     {
+        appInfo = *(modifiedCreateInfo.pApplicationInfo);
+        if(appInfo.apiVersion < VK_API_VERSION_1_1)
+        {
+            appInfo.apiVersion = VK_API_VERSION_1_1;
+        }
+    }
+    else
+    {
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pNext = nullptr;
+        appInfo.pApplicationName = nullptr;
+        appInfo.applicationVersion = 0;
+        appInfo.pEngineName = nullptr;
+        appInfo.engineVersion = 0;
         appInfo.apiVersion = VK_API_VERSION_1_1;
     }
 
