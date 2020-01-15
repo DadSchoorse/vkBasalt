@@ -28,7 +28,7 @@ If using the AUR, you can install the [vkBasalt](https://aur.archlinux.org/packa
 ### Fedora
 For Fedora, execute:
 ```
-sudo dnf install vulkan-headers vulkan-tools vulkan-validation-layers
+sudo dnf install vulkan-headers vulkan-tools vulkan-validation-layers vulkan-validation-layers-devel glslang glibc-devel.i686 libstdc++-devel.i686 spirv-tools
 ```
 ### Solus
 For Solus, execute:
@@ -38,7 +38,7 @@ sudo eopkg it vulkan-headers vulkan-tools vulkan-validation-layers
 ### Gentoo-based distributions
 For Gentoo-based distributions, execute:
 ```
-sudo emerge -v dev-util/glslang dev-util/vulkan-headers dev-util/vulkan-tools media-libs/vulkan-layers media-libs/vulkan-loader
+sudo emerge -v dev-util/glslang dev-util/vulkan-headers dev-util/vulkan-tools media-libs/vulkan-layers media-libs/vulkan-loader dev-util/spirv-tools
 ```
 ## Build
 To build and install the program, execute:
