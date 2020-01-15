@@ -26,6 +26,11 @@ On Solus, they can be installed with:
 ```
 sudo eopkg it vulkan-headers vulkan-tools vulkan-validation-layers
 ```
+On Gentoo, they can be installed with:
+```
+sudo emerge -v dev-util/glslang dev-util/vulkan-headers dev-util/vulkan-tools media-libs/vulkan-layers media-libs/vulkan-loader
+```
+
 
 Simply use
 ```
