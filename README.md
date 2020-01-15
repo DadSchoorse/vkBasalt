@@ -54,7 +54,7 @@ make install
 Enable the layer with the environment variable (see below). Since vkBasalt 0.2.0 there is one unified variable for 64-bit and 32-bit games.
 
 ### Standard
-When using the terminal or an application file, execute:
+When using the terminal or an application (.desktop) file, execute:
 ```
 ENABLE_VKBASALT=1 yourgame
 ```
