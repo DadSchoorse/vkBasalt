@@ -13,7 +13,7 @@
 
 namespace vkBasalt
 {
-    CasEffect::CasEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
+    CasEffect::CasEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
         std::string casFragmentFile = "cas.frag.spv";
@@ -38,7 +38,7 @@ namespace vkBasalt
         pVertexSpecInfo = nullptr;
         pFragmentSpecInfo = &fragmentSpecializationInfo;
 
-        init(physicalDevice, instanceDispatchTable, device, dispatchTable, format,  imageExtent, inputImages, outputImages, pConfig);
+        init(logicalDevice, format,  imageExtent, inputImages, outputImages, pConfig);
     }
     CasEffect::~CasEffect()
     {
