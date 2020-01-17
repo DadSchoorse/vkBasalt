@@ -8,9 +8,7 @@
 #include <chrono>
 #include <memory>
 
-#include "vulkan/vulkan.h"
-#include "vulkan/vk_layer.h"
-#include "vulkan/vk_layer_dispatch_table.h"
+#include "vulkan_include.hpp"
 
 #include "../reshade/source/effect_module.hpp"
 

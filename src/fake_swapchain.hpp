@@ -6,9 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include "vulkan/vulkan.h"
-#include "vulkan/vk_layer.h"
-#include "vulkan/vk_layer_dispatch_table.h"
+#include "vulkan_include.hpp"
 
 namespace vkBasalt{
     std::vector<VkImage> createFakeSwapchainImages(VkLayerInstanceDispatchTable instanceDispatchTable, VkPhysicalDevice physicalDevice, VkDevice device, VkLayerDispatchTable dispatchTable, VkSwapchainCreateInfoKHR swapchainCreateInfo, uint32_t count, VkDeviceMemory& deviceMemory);

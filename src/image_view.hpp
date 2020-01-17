@@ -6,9 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include "vulkan/vulkan.h"
-#include "vulkan/vk_layer.h"
-#include "vulkan/vk_layer_dispatch_table.h"
+#include "vulkan_include.hpp"
 
 namespace vkBasalt{
      std::vector<VkImageView> createImageViews(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
