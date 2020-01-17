@@ -1,13 +1,5 @@
 #include "framebuffer.hpp"
 
-#ifndef ASSERT_VULKAN
-#define ASSERT_VULKAN(val)\
-        if(val!=VK_SUCCESS)\
-        {\
-            throw std::runtime_error("ASSERT_VULKAN failed " + std::to_string(val));\
-        }
-#endif
-
 namespace vkBasalt
 {
     std::vector<VkFramebuffer> createFramebuffers(VkDevice device, VkLayerDispatchTable dispatchTable, VkRenderPass renderPass, VkExtent2D& extent, std::vector<std::vector<VkImageView>> imageViews)

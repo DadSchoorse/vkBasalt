@@ -1,12 +1,5 @@
 #include "memory.hpp"
 
-#ifndef ASSERT_VULKAN
-#define ASSERT_VULKAN(val)\
-        if(val!=VK_SUCCESS)\
-        {\
-            throw std::runtime_error("ASSERT_VULKAN failed " + val);\
-        }
-#endif
 namespace vkBasalt
 {
     uint32_t findMemoryTypeIndex(VkLayerInstanceDispatchTable dispatchTable, VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
