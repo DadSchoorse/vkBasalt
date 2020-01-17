@@ -17,19 +17,6 @@
 
 namespace vkBasalt
 {
-    typedef struct {
-        float screenWidth;
-        float screenHeight;
-        float reverseScreenWidth;
-        float reverseScreenHeight;
-        float threshold;
-        int32_t maxSearchSteps;
-        int32_t maxSearchStepsDiag;
-        int32_t cornerRounding;
-    } SmaaOptions;
-
-
-
     SmaaEffect::SmaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool)
     {
         std::string smaaEdgeVertexFile        = "smaa_edge.vert.spv";
@@ -140,6 +127,17 @@ namespace vkBasalt
         std::cout << "after creating descriptorPool" << std::endl;
 
         //get config options
+        struct SmaaOptions{
+            float screenWidth;
+            float screenHeight;
+            float reverseScreenWidth;
+            float reverseScreenHeight;
+            float threshold;
+            int32_t maxSearchSteps;
+            int32_t maxSearchStepsDiag;
+            int32_t cornerRounding;
+        };
+        
         SmaaOptions smaaOptions;
         smaaOptions.threshold           = std::stod(pConfig->getOption("smaaThreshold", "0.05"));
         smaaOptions.maxSearchSteps      = std::stoi(pConfig->getOption("smaaMaxSearchSteps", "32"));
