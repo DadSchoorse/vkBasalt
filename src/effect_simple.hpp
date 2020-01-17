@@ -13,6 +13,8 @@
 #include "effect.hpp"
 #include "config.hpp"
 
+#include "logical_device.hpp"
+
 namespace vkBasalt{
     class SimpleEffect : public Effect
     {
@@ -21,10 +23,7 @@ namespace vkBasalt{
         void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
         virtual ~SimpleEffect();
     protected:
-        VkPhysicalDevice physicalDevice;
-        VkLayerInstanceDispatchTable instanceDispatchTable;
-        VkDevice device;
-        VkLayerDispatchTable dispatchTable;
+        LogicalDevice logicalDevice;
         std::vector<VkImage> inputImages;
         std::vector<VkImage> outputImages;
         std::vector<VkImageView> inputImageViews;
@@ -48,7 +47,7 @@ namespace vkBasalt{
         VkSpecializationInfo* pFragmentSpecInfo;
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts;//subclasses can put DescriptorSets in here, but the first one will be the input image descriptorSet
         
-        void init(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
+        void init(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
     };
 }
 

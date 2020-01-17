@@ -392,10 +392,7 @@ namespace vkBasalt
             std::cout << secondImages.size() << " images in secondImages" << std::endl;
             if(effectStrings[i] == std::string("fxaa"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new FxaaEffect(logicalDevice.physicalDevice,
-                                                             logicalDevice.vki,
-                                                             device,
-                                                             logicalDevice.vkd,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new FxaaEffect(logicalDevice,
                                                              convertToSRGB(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -405,10 +402,7 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("cas"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new CasEffect(logicalDevice.physicalDevice,
-                                                             logicalDevice.vki,
-                                                             device,
-                                                             logicalDevice.vkd,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new CasEffect(logicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -418,10 +412,7 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("deband"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new DebandEffect(logicalDevice.physicalDevice,
-                                                             logicalDevice.vki,
-                                                             device,
-                                                             logicalDevice.vkd,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new DebandEffect(logicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -445,17 +436,12 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("lut"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new LutEffect(logicalDevice.physicalDevice,
-                                                             logicalDevice.vki,
-                                                             device,
-                                                             logicalDevice.vkd,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new LutEffect(logicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
                                                              secondImages,
-                                                             pConfig,
-                                                             logicalDevice.queue,
-                                                             logicalDevice.commandPool)));
+                                                             pConfig)));
             }
             else
             {

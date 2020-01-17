@@ -17,28 +17,25 @@ namespace vkBasalt
     {
     
     }
-    void SimpleEffect::init(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
+    void SimpleEffect::init(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::cout << "in creating SimpleEffect " << std::endl;
         
-        this->physicalDevice = physicalDevice;
-        this->instanceDispatchTable = instanceDispatchTable;
-        this->device = device;
-        this->dispatchTable = dispatchTable;
+        this->logicalDevice = logicalDevice;
         this->format = format;
         this->imageExtent = imageExtent;
         this->inputImages = inputImages;
         this->outputImages = outputImages;
         this->pConfig = pConfig;
         
-        inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
+        inputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        outputImageViews = createImageViews(device, dispatchTable, format, outputImages);
+        outputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, outputImages);
         std::cout << "after creating ImageViews" << std::endl;
-        sampler = createSampler(device, dispatchTable);
+        sampler = createSampler(logicalDevice.device, logicalDevice.vkd);
         std::cout << "after creating sampler" << std::endl;
         
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 1);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd, 1);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
@@ -48,28 +45,27 @@ namespace vkBasalt
         
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
         
-        descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
+        descriptorPool = createDescriptorPool(logicalDevice.device, logicalDevice.vkd, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        createShaderModule(device, dispatchTable, vertexCode, &vertexModule);
-        createShaderModule(device, dispatchTable, fragmentCode, &fragmentModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, vertexCode, &vertexModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, fragmentCode, &fragmentModule);
         
-        renderPass = createRenderPass(device, dispatchTable, format);
+        renderPass = createRenderPass(logicalDevice.device, logicalDevice.vkd, format);
         
         descriptorSetLayouts.insert(descriptorSetLayouts.begin(),imageSamplerDescriptorSetLayout);
-        pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
+        pipelineLayout = createGraphicsPipelineLayout(logicalDevice.device, logicalDevice.vkd, descriptorSetLayouts);
         
-        graphicsPipeline = createGraphicsPipeline(device, dispatchTable, vertexModule, pVertexSpecInfo, "main", fragmentModule, pFragmentSpecInfo, "main", imageExtent, renderPass, pipelineLayout);
+        graphicsPipeline = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, vertexModule, pVertexSpecInfo, "main", fragmentModule, pFragmentSpecInfo, "main", imageExtent, renderPass, pipelineLayout);
         
         
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
-                                                                         dispatchTable,
+        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device, logicalDevice.vkd,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          {sampler},
                                                                          std::vector<std::vector<VkImageView>>(1,inputImageViews));
         
-        framebuffers = createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputImageViews});
+        framebuffers = createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass, imageExtent, {outputImageViews});
     }
     void SimpleEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
@@ -108,7 +104,7 @@ namespace vkBasalt
         secondBarrier.subresourceRange.baseArrayLayer = 0;
         secondBarrier.subresourceRange.layerCount = 1;
         
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
         
         std::cout << "framebuffer " << framebuffers.size() << std::endl;
@@ -127,43 +123,43 @@ namespace vkBasalt
         renderPassBeginInfo.pClearValues = &clearValue;
         
         std::cout << "before beginn renderpass" << std::endl;
-        dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
         
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
+        logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
         
-        dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
+        logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
         std::cout << "after bind pipeliene" << std::endl;
         
-        dispatchTable.CmdDraw(commandBuffer, 3, 1, 0, 0);
+        logicalDevice.vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
-        dispatchTable.CmdEndRenderPass(commandBuffer);
+        logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
         
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         std::cout << "after the second pipeline barrier" << std::endl;
 
     }
     SimpleEffect::~SimpleEffect()
     {
         std::cout << "destroying SimpleEffect" << this << std::endl;
-        dispatchTable.DestroyPipeline(device, graphicsPipeline, nullptr);
-        dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
-        dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
-        dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
-        dispatchTable.DestroyShaderModule(device,vertexModule,nullptr);
-        dispatchTable.DestroyShaderModule(device,fragmentModule,nullptr);
+        logicalDevice.vkd.DestroyPipeline(logicalDevice.device, graphicsPipeline, nullptr);
+        logicalDevice.vkd.DestroyPipelineLayout(logicalDevice.device,pipelineLayout,nullptr);
+        logicalDevice.vkd.DestroyRenderPass(logicalDevice.device,renderPass,nullptr);
+        logicalDevice.vkd.DestroyDescriptorSetLayout(logicalDevice.device,imageSamplerDescriptorSetLayout,nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device,vertexModule,nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device,fragmentModule,nullptr);
         
-        dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
+        logicalDevice.vkd.DestroyDescriptorPool(logicalDevice.device,descriptorPool,nullptr);
         for(unsigned int i=0;i<framebuffers.size();i++)
         {
-            dispatchTable.DestroyFramebuffer(device,framebuffers[i],nullptr);
-            dispatchTable.DestroyImageView(device,inputImageViews[i],nullptr);
-            dispatchTable.DestroyImageView(device,outputImageViews[i],nullptr);
-            std::cout << "after DestroyImageView" << std::endl;
+            logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device,framebuffers[i],nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device,inputImageViews[i],nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device,outputImageViews[i],nullptr);
         }
-        dispatchTable.DestroySampler(device,sampler,nullptr);
+        std::cout << "after DestroyImageView" << std::endl;
+        logicalDevice.vkd.DestroySampler(logicalDevice.device,sampler,nullptr);
     }
 }
