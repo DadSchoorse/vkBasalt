@@ -45,9 +45,9 @@ namespace vkBasalt
     
     std::mutex globalLock;
     #ifdef _GCC_
-    typedef std::lock_guard<std::mutex> scoped_lock __attribute__((unused)) ;
+    using scoped_lock __attribute__((unused)) = std::lock_guard<std::mutex>;
     #else
-    typedef std::lock_guard<std::mutex> scoped_lock;
+    using scoped_lock = std::lock_guard<std::mutex>;
     #endif
     
     template<typename DispatchableType>
