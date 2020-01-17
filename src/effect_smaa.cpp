@@ -17,7 +17,7 @@
 
 namespace vkBasalt
 {
-    SmaaEffect::SmaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool)
+    SmaaEffect::SmaaEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string smaaEdgeVertexFile        = "smaa_edge.vert.spv";
         std::string smaaEdgeLumaFragmentFile  = "smaa_edge_luma.frag.spv";
@@ -28,10 +28,7 @@ namespace vkBasalt
         std::string smaaNeighborFragmentFile  = "smaa_neighbor.frag.spv";
         std::cout << "in creating SmaaEffect " << std::endl;
 
-        this->physicalDevice = physicalDevice;
-        this->instanceDispatchTable = instanceDispatchTable;
-        this->device = device;
-        this->dispatchTable = dispatchTable;
+        this->logicalDevice = logicalDevice;
         this->format = format;
         this->imageExtent = imageExtent;
         this->inputImages = inputImages;
@@ -39,10 +36,10 @@ namespace vkBasalt
         this->pConfig = pConfig;
 
         //create Images for the first and second pass at once -> less memory fragmentation
-        std::vector<VkImage> edgeAndBlendImages= createImages(instanceDispatchTable,
-                                                               device,
-                                                               dispatchTable,
-                                                               physicalDevice,
+        std::vector<VkImage> edgeAndBlendImages= createImages(logicalDevice.vki,
+                                                               logicalDevice.device,
+                                                               logicalDevice.vkd,
+                                                               logicalDevice.physicalDevice,
                                                                inputImages.size()*2,
                                                                {imageExtent.width, imageExtent.height, 1},
                                                                VK_FORMAT_B8G8R8A8_UNORM,//TODO search for format and save it
@@ -53,22 +50,22 @@ namespace vkBasalt
         edgeImages  = std::vector<VkImage>(edgeAndBlendImages.begin(), edgeAndBlendImages.begin() + edgeAndBlendImages.size()/2);
         blendImages = std::vector<VkImage>(edgeAndBlendImages.begin() + edgeAndBlendImages.size()/2, edgeAndBlendImages.end());
 
-        inputImageViews = createImageViews(device, dispatchTable, format, inputImages);
+        inputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        edgeImageViews = createImageViews(device, dispatchTable, VK_FORMAT_B8G8R8A8_UNORM, edgeImages);
+        edgeImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_B8G8R8A8_UNORM, edgeImages);
         std::cout << "after creating edge  ImageViews" << std::endl;
-        blendImageViews = createImageViews(device, dispatchTable, VK_FORMAT_B8G8R8A8_UNORM, blendImages);
+        blendImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_B8G8R8A8_UNORM, blendImages);
         std::cout << "after creating blend ImageViews" << std::endl;
-        outputImageViews = createImageViews(device, dispatchTable, format, outputImages);
+        outputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, outputImages);
         std::cout << "after creating output ImageViews" << std::endl;
-        sampler = createSampler(device, dispatchTable);
+        sampler = createSampler(logicalDevice.device, logicalDevice.vkd);
         std::cout << "after creating sampler" << std::endl;
 
         VkExtent3D areaImageExtent = {AREATEX_WIDTH, AREATEX_HEIGHT, 1};
-        areaImage = createImages(instanceDispatchTable,
-                                 device,
-                                 dispatchTable,
-                                 physicalDevice,
+        areaImage = createImages(logicalDevice.vki,
+                                 logicalDevice.device,
+                                 logicalDevice.vkd,
+                                 logicalDevice.physicalDevice,
                                  1,
                                  areaImageExtent,
                                  VK_FORMAT_R8G8_UNORM,//TODO search for format and save it
@@ -76,10 +73,10 @@ namespace vkBasalt
                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                  areaMemory)[0];
         VkExtent3D searchImageExtent = {SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1};
-        searchImage = createImages(instanceDispatchTable,
-                                   device,
-                                   dispatchTable,
-                                   physicalDevice,
+        searchImage = createImages(logicalDevice.vki,
+                                   logicalDevice.device,
+                                   logicalDevice.vkd,
+                                   logicalDevice.physicalDevice,
                                    1,
                                    searchImageExtent,
                                    VK_FORMAT_R8_UNORM,//TODO search for format and save it
@@ -87,34 +84,34 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    searchMemory)[0];
 
-        uploadToImage(instanceDispatchTable,
-                       device,
-                       dispatchTable,
-                       physicalDevice,
+        uploadToImage(logicalDevice.vki,
+                       logicalDevice.device,
+                       logicalDevice.vkd,
+                       logicalDevice.physicalDevice,
                        areaImage,
                        areaImageExtent,
                        AREATEX_SIZE,
-                       queue,
-                       commandPool,
+                       logicalDevice.queue,
+                       logicalDevice.commandPool,
                        areaTexBytes);
 
-        uploadToImage(instanceDispatchTable,
-                       device,
-                       dispatchTable,
-                       physicalDevice,
+        uploadToImage(logicalDevice.vki,
+                       logicalDevice.device,
+                       logicalDevice.vkd,
+                       logicalDevice.physicalDevice,
                        searchImage,
                        searchImageExtent,
                        SEARCHTEX_SIZE,
-                       queue,
-                       commandPool,
+                       logicalDevice.queue,
+                       logicalDevice.commandPool,
                        searchTexBytes);
 
-        areaImageView = createImageViews(device, dispatchTable, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1,areaImage))[0];
+        areaImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1,areaImage))[0];
         std::cout << "after creating area ImageView" << std::endl;
-        searchImageView = createImageViews(device, dispatchTable, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
+        searchImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
         std::cout << "after creating search ImageView" << std::endl;
 
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, 5);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd, 5);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
 
         VkDescriptorPoolSize imagePoolSize;
@@ -123,7 +120,7 @@ namespace vkBasalt
 
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
 
-        descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
+        descriptorPool = createDescriptorPool(logicalDevice.device, logicalDevice.vkd, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
 
         //get config options
@@ -145,25 +142,25 @@ namespace vkBasalt
         smaaOptions.cornerRounding      = std::stoi(pConfig->getOption("smaaCornerRounding", "25"));
 
         auto shaderCode = readFile(smaaEdgeVertexFile);
-        createShaderModule(device, dispatchTable, shaderCode, &edgeVertexModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &edgeVertexModule);
         shaderCode = pConfig->getOption("smaaEdgeDetection", "luma") == "color"
             ? readFile(smaaEdgeColorFragmentFile)
             : readFile(smaaEdgeLumaFragmentFile);
-        createShaderModule(device, dispatchTable, shaderCode, &edgeFragmentModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &edgeFragmentModule);
         shaderCode = readFile(smaaBlendVertexFile);
-        createShaderModule(device, dispatchTable, shaderCode, &blendVertexModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &blendVertexModule);
         shaderCode = readFile(smaaBlendFragmentFile);
-        createShaderModule(device, dispatchTable, shaderCode, &blendFragmentModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &blendFragmentModule);
         shaderCode = readFile(smaaNeighborVertexFile);
-        createShaderModule(device, dispatchTable, shaderCode, &neighborVertexModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &neighborVertexModule);
         shaderCode = readFile(smaaNeighborFragmentFile);
-        createShaderModule(device, dispatchTable, shaderCode, &neignborFragmentModule);
+        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &neignborFragmentModule);
 
-        renderPass      = createRenderPass(device, dispatchTable, format);
-        unormRenderPass = createRenderPass(device, dispatchTable, VK_FORMAT_B8G8R8A8_UNORM);
+        renderPass      = createRenderPass(logicalDevice.device, logicalDevice.vkd, format);
+        unormRenderPass = createRenderPass(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_B8G8R8A8_UNORM);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
-        pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
+        pipelineLayout = createGraphicsPipelineLayout(logicalDevice.device, logicalDevice.vkd, descriptorSetLayouts);
 
         std::vector<VkSpecializationMapEntry> specMapEntrys(8);
         for(uint32_t i=0;i<specMapEntrys.size();i++)
@@ -183,9 +180,9 @@ namespace vkBasalt
         specializationInfo.dataSize = sizeof(smaaOptions);
         specializationInfo.pData = &smaaOptions;
 
-        edgePipeline     = createGraphicsPipeline(device, dispatchTable, edgeVertexModule, &specializationInfo, "main", edgeFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
-        blendPipeline    = createGraphicsPipeline(device, dispatchTable, blendVertexModule, &specializationInfo, "main", blendFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
-        neighborPipeline = createGraphicsPipeline(device, dispatchTable, neighborVertexModule, &specializationInfo, "main", neignborFragmentModule, &specializationInfo, "main", imageExtent, renderPass, pipelineLayout);
+        edgePipeline     = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, edgeVertexModule, &specializationInfo, "main", edgeFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        blendPipeline    = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, blendVertexModule, &specializationInfo, "main", blendFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        neighborPipeline = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, neighborVertexModule, &specializationInfo, "main", neignborFragmentModule, &specializationInfo, "main", imageExtent, renderPass, pipelineLayout);
 
 
         std::vector<std::vector<VkImageView>> imageViewsVector = {inputImageViews,
@@ -193,11 +190,11 @@ namespace vkBasalt
                                                                   std::vector<VkImageView>(inputImageViews.size(), areaImageView),
                                                                   std::vector<VkImageView>(inputImageViews.size(), searchImageView),
                                                                   blendImageViews};
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device, dispatchTable, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
+        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device, logicalDevice.vkd, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
 
-        edgeFramebuffers     = createFramebuffers(device, dispatchTable, unormRenderPass, imageExtent,   {edgeImageViews});
-        blendFramebuffers    = createFramebuffers(device, dispatchTable, unormRenderPass, imageExtent,  {blendImageViews});
-        neignborFramebuffers = createFramebuffers(device, dispatchTable, renderPass,      imageExtent, {outputImageViews});
+        edgeFramebuffers     = createFramebuffers(logicalDevice.device, logicalDevice.vkd, unormRenderPass, imageExtent,   {edgeImageViews});
+        blendFramebuffers    = createFramebuffers(logicalDevice.device, logicalDevice.vkd, unormRenderPass, imageExtent,  {blendImageViews});
+        neignborFramebuffers = createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass,      imageExtent, {outputImageViews});
     }
     void SmaaEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
@@ -236,7 +233,7 @@ namespace vkBasalt
         secondBarrier.subresourceRange.baseArrayLayer = 0;
         secondBarrier.subresourceRange.layerCount = 1;
 
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
 
         VkRenderPassBeginInfo renderPassBeginInfo;
@@ -251,105 +248,105 @@ namespace vkBasalt
         renderPassBeginInfo.pClearValues = &clearValue;
         //edge renderPass
         std::cout << "before beginn edge renderpass" << std::endl;
-        dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
 
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
+        logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
 
-        dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,edgePipeline);
+        logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,edgePipeline);
         std::cout << "after bind pipeliene" << std::endl;
 
-        dispatchTable.CmdDraw(commandBuffer, 3, 1, 0, 0);
+        logicalDevice.vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
-        dispatchTable.CmdEndRenderPass(commandBuffer);
+        logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
 
         memoryBarrier.image = edgeImages[imageIndex];
         renderPassBeginInfo.framebuffer = blendFramebuffers[imageIndex];
         //blend renderPass
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
 
         std::cout << "before beginn blend renderpass" << std::endl;
-        dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
 
-        dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,blendPipeline);
+        logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,blendPipeline);
         std::cout << "after bind pipeliene" << std::endl;
 
-        dispatchTable.CmdDraw(commandBuffer, 3, 1, 0, 0);
+        logicalDevice.vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
-        dispatchTable.CmdEndRenderPass(commandBuffer);
+        logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
 
         memoryBarrier.image = blendImages[imageIndex];
         renderPassBeginInfo.framebuffer = neignborFramebuffers[imageIndex];
         renderPassBeginInfo.renderPass = renderPass;
         //neighbor renderPass
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
 
         std::cout << "before beginn neighbor renderpass" << std::endl;
-        dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
 
-        dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,neighborPipeline);
+        logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,neighborPipeline);
         std::cout << "after bind pipeliene" << std::endl;
 
-        dispatchTable.CmdDraw(commandBuffer, 3, 1, 0, 0);
+        logicalDevice.vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
-        dispatchTable.CmdEndRenderPass(commandBuffer);
+        logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
 
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         std::cout << "after the second pipeline barrier" << std::endl;
 
     }
     SmaaEffect::~SmaaEffect()
     {
         std::cout << "destroying smaa effect " << this << std::endl;
-        dispatchTable.DestroyPipeline(device, edgePipeline,     nullptr);
-        dispatchTable.DestroyPipeline(device, blendPipeline,    nullptr);
-        dispatchTable.DestroyPipeline(device, neighborPipeline, nullptr);
+        logicalDevice.vkd.DestroyPipeline(logicalDevice.device, edgePipeline,     nullptr);
+        logicalDevice.vkd.DestroyPipeline(logicalDevice.device, blendPipeline,    nullptr);
+        logicalDevice.vkd.DestroyPipeline(logicalDevice.device, neighborPipeline, nullptr);
 
-        dispatchTable.DestroyPipelineLayout(device,pipelineLayout,nullptr);
-        dispatchTable.DestroyRenderPass(device,renderPass,nullptr);
-        dispatchTable.DestroyRenderPass(device,unormRenderPass,nullptr);
-        dispatchTable.DestroyDescriptorSetLayout(device,imageSamplerDescriptorSetLayout,nullptr);
+        logicalDevice.vkd.DestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
+        logicalDevice.vkd.DestroyRenderPass(logicalDevice.device, renderPass, nullptr);
+        logicalDevice.vkd.DestroyRenderPass(logicalDevice.device, unormRenderPass, nullptr);
+        logicalDevice.vkd.DestroyDescriptorSetLayout(logicalDevice.device, imageSamplerDescriptorSetLayout, nullptr);
 
-        dispatchTable.DestroyShaderModule(device, edgeVertexModule,       nullptr);
-        dispatchTable.DestroyShaderModule(device, edgeFragmentModule,     nullptr);
-        dispatchTable.DestroyShaderModule(device, blendVertexModule,      nullptr);
-        dispatchTable.DestroyShaderModule(device, blendFragmentModule,    nullptr);
-        dispatchTable.DestroyShaderModule(device, neighborVertexModule,   nullptr);
-        dispatchTable.DestroyShaderModule(device, neignborFragmentModule, nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, edgeVertexModule,       nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, edgeFragmentModule,     nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, blendVertexModule,      nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, blendFragmentModule,    nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, neighborVertexModule,   nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, neignborFragmentModule, nullptr);
 
-        dispatchTable.DestroyDescriptorPool(device,descriptorPool,nullptr);
-        dispatchTable.FreeMemory(device,imageMemory,nullptr);
-        dispatchTable.FreeMemory(device,areaMemory,nullptr);
-        dispatchTable.FreeMemory(device,searchMemory,nullptr);
+        logicalDevice.vkd.DestroyDescriptorPool(logicalDevice.device, descriptorPool, nullptr);
+        logicalDevice.vkd.FreeMemory(logicalDevice.device, imageMemory, nullptr);
+        logicalDevice.vkd.FreeMemory(logicalDevice.device, areaMemory, nullptr);
+        logicalDevice.vkd.FreeMemory(logicalDevice.device, searchMemory, nullptr);
         for(unsigned int i=0;i<edgeFramebuffers.size();i++)
         {
-            dispatchTable.DestroyFramebuffer(device,edgeFramebuffers[i],nullptr);
-            dispatchTable.DestroyFramebuffer(device,blendFramebuffers[i],nullptr);
-            dispatchTable.DestroyFramebuffer(device,neignborFramebuffers[i],nullptr);
-            dispatchTable.DestroyImageView(device,inputImageViews[i],nullptr);
-            dispatchTable.DestroyImageView(device,edgeImageViews[i],nullptr);
-            dispatchTable.DestroyImageView(device,blendImageViews[i],nullptr);
-            dispatchTable.DestroyImageView(device,outputImageViews[i],nullptr);
-            dispatchTable.DestroyImage(device,edgeImages[i],nullptr);
-            dispatchTable.DestroyImage(device,blendImages[i],nullptr);
-            std::cout << "after DestroyImageView" << std::endl;
+            logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device, edgeFramebuffers[i], nullptr);
+            logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device, blendFramebuffers[i], nullptr);
+            logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device, neignborFramebuffers[i], nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device, inputImageViews[i], nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device, edgeImageViews[i], nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device, blendImageViews[i], nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device, outputImageViews[i], nullptr);
+            logicalDevice.vkd.DestroyImage(logicalDevice.device, edgeImages[i], nullptr);
+            logicalDevice.vkd.DestroyImage(logicalDevice.device, blendImages[i], nullptr);
         }
-        dispatchTable.DestroyImageView(device,areaImageView,nullptr);
-        dispatchTable.DestroyImage(device,areaImage,nullptr);
-        dispatchTable.DestroyImageView(device,searchImageView,nullptr);
-        dispatchTable.DestroyImage(device,searchImage,nullptr);
+        std::cout << "after DestroyImageView" << std::endl;
+        logicalDevice.vkd.DestroyImageView(logicalDevice.device, areaImageView, nullptr);
+        logicalDevice.vkd.DestroyImage(logicalDevice.device, areaImage, nullptr);
+        logicalDevice.vkd.DestroyImageView(logicalDevice.device, searchImageView, nullptr);
+        logicalDevice.vkd.DestroyImage(logicalDevice.device, searchImage, nullptr);
 
-        dispatchTable.DestroySampler(device,sampler,nullptr);
+        logicalDevice.vkd.DestroySampler(logicalDevice.device, sampler, nullptr);
     }
 }

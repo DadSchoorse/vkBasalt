@@ -13,18 +13,17 @@
 #include "effect.hpp"
 #include "config.hpp"
 
+#include "logical_device.hpp"
+
 namespace vkBasalt{
     class SmaaEffect : public Effect
     {
     public:
-        SmaaEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool);
+        SmaaEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
         void applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override; 
         ~SmaaEffect();
     private:
-        VkPhysicalDevice physicalDevice;
-        VkLayerInstanceDispatchTable instanceDispatchTable;
-        VkDevice device;
-        VkLayerDispatchTable dispatchTable;
+        LogicalDevice logicalDevice;
         std::vector<VkImage> inputImages;
         std::vector<VkImage> edgeImages;
         std::vector<VkImage> blendImages;

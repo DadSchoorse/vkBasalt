@@ -422,17 +422,12 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("smaa"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new SmaaEffect(logicalDevice.physicalDevice,
-                                                             logicalDevice.vki,
-                                                             device,
-                                                             logicalDevice.vkd,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new SmaaEffect(logicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
                                                              secondImages,
-                                                             pConfig,
-                                                             logicalDevice.queue,
-                                                             logicalDevice.commandPool)));
+                                                             pConfig)));
             }
             else if(effectStrings[i] == std::string("lut"))
             {
