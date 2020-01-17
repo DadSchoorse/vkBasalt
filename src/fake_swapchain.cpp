@@ -1,14 +1,6 @@
 #include "fake_swapchain.hpp"
 #include "memory.hpp"
 
-#ifndef ASSERT_VULKAN
-#define ASSERT_VULKAN(val)\
-        if(val!=VK_SUCCESS)\
-        {\
-            throw std::runtime_error("ASSERT_VULKAN failed " + std::to_string(val));\
-        }
-#endif
-
 namespace vkBasalt
 {
     std::vector<VkImage> createFakeSwapchainImages(VkLayerInstanceDispatchTable instanceDispatchTable, VkPhysicalDevice physicalDevice, VkDevice device, VkLayerDispatchTable dispatchTable, VkSwapchainCreateInfoKHR swapchainCreateInfo, uint32_t count, VkDeviceMemory& deviceMemory)

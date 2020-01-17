@@ -1,14 +1,5 @@
 #include "command_buffer.hpp"
 
-
-#ifndef ASSERT_VULKAN
-#define ASSERT_VULKAN(val)\
-        if(val!=VK_SUCCESS)\
-        {\
-            throw std::runtime_error("ASSERT_VULKAN failed " + std::to_string(val));\
-        }
-#endif
-
 namespace vkBasalt
 {
     std::vector<VkCommandBuffer> allocateCommandBuffer(VkDevice device, VkLayerDispatchTable dispatchTable, VkCommandPool commandPool, uint32_t count)

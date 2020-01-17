@@ -1,13 +1,5 @@
 #include "descriptor_set.hpp"
 
-#ifndef ASSERT_VULKAN
-#define ASSERT_VULKAN(val)\
-        if(val!=VK_SUCCESS)\
-        {\
-            throw std::runtime_error("ASSERT_VULKAN failed " + std::to_string(val));\
-        }
-#endif
-
 namespace vkBasalt
 {
         
