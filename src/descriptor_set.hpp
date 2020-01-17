@@ -6,9 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include "vulkan/vulkan.h"
-#include "vulkan/vk_layer.h"
-#include "vulkan/vk_layer_dispatch_table.h"
+#include "vulkan_include.hpp"
 
 namespace vkBasalt{
     VkDescriptorPool createDescriptorPool(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<VkDescriptorPoolSize>& poolSizes);
