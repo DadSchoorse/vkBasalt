@@ -353,10 +353,7 @@ namespace vkBasalt
             }
         }
         
-        logicalSwapchain.fakeImages = createFakeSwapchainImages(logicalDevice.vki,
-                                                                logicalDevice.physicalDevice,
-                                                                device,
-                                                                logicalDevice.vkd,
+        logicalSwapchain.fakeImages = createFakeSwapchainImages(logicalDevice,
                                                                 logicalSwapchain.swapchainCreateInfo,
                                                                 *pCount * effectStrings.size(),
                                                                 logicalSwapchain.fakeImageMemory);
