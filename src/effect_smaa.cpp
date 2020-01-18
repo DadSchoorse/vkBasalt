@@ -50,13 +50,13 @@ namespace vkBasalt
         edgeImages  = std::vector<VkImage>(edgeAndBlendImages.begin(), edgeAndBlendImages.begin() + edgeAndBlendImages.size()/2);
         blendImages = std::vector<VkImage>(edgeAndBlendImages.begin() + edgeAndBlendImages.size()/2, edgeAndBlendImages.end());
 
-        inputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, inputImages);
+        inputImageViews = createImageViews(logicalDevice, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        edgeImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_B8G8R8A8_UNORM, edgeImages);
+        edgeImageViews = createImageViews(logicalDevice, VK_FORMAT_B8G8R8A8_UNORM, edgeImages);
         std::cout << "after creating edge  ImageViews" << std::endl;
-        blendImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_B8G8R8A8_UNORM, blendImages);
+        blendImageViews = createImageViews(logicalDevice, VK_FORMAT_B8G8R8A8_UNORM, blendImages);
         std::cout << "after creating blend ImageViews" << std::endl;
-        outputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, outputImages);
+        outputImageViews = createImageViews(logicalDevice, format, outputImages);
         std::cout << "after creating output ImageViews" << std::endl;
         sampler = createSampler(logicalDevice.device, logicalDevice.vkd);
         std::cout << "after creating sampler" << std::endl;
@@ -106,9 +106,9 @@ namespace vkBasalt
                        logicalDevice.commandPool,
                        searchTexBytes);
 
-        areaImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1,areaImage))[0];
+        areaImageView = createImageViews(logicalDevice, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1,areaImage))[0];
         std::cout << "after creating area ImageView" << std::endl;
-        searchImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
+        searchImageView = createImageViews(logicalDevice, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
         std::cout << "after creating search ImageView" << std::endl;
 
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 5);

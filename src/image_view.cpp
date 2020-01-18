@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImageView> createImageViews(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType, VkImageAspectFlags aspectMask)
+    std::vector<VkImageView> createImageViews(LogicalDevice logicalDevice, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType, VkImageAspectFlags aspectMask)
     {
         std::vector<VkImageView> imageViews(images.size());
         
@@ -24,10 +24,10 @@ namespace vkBasalt
         imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
         imageViewCreateInfo.subresourceRange.layerCount = 1;
         
-        for(unsigned int i=0;i<images.size();i++)
+        for(uint32_t i = 0; i < images.size(); i++)
         {
             imageViewCreateInfo.image = images[i];
-            VkResult result = dispatchTable.CreateImageView(device,&imageViewCreateInfo,nullptr,&(imageViews[i]));
+            VkResult result = logicalDevice.vkd.CreateImageView(logicalDevice.device, &imageViewCreateInfo, nullptr, &(imageViews[i]));
             ASSERT_VULKAN(result);
         }
         
