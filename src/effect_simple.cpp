@@ -65,7 +65,7 @@ namespace vkBasalt
                                                                          {sampler},
                                                                          std::vector<std::vector<VkImageView>>(1,inputImageViews));
         
-        framebuffers = createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass, imageExtent, {outputImageViews});
+        framebuffers = createFramebuffers(logicalDevice, renderPass, imageExtent, {outputImageViews});
     }
     void SimpleEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
