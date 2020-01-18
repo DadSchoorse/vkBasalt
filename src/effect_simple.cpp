@@ -28,9 +28,9 @@ namespace vkBasalt
         this->outputImages = outputImages;
         this->pConfig = pConfig;
         
-        inputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, inputImages);
+        inputImageViews = createImageViews(logicalDevice, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        outputImageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, format, outputImages);
+        outputImageViews = createImageViews(logicalDevice, format, outputImages);
         std::cout << "after creating ImageViews" << std::endl;
         sampler = createSampler(logicalDevice.device, logicalDevice.vkd);
         std::cout << "after creating sampler" << std::endl;

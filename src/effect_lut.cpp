@@ -91,7 +91,7 @@ namespace vkBasalt
             stbi_image_free(pixels);
         }
                        
-        lutImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_R8G8B8A8_UNORM, std::vector<VkImage>(1,lutImage), VK_IMAGE_VIEW_TYPE_3D)[0];
+        lutImageView = createImageViews(logicalDevice, VK_FORMAT_R8G8B8A8_UNORM, std::vector<VkImage>(1,lutImage), VK_IMAGE_VIEW_TYPE_3D)[0];
         
         lutDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 1);
         descriptorSetLayouts.push_back(lutDescriptorSetLayout);

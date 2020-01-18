@@ -40,11 +40,11 @@ namespace vkBasalt
         inputOutputFormatSRGB = convertToSRGB(format);
         
         
-        std::vector<VkImageView> inputImageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatSRGB, inputImages);
-        std::vector<VkImageView> inputImageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatUNORM, inputImages);
+        std::vector<VkImageView> inputImageViewsSRGB = createImageViews(logicalDevice, inputOutputFormatSRGB, inputImages);
+        std::vector<VkImageView> inputImageViewsUNORM = createImageViews(logicalDevice, inputOutputFormatUNORM, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        outputImageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatSRGB, outputImages);
-        outputImageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatUNORM, outputImages);
+        outputImageViewsSRGB = createImageViews(logicalDevice, inputOutputFormatSRGB, outputImages);
+        outputImageViewsUNORM = createImageViews(logicalDevice, inputOutputFormatUNORM, outputImages);
         std::cout << "after creating ImageViews" << std::endl;
         
         createReshadeModule();
@@ -74,7 +74,7 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back())[0];
         
-        stencilImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, stencilFormat, {stencilImage}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)[0];
+        stencilImageView = createImageViews(logicalDevice, stencilFormat, {stencilImage}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)[0];
         
         
         
@@ -116,8 +116,8 @@ namespace vkBasalt
                                    textureMemory.back());
                
                textureImages[module.textures[i].unique_name] = images;
-               std::vector<VkImageView> imageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
-               std::vector<VkImageView> imageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+               std::vector<VkImageView> imageViewsUNORM = createImageViews(logicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
+               std::vector<VkImageView> imageViewsSRGB = createImageViews(logicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
                textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
                textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
                textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
@@ -145,9 +145,9 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back());
                 textureImages[module.textures[i].unique_name] = images;
-                std::vector<VkImageView> imageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
+                std::vector<VkImageView> imageViews = createImageViews(logicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
                 std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
-                imageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+                imageViews = createImageViews(logicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
                 std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
                 textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
                 textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
@@ -297,8 +297,8 @@ namespace vkBasalt
                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                textureMemory.back());
-            backBufferImageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatSRGB, backBufferImages);
-            backBufferImageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatUNORM, backBufferImages);
+            backBufferImageViewsSRGB = createImageViews(logicalDevice, inputOutputFormatSRGB, backBufferImages);
+            backBufferImageViewsUNORM = createImageViews(logicalDevice, inputOutputFormatUNORM, backBufferImages);
             std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsSRGB, backBufferImageViewsSRGB);
             std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsUNORM, backBufferImageViewsUNORM);
             backBufferDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
