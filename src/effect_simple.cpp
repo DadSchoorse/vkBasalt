@@ -48,8 +48,8 @@ namespace vkBasalt
         descriptorPool = createDescriptorPool(logicalDevice, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, vertexCode, &vertexModule);
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, fragmentCode, &fragmentModule);
+        createShaderModule(logicalDevice, vertexCode, &vertexModule);
+        createShaderModule(logicalDevice, fragmentCode, &fragmentModule);
         
         renderPass = createRenderPass(logicalDevice, format);
         

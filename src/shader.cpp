@@ -62,7 +62,7 @@ namespace vkBasalt{
     }
 
 
-    void createShaderModule(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<char> &code, VkShaderModule *shaderModule)
+    void createShaderModule(LogicalDevice logicalDevice, const std::vector<char> &code, VkShaderModule *shaderModule)
     {
         VkShaderModuleCreateInfo shaderCreateInfo;
 
@@ -72,7 +72,7 @@ namespace vkBasalt{
         shaderCreateInfo.codeSize = code.size();
         shaderCreateInfo.pCode = (uint32_t*) code.data();
 
-        VkResult result = dispatchTable.CreateShaderModule(device,&shaderCreateInfo,nullptr,shaderModule);
+        VkResult result = logicalDevice.vkd.CreateShaderModule(logicalDevice.device, &shaderCreateInfo, nullptr, shaderModule);
         ASSERT_VULKAN(result);
     }
 }
