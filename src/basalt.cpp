@@ -9,6 +9,8 @@
 #include <memory>
 #include <cstring>
 
+#include "util.hpp"
+
 #include "logical_device.hpp"
 #include "logical_swapchain.hpp"
 
@@ -32,6 +34,7 @@
 #include "effect_deband.hpp"
 #include "effect_lut.hpp"
 #include "effect_reshade.hpp"
+#include "effect_transfer.hpp"
 
 namespace vkBasalt
 {
@@ -165,7 +168,32 @@ namespace vkBasalt
 
         PFN_vkCreateDevice createFunc = (PFN_vkCreateDevice)gipa(VK_NULL_HANDLE, "vkCreateDevice");
         
-        //Active needed Features
+        //check and activate extentions
+        uint32_t extensionCount = 0;
+        
+        instanceDispatchMap[GetKey(physicalDevice)].EnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+        std::vector<VkExtensionProperties> extensionProperties(extensionCount);
+        instanceDispatchMap[GetKey(physicalDevice)].EnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, extensionProperties.data());
+        
+        bool supportsMutableFormat = false;
+        for(VkExtensionProperties properties : extensionProperties)
+        {
+            if(properties.extensionName == std::string("VK_KHR_swapchain_mutable_format"))
+            {
+                std::cout << "device supports VK_KHR_swapchain_mutable_format" << std::endl;
+                supportsMutableFormat = true;
+                break;
+            }
+        }
+        
+        if(pConfig->getOption("mutableFormat") == "on")
+        {
+            supportsMutableFormat = true;
+        }
+        if(pConfig->getOption("mutableFormat") == "off")
+        {
+            supportsMutableFormat = false;
+        }
         
         VkDeviceCreateInfo modifiedCreateInfo = *pCreateInfo;
         std::vector<const char*> enabledExtensionNames;
@@ -173,11 +201,18 @@ namespace vkBasalt
         {
             enabledExtensionNames = std::vector<const char*>(modifiedCreateInfo.ppEnabledExtensionNames, modifiedCreateInfo.ppEnabledExtensionNames + modifiedCreateInfo.enabledExtensionCount);
         }
-        enabledExtensionNames.push_back("VK_KHR_swapchain_mutable_format");
-        enabledExtensionNames.push_back("VK_KHR_image_format_list");
+        
+        if(supportsMutableFormat)
+        {
+            std::cout << "activating mutable_format" << std::endl;
+            addUniqueCString(enabledExtensionNames, "VK_KHR_swapchain_mutable_format");
+            addUniqueCString(enabledExtensionNames, "VK_KHR_image_format_list");
+        }
         modifiedCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
         modifiedCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
         
+        
+        //Active needed Features
         VkPhysicalDeviceFeatures deviceFeatures = {};
         if(modifiedCreateInfo.pEnabledFeatures)
         {
@@ -201,6 +236,7 @@ namespace vkBasalt
         logicalDevice.queue = VK_NULL_HANDLE;
         logicalDevice.queueFamilyIndex = 0;
         logicalDevice.commandPool = VK_NULL_HANDLE;
+        logicalDevice.supportsMutableFormat = supportsMutableFormat;
         
         // store the table by key
         {
@@ -278,10 +314,11 @@ namespace vkBasalt
 
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
     {
+        scoped_lock l(globalLock);
+        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        
         VkSwapchainCreateInfoKHR modifiedCreateInfo = *pCreateInfo;
-        modifiedCreateInfo.imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;//we want to use the swapchain images as output of the graphics pipeline
-        modifiedCreateInfo.flags |= VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
-        //TODO what if the application already uses multiple formats for the swapchain?
+        modifiedCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;//we want to use the swapchain images as output of the graphics pipeline
         
         VkFormat format = modifiedCreateInfo.imageFormat;
         
@@ -292,17 +329,23 @@ namespace vkBasalt
         VkFormat formats[] = {unormFormat, srgbFormat};
         
         VkImageFormatListCreateInfoKHR imageFormatListCreateInfo;
-        imageFormatListCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO_KHR;
-        imageFormatListCreateInfo.pNext = modifiedCreateInfo.pNext;
-        imageFormatListCreateInfo.viewFormatCount = (srgbFormat == unormFormat) ? 1 : 2;
-        imageFormatListCreateInfo.pViewFormats = formats;
+        if(logicalDevice.supportsMutableFormat)
+        {
+            modifiedCreateInfo.flags |= VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
+            //TODO what if the application already uses multiple formats for the swapchain?
+            
+            imageFormatListCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO_KHR;
+            imageFormatListCreateInfo.pNext = modifiedCreateInfo.pNext;
+            imageFormatListCreateInfo.viewFormatCount = (srgbFormat == unormFormat) ? 1 : 2;
+            imageFormatListCreateInfo.pViewFormats = formats;
+            
+            modifiedCreateInfo.pNext = &imageFormatListCreateInfo;
+        }
+        else
+        {
+            modifiedCreateInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        }
         
-        modifiedCreateInfo.pNext = &imageFormatListCreateInfo;
-        
-        scoped_lock l(globalLock);
-        
-        
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
         std::cout << "format " << modifiedCreateInfo.imageFormat << std::endl;
         LogicalSwapchain logicalSwapchain;
         logicalSwapchain.logicalDevice = logicalDevice;
@@ -355,7 +398,7 @@ namespace vkBasalt
         
         logicalSwapchain.fakeImages = createFakeSwapchainImages(logicalDevice,
                                                                 logicalSwapchain.swapchainCreateInfo,
-                                                                *pCount * effectStrings.size(),
+                                                                *pCount * (effectStrings.size() + !logicalDevice.supportsMutableFormat), // create 1 more set of images when we can't use the swapchain it self
                                                                 logicalSwapchain.fakeImageMemory);
         std::cout << "after createFakeSwapchainImages " << std::endl;
         
@@ -380,7 +423,7 @@ namespace vkBasalt
             std::vector<VkImage> secondImages;
             if(i == effectStrings.size() - 1)
             {
-                secondImages = logicalSwapchain.images;
+                secondImages = logicalDevice.supportsMutableFormat ? logicalSwapchain.images : std::vector<VkImage>(logicalSwapchain.fakeImages.end() - logicalSwapchain.imageCount, logicalSwapchain.fakeImages.end());
                 std::cout << "using swapchain images as second images" << std::endl;
             }
             else
@@ -448,6 +491,16 @@ namespace vkBasalt
                                                              pConfig,
                                                              effectStrings[i])));
             }
+        }
+        
+        if(!logicalDevice.supportsMutableFormat)
+        {
+            logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new TransferEffect(logicalDevice,
+                                                             logicalSwapchain.format,
+                                                             logicalSwapchain.imageExtent,
+                                                             std::vector<VkImage>(logicalSwapchain.fakeImages.end() - logicalSwapchain.imageCount, logicalSwapchain.fakeImages.end()),
+                                                             logicalSwapchain.images,
+                                                             pConfig)));
         }
         std::cout << "effect string count: " << effectStrings.size() << std::endl;
         std::cout << "effect count: " << logicalSwapchain.effects.size() << std::endl;

@@ -20,6 +20,7 @@ namespace vkBasalt
         VkQueue                      queue;
         uint32_t                     queueFamilyIndex;
         VkCommandPool                commandPool;
+        bool                         supportsMutableFormat;
     };
 }
 
