@@ -440,17 +440,12 @@ namespace vkBasalt
             }
             else
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new ReshadeEffect(logicalDevice.physicalDevice,
-                                                             logicalDevice.vki,
-                                                             device,
-                                                             logicalDevice.vkd,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new ReshadeEffect(logicalDevice,
                                                              logicalSwapchain.format,
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
                                                              secondImages,
                                                              pConfig,
-                                                             logicalDevice.queue,
-                                                             logicalDevice.commandPool,
                                                              effectStrings[i])));
             }
         }
