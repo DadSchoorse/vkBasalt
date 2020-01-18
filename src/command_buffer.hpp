@@ -9,13 +9,15 @@
 
 #include "vulkan_include.hpp"
 
+#include "logical_device.hpp"
+
 #include "effect.hpp"
 namespace vkBasalt
 {
     
-    std::vector<VkCommandBuffer> allocateCommandBuffer(VkDevice device, VkLayerDispatchTable dispatchTable, VkCommandPool commandPool, uint32_t count);
-    void writeCommandBuffers(VkDevice device, VkLayerDispatchTable dispatchTable, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, std::vector<VkCommandBuffer> commandBuffers);
-    std::vector<VkSemaphore> createSemaphores(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t count);
+    std::vector<VkCommandBuffer> allocateCommandBuffer(LogicalDevice logicalDevice, uint32_t count);
+    void writeCommandBuffers(LogicalDevice logicalDevice, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, std::vector<VkCommandBuffer> commandBuffers);
+    std::vector<VkSemaphore> createSemaphores(LogicalDevice logicalDevice, uint32_t count);
 }
 
 #endif // COMMAND_BUFFER_HPP_INCLUDED

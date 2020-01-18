@@ -452,13 +452,13 @@ namespace vkBasalt
         std::cout << "effect string count: " << effectStrings.size() << std::endl;
         std::cout << "effect count: " << logicalSwapchain.effects.size() << std::endl;
         
-        logicalSwapchain.commandBuffers = allocateCommandBuffer(device, logicalDevice.vkd, logicalDevice.commandPool, logicalSwapchain.imageCount);
+        logicalSwapchain.commandBuffers = allocateCommandBuffer(logicalDevice, logicalSwapchain.imageCount);
         std::cout << "after allocateCommandBuffer " << std::endl;
         
-        writeCommandBuffers(device, logicalDevice.vkd, logicalSwapchain.effects,  logicalSwapchain.commandBuffers);
+        writeCommandBuffers(logicalDevice, logicalSwapchain.effects,  logicalSwapchain.commandBuffers);
         std::cout << "after write CommandBuffer" << std::endl;
         
-        logicalSwapchain.semaphores = createSemaphores(device, logicalDevice.vkd, logicalSwapchain.imageCount);
+        logicalSwapchain.semaphores = createSemaphores(logicalDevice, logicalSwapchain.imageCount);
         std::cout << "after create semaphores" << std::endl;
         for(unsigned int i = 0; i < logicalSwapchain.imageCount; i++)
         {

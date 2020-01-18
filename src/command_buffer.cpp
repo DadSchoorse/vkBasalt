@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkCommandBuffer> allocateCommandBuffer(VkDevice device, VkLayerDispatchTable dispatchTable, VkCommandPool commandPool, uint32_t count)
+    std::vector<VkCommandBuffer> allocateCommandBuffer(LogicalDevice logicalDevice, uint32_t count)
     {
         std::vector<VkCommandBuffer> commandBuffers(count);
         
@@ -10,21 +10,21 @@ namespace vkBasalt
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.pNext = nullptr;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = logicalDevice.commandPool;
         allocInfo.commandBufferCount = count;
         
-        VkResult result = dispatchTable.AllocateCommandBuffers(device,&allocInfo,commandBuffers.data());
+        VkResult result = logicalDevice.vkd.AllocateCommandBuffers(logicalDevice.device, &allocInfo, commandBuffers.data());
         ASSERT_VULKAN(result);
-        for(unsigned int i=0;i<count;i++)
+        for(uint32_t i = 0; i < count; i++)
         {
             //initialize dispatch tables for commandBuffers since the are dispatchable objects
-            *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(device);
+            *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(logicalDevice.device);
         }
         
         return commandBuffers;
     
     }
-    void writeCommandBuffers(VkDevice device, VkLayerDispatchTable dispatchTable, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, std::vector<VkCommandBuffer> commandBuffers)
+    void writeCommandBuffers(LogicalDevice logicalDevice, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, std::vector<VkCommandBuffer> commandBuffers)
     {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -32,10 +32,10 @@ namespace vkBasalt
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         beginInfo.pInheritanceInfo = nullptr;
         
-        for(unsigned int i=0;i<commandBuffers.size();i++)
+        for(uint32_t i=0;i<commandBuffers.size();i++)
         {
             
-            VkResult result = dispatchTable.BeginCommandBuffer(commandBuffers[i],&beginInfo);
+            VkResult result = logicalDevice.vkd.BeginCommandBuffer(commandBuffers[i],&beginInfo);
             ASSERT_VULKAN(result);
             
             for(uint32_t j=0;j<effects.size();j++)
@@ -44,13 +44,13 @@ namespace vkBasalt
                 effects[j]->applyEffect(i,commandBuffers[i]);
             }
 
-            result = dispatchTable.EndCommandBuffer(commandBuffers[i]);
+            result = logicalDevice.vkd.EndCommandBuffer(commandBuffers[i]);
             ASSERT_VULKAN(result);
         }
     }
 
 
-    std::vector<VkSemaphore> createSemaphores(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t count)
+    std::vector<VkSemaphore> createSemaphores(LogicalDevice logicalDevice, uint32_t count)
     {
         std::vector<VkSemaphore> semaphores(count);
         VkSemaphoreCreateInfo info;
@@ -60,7 +60,7 @@ namespace vkBasalt
 
         for (uint32_t i = 0; i < count; i++)
         {
-            dispatchTable.CreateSemaphore(device, &info, nullptr, &semaphores[i]);
+            logicalDevice.vkd.CreateSemaphore(logicalDevice.device, &info, nullptr, &semaphores[i]);
         }
         return semaphores;
     }
