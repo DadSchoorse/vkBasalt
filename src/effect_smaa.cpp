@@ -111,7 +111,7 @@ namespace vkBasalt
         searchImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
         std::cout << "after creating search ImageView" << std::endl;
 
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd, 5);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 5);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
 
         VkDescriptorPoolSize imagePoolSize;
@@ -120,7 +120,7 @@ namespace vkBasalt
 
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
 
-        descriptorPool = createDescriptorPool(logicalDevice.device, logicalDevice.vkd, poolSizes);
+        descriptorPool = createDescriptorPool(logicalDevice, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
 
         //get config options
@@ -190,7 +190,7 @@ namespace vkBasalt
                                                                   std::vector<VkImageView>(inputImageViews.size(), areaImageView),
                                                                   std::vector<VkImageView>(inputImageViews.size(), searchImageView),
                                                                   blendImageViews};
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device, logicalDevice.vkd, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
+        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
 
         edgeFramebuffers     = createFramebuffers(logicalDevice.device, logicalDevice.vkd, unormRenderPass, imageExtent,   {edgeImageViews});
         blendFramebuffers    = createFramebuffers(logicalDevice.device, logicalDevice.vkd, unormRenderPass, imageExtent,  {blendImageViews});

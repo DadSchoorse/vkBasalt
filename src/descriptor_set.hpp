@@ -8,13 +8,15 @@
 
 #include "vulkan_include.hpp"
 
-namespace vkBasalt{
-    VkDescriptorPool createDescriptorPool(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<VkDescriptorPoolSize>& poolSizes);
+#include "logical_device.hpp"
 
-    VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable);
-    VkDescriptorSet writeBufferDescriptorSet(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer);
-    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t count);
-    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkSampler> samplers, std::vector<std::vector<VkImageView>> imageViewsVectors);
+namespace vkBasalt{
+    VkDescriptorPool createDescriptorPool(LogicalDevice logicalDevice, const std::vector<VkDescriptorPoolSize>& poolSizes);
+
+    VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(LogicalDevice logicalDevice);
+    VkDescriptorSet writeBufferDescriptorSet(LogicalDevice logicalDevice, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer);
+    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(LogicalDevice logicalDevice, uint32_t count);
+    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(LogicalDevice logicalDevice, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkSampler> samplers, std::vector<std::vector<VkImageView>> imageViewsVectors);
 }
 
 
