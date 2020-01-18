@@ -3,7 +3,7 @@
 
 namespace vkBasalt
 {
-    void createBuffer(VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkPhysicalDevice physicalDevice, VkDeviceSize size,  VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+    void createBuffer(LogicalDevice logicalDevice, VkDeviceSize size,  VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
     {
         VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -11,23 +11,23 @@ namespace vkBasalt
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (dispatchTable.CreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+        if (logicalDevice.vkd.CreateBuffer(logicalDevice.device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
 
         VkMemoryRequirements memRequirements;
-        dispatchTable.GetBufferMemoryRequirements(device, buffer, &memRequirements);
+        logicalDevice.vkd.GetBufferMemoryRequirements(logicalDevice.device, buffer, &memRequirements);
 
         VkMemoryAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryTypeIndex(instanceDispatchTable,physicalDevice,memRequirements.memoryTypeBits, properties);
+        allocInfo.memoryTypeIndex = findMemoryTypeIndex(logicalDevice, memRequirements.memoryTypeBits, properties);
 
-        if (dispatchTable.AllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+        if (logicalDevice.vkd.AllocateMemory(logicalDevice.device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate buffer memory!");
         }
 
-        dispatchTable.BindBufferMemory(device, buffer, bufferMemory, 0);
+        logicalDevice.vkd.BindBufferMemory(logicalDevice.device, buffer, bufferMemory, 0);
     }
 
 }

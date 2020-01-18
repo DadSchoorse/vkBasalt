@@ -56,17 +56,14 @@ namespace vkBasalt
         bufferSize = module.total_uniform_size;
         if(bufferSize)
         {
-            createBuffer(logicalDevice.vki, logicalDevice.device, logicalDevice.vkd, logicalDevice.physicalDevice, bufferSize,  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            createBuffer(logicalDevice, bufferSize,  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
         }
         
         stencilFormat = getStencilFormat(logicalDevice);
         std::cout << "Stencil Format: " << stencilFormat << std::endl;
         textureMemory.push_back(VK_NULL_HANDLE);
-        stencilImage = createImages(logicalDevice.vki,
-                                   logicalDevice.device,
-                                   logicalDevice.vkd,
-                                   logicalDevice.physicalDevice,
+        stencilImage = createImages(logicalDevice,
                                    1,
                                    {imageExtent.width, imageExtent.height, 1},
                                    stencilFormat,
@@ -104,10 +101,7 @@ namespace vkBasalt
             if(const auto source = std::find_if(module.textures[i].annotations.begin(), module.textures[i].annotations.end(), [](const auto &a) { return a.name == "source"; }); source == module.textures[i].annotations.end())
             {
                 textureMemory.push_back(VK_NULL_HANDLE);
-                std::vector<VkImage> images = createImages(logicalDevice.vki,
-                                   logicalDevice.device,
-                                   logicalDevice.vkd,
-                                   logicalDevice.physicalDevice,
+                std::vector<VkImage> images = createImages(logicalDevice,
                                    inputImages.size(),
                                    textureExtent,
                                    convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
@@ -122,22 +116,13 @@ namespace vkBasalt
                textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
                textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
                textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
-               changeImageLayout(logicalDevice.vki,
-                               logicalDevice.device,
-                               logicalDevice.vkd,
-                               logicalDevice.physicalDevice,
-                               images,
-                               logicalDevice.queue,
-                               logicalDevice.commandPool);
+               changeImageLayout(logicalDevice, images);
                continue;
             }
             else
             {
                 textureMemory.push_back(VK_NULL_HANDLE);
-                std::vector<VkImage> images = createImages(logicalDevice.vki,
-                                   logicalDevice.device,
-                                   logicalDevice.vkd,
-                                   logicalDevice.physicalDevice,
+                std::vector<VkImage> images = createImages(logicalDevice,
                                    1,
                                    textureExtent,
                                    convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
@@ -217,15 +202,10 @@ namespace vkBasalt
                     stbir_resize_uint8(pixels, width, height, 0, resizedPixels.data(), textureExtent.width, textureExtent.height, 0, desiredChannels);
                 }
                 
-                uploadToImage(logicalDevice.vki,
-                       logicalDevice.device,
-                       logicalDevice.vkd,
-                       logicalDevice.physicalDevice,
+                uploadToImage(logicalDevice,
                        images[0],
                        textureExtent,
                        size,
-                       logicalDevice.queue,
-                       logicalDevice.commandPool,
                        resizedPixels.size() ? resizedPixels.data() : pixels);
                 stbi_image_free(pixels);
             }
@@ -287,10 +267,7 @@ namespace vkBasalt
         if(outputWrites > 1)
         {
             textureMemory.push_back(VK_NULL_HANDLE);
-            backBufferImages = createImages(logicalDevice.vki,
-                               logicalDevice.device,
-                               logicalDevice.vkd,
-                               logicalDevice.physicalDevice,
+            backBufferImages = createImages(logicalDevice,
                                inputImages.size(),
                                {imageExtent.width, imageExtent.height, 1},
                                format,//TODO search for format and save it

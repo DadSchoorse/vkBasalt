@@ -64,10 +64,7 @@ namespace vkBasalt
         pFragmentSpecInfo = &fragmentSpecializationInfo;
         
         VkExtent3D lutImageExtent = {(uint32_t) height, (uint32_t) height, (uint32_t) height};
-        lutImage = createImages(logicalDevice.vki,
-                                 logicalDevice.device,
-                                 logicalDevice.vkd,
-                                 logicalDevice.physicalDevice,
+        lutImage = createImages(logicalDevice,
                                  1,
                                  lutImageExtent,
                                  VK_FORMAT_R8G8B8A8_UNORM,//TODO search for format and save it
@@ -75,15 +72,10 @@ namespace vkBasalt
                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                  lutMemory)[0];
         
-        uploadToImage(logicalDevice.vki,
-                       logicalDevice.device,
-                       logicalDevice.vkd,
-                       logicalDevice.physicalDevice,
+        uploadToImage(logicalDevice,
                        lutImage,
                        lutImageExtent,
                        height*height*height*4,
-                       logicalDevice.queue,
-                       logicalDevice.commandPool,
                        pixels);
         
         if(usingPNG)

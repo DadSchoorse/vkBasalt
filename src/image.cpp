@@ -4,10 +4,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImage> createImages(VkLayerInstanceDispatchTable instanceDispatchTable,
-                                      VkDevice device,
-                                      VkLayerDispatchTable dispatchTable,
-                                      VkPhysicalDevice physicalDevice,
+    std::vector<VkImage> createImages(LogicalDevice logicalDevice,
                                       uint32_t count,
                                       VkExtent3D extent,
                                       VkFormat format,
@@ -43,12 +40,12 @@ namespace vkBasalt
         VkResult result;
         for(uint32_t i=0;i<count;i++)
         {
-            result = dispatchTable.CreateImage(device, &imageCreateInfo, nullptr, &(images[i]));
+            result = logicalDevice.vkd.CreateImage(logicalDevice.device, &imageCreateInfo, nullptr, &(images[i]));
             ASSERT_VULKAN(result);
         }
         //Allocate a bunch of memory for all images at one
         VkMemoryRequirements memoryRequirements;
-        dispatchTable.GetImageMemoryRequirements(device, images[0], &memoryRequirements);
+        logicalDevice.vkd.GetImageMemoryRequirements(logicalDevice.device, images[0], &memoryRequirements);
         
         if(memoryRequirements.size%memoryRequirements.alignment!=0)
         {
@@ -59,65 +56,57 @@ namespace vkBasalt
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.pNext = nullptr;
         memoryAllocateInfo.allocationSize = memoryRequirements.size * count;
-        memoryAllocateInfo.memoryTypeIndex = findMemoryTypeIndex(instanceDispatchTable,physicalDevice,memoryRequirements.memoryTypeBits,properties);
+        memoryAllocateInfo.memoryTypeIndex = findMemoryTypeIndex(logicalDevice, memoryRequirements.memoryTypeBits, properties);
         
-        result = dispatchTable.AllocateMemory(device, &memoryAllocateInfo, nullptr, &imageMemory);
+        result = logicalDevice.vkd.AllocateMemory(logicalDevice.device, &memoryAllocateInfo, nullptr, &imageMemory);
         ASSERT_VULKAN(result);
         
         for(uint32_t i=0;i<count;i++)
         {
-            result = dispatchTable.BindImageMemory(device, images[i], imageMemory, memoryRequirements.size*i);
+            result = logicalDevice.vkd.BindImageMemory(logicalDevice.device, images[i], imageMemory, memoryRequirements.size*i);
             ASSERT_VULKAN(result);
         }
         return images;
     }
     
-    void uploadToImage(VkLayerInstanceDispatchTable instanceDispatchTable,
-                       VkDevice device,
-                       VkLayerDispatchTable dispatchTable,
-                       VkPhysicalDevice physicalDevice,
+    void uploadToImage(LogicalDevice logicalDevice,
                        VkImage image,
                        VkExtent3D extent,
                        uint32_t size,
-                       VkQueue queue,
-                       VkCommandPool commandPool,
                        const unsigned char* writeData)
     {
         
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingMemory;
         
-        createBuffer(instanceDispatchTable,
-                     device,
-                     dispatchTable,
-                     physicalDevice,
+        createBuffer(logicalDevice,
                      size,
                      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                      stagingBuffer,
                      stagingMemory);
         void* data;
-        VkResult result = dispatchTable.MapMemory(device, stagingMemory, 0, size, 0, &data);
+        VkResult result = logicalDevice.vkd.MapMemory(logicalDevice.device, stagingMemory, 0, size, 0, &data);
         ASSERT_VULKAN(result);
         std::memcpy(data, writeData, size);
-        dispatchTable.UnmapMemory(device, stagingMemory);
+        logicalDevice.vkd.UnmapMemory(logicalDevice.device, stagingMemory);
         
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = logicalDevice.commandPool;
         allocInfo.commandBufferCount = 1;
 
         VkCommandBuffer commandBuffer;
-        dispatchTable.AllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+        logicalDevice.vkd.AllocateCommandBuffers(logicalDevice.device, &allocInfo, &commandBuffer);
         //initialize dispatch table for commandBuffer since it is a dispatchable object
-        *reinterpret_cast<void**>(commandBuffer) = *reinterpret_cast<void**>(device);
+        *reinterpret_cast<void**>(commandBuffer) = *reinterpret_cast<void**>(logicalDevice.device);
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        dispatchTable.BeginCommandBuffer(commandBuffer, &beginInfo);
+        logicalDevice.vkd.BeginCommandBuffer(commandBuffer, &beginInfo);
         
         VkImageMemoryBarrier memoryBarrier;
         memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -135,7 +124,7 @@ namespace vkBasalt
         memoryBarrier.subresourceRange.baseArrayLayer = 0;
         memoryBarrier.subresourceRange.layerCount = 1;
         
-        dispatchTable.CmdPipelineBarrier(
+        logicalDevice.vkd.CmdPipelineBarrier(
             commandBuffer,
             VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
             0,
@@ -155,14 +144,14 @@ namespace vkBasalt
         region.imageOffset = {0,0,0};
         region.imageExtent = extent;
         
-        dispatchTable.CmdCopyBufferToImage(commandBuffer,stagingBuffer,image,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,1,&region);
+        logicalDevice.vkd.CmdCopyBufferToImage(commandBuffer, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
         
         memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         memoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         
-        dispatchTable.CmdPipelineBarrier(
+        logicalDevice.vkd.CmdPipelineBarrier(
             commandBuffer,
             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
             0,
@@ -171,45 +160,39 @@ namespace vkBasalt
             1, &memoryBarrier
         );
         
-        dispatchTable.EndCommandBuffer(commandBuffer);
+        logicalDevice.vkd.EndCommandBuffer(commandBuffer);
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        dispatchTable.QueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-        dispatchTable.QueueWaitIdle(queue);
+        logicalDevice.vkd.QueueSubmit(logicalDevice.queue, 1, &submitInfo, VK_NULL_HANDLE);
+        logicalDevice.vkd.QueueWaitIdle(logicalDevice.queue);
 
-        dispatchTable.FreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-        dispatchTable.FreeMemory(device,stagingMemory,nullptr);
-        dispatchTable.DestroyBuffer(device,stagingBuffer,nullptr);
+        logicalDevice.vkd.FreeCommandBuffers(logicalDevice.device, logicalDevice.commandPool, 1, &commandBuffer);
+        logicalDevice.vkd.FreeMemory(logicalDevice.device, stagingMemory, nullptr);
+        logicalDevice.vkd.DestroyBuffer(logicalDevice.device, stagingBuffer, nullptr);
     }
     
-    void changeImageLayout(VkLayerInstanceDispatchTable instanceDispatchTable,
-                       VkDevice device,
-                       VkLayerDispatchTable dispatchTable,
-                       VkPhysicalDevice physicalDevice,
-                       std::vector<VkImage> images,
-                       VkQueue queue,
-                       VkCommandPool commandPool)
+    void changeImageLayout(LogicalDevice logicalDevice, std::vector<VkImage> images)
     {
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = logicalDevice.commandPool;
         allocInfo.commandBufferCount = 1;
 
         VkCommandBuffer commandBuffer;
-        dispatchTable.AllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+        logicalDevice.vkd.AllocateCommandBuffers(logicalDevice.device, &allocInfo, &commandBuffer);
         //initialize dispatch table for commandBuffer since it is a dispatchable object
-        *reinterpret_cast<void**>(commandBuffer) = *reinterpret_cast<void**>(device);
+        *reinterpret_cast<void**>(commandBuffer) = *reinterpret_cast<void**>(logicalDevice.device);
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         
-        dispatchTable.BeginCommandBuffer(commandBuffer, &beginInfo);
+        logicalDevice.vkd.BeginCommandBuffer(commandBuffer, &beginInfo);
         
         VkImageMemoryBarrier memoryBarrier;
         memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -229,7 +212,7 @@ namespace vkBasalt
         for(auto& image : images)
         {
             memoryBarrier.image = image;
-            dispatchTable.CmdPipelineBarrier(
+            logicalDevice.vkd.CmdPipelineBarrier(
                 commandBuffer,
                 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
                 0,
@@ -238,16 +221,16 @@ namespace vkBasalt
                 1, &memoryBarrier);
         }
         
-        dispatchTable.EndCommandBuffer(commandBuffer);
+        logicalDevice.vkd.EndCommandBuffer(commandBuffer);
         
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        dispatchTable.QueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-        dispatchTable.QueueWaitIdle(queue);
+        logicalDevice.vkd.QueueSubmit(logicalDevice.queue, 1, &submitInfo, VK_NULL_HANDLE);
+        logicalDevice.vkd.QueueWaitIdle(logicalDevice.queue);
 
-        dispatchTable.FreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+        logicalDevice.vkd.FreeCommandBuffers(logicalDevice.device, logicalDevice.commandPool, 1, &commandBuffer);
     }
 }
