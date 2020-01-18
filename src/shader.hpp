@@ -9,9 +9,11 @@
 
 #include "vulkan_include.hpp"
 
+#include "logical_device.hpp"
+
 namespace vkBasalt{
     std::vector<char> readFile(const std::string &filename);
-    void createShaderModule(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<char> &code, VkShaderModule *shaderModule);
+    void createShaderModule(LogicalDevice logicalDevice, const std::vector<char> &code, VkShaderModule *shaderModule);
 }
 
 

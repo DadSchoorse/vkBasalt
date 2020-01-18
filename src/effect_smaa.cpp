@@ -142,19 +142,19 @@ namespace vkBasalt
         smaaOptions.cornerRounding      = std::stoi(pConfig->getOption("smaaCornerRounding", "25"));
 
         auto shaderCode = readFile(smaaEdgeVertexFile);
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &edgeVertexModule);
+        createShaderModule(logicalDevice, shaderCode, &edgeVertexModule);
         shaderCode = pConfig->getOption("smaaEdgeDetection", "luma") == "color"
             ? readFile(smaaEdgeColorFragmentFile)
             : readFile(smaaEdgeLumaFragmentFile);
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &edgeFragmentModule);
+        createShaderModule(logicalDevice, shaderCode, &edgeFragmentModule);
         shaderCode = readFile(smaaBlendVertexFile);
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &blendVertexModule);
+        createShaderModule(logicalDevice, shaderCode, &blendVertexModule);
         shaderCode = readFile(smaaBlendFragmentFile);
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &blendFragmentModule);
+        createShaderModule(logicalDevice, shaderCode, &blendFragmentModule);
         shaderCode = readFile(smaaNeighborVertexFile);
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &neighborVertexModule);
+        createShaderModule(logicalDevice, shaderCode, &neighborVertexModule);
         shaderCode = readFile(smaaNeighborFragmentFile);
-        createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &neignborFragmentModule);
+        createShaderModule(logicalDevice, shaderCode, &neignborFragmentModule);
 
         renderPass      = createRenderPass(logicalDevice, format);
         unormRenderPass = createRenderPass(logicalDevice, VK_FORMAT_B8G8R8A8_UNORM);
