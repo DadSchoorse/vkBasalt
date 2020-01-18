@@ -8,11 +8,12 @@
 
 #include "vulkan_include.hpp"
 
+#include "logical_device.hpp"
+
 namespace vkBasalt
 {
-    VkPipelineLayout createGraphicsPipelineLayout(VkDevice device, VkLayerDispatchTable dispatchTable, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
-    VkPipeline createGraphicsPipeline(VkDevice device,
-                                      VkLayerDispatchTable dispatchTable,
+    VkPipelineLayout createGraphicsPipelineLayout(LogicalDevice logicalDevice, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
+    VkPipeline createGraphicsPipeline(LogicalDevice logicalDevice,
                                       VkShaderModule vertexModule,
                                       VkSpecializationInfo* vertexSpecializationInfo,
                                       std::string vertexEntryPoint,

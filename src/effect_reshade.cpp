@@ -258,7 +258,7 @@ namespace vkBasalt
         std::cout << "after creating descriptorPool" << std::endl;
         
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {uniformDescriptorSetLayout,imageSamplerDescriptorSetLayout};
-        pipelineLayout = createGraphicsPipelineLayout(logicalDevice.device, logicalDevice.vkd, descriptorSetLayouts);
+        pipelineLayout = createGraphicsPipelineLayout(logicalDevice, descriptorSetLayouts);
         
         std::cout << "after creating Pipeline layout" << std::endl;
         

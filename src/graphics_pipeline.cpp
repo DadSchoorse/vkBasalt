@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    VkPipelineLayout createGraphicsPipelineLayout(VkDevice device, VkLayerDispatchTable dispatchTable, std::vector<VkDescriptorSetLayout> descriptorSetLayouts)
+    VkPipelineLayout createGraphicsPipelineLayout(LogicalDevice logicalDevice, std::vector<VkDescriptorSetLayout> descriptorSetLayouts)
     {
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo;
         pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -14,13 +14,12 @@ namespace vkBasalt
         pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
         VkPipelineLayout pipelineLayout;
-        VkResult result = dispatchTable.CreatePipelineLayout(device,&pipelineLayoutCreateInfo,nullptr,&pipelineLayout);
+        VkResult result = logicalDevice.vkd.CreatePipelineLayout(logicalDevice.device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
         ASSERT_VULKAN(result);
         return pipelineLayout;
     }
     
-    VkPipeline createGraphicsPipeline(VkDevice device,
-                                      VkLayerDispatchTable dispatchTable,
+    VkPipeline createGraphicsPipeline(LogicalDevice logicalDevice,
                                       VkShaderModule vertexModule,
                                       VkSpecializationInfo* vertexSpecializationInfo,
                                       std::string vertexEntryPoint,
@@ -176,7 +175,7 @@ namespace vkBasalt
         pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineCreateInfo.basePipelineIndex = -1;
 
-        result = dispatchTable.CreateGraphicsPipelines(device,VK_NULL_HANDLE,1,&pipelineCreateInfo,nullptr,&pipeline);
+        result = logicalDevice.vkd.CreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline);
         ASSERT_VULKAN(result);
         
         return pipeline;
