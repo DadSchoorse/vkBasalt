@@ -61,6 +61,7 @@ namespace vkBasalt{
         std::vector<VkDeviceMemory> textureMemory;
         VkFormat inputOutputFormatUNORM;
         VkFormat inputOutputFormatSRGB;
+        VkFormat stencilFormat;
         VkImage stencilImage;
         VkImageView stencilImageView;
         //how often the shader writes to the reshade back buffer

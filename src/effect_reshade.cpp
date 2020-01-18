@@ -63,6 +63,8 @@ namespace vkBasalt
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
         }
         
+        stencilFormat = getStencilFormat(physicalDevice, instanceDispatchTable);
+        std::cout << "Stencil Format: " << stencilFormat << std::endl;
         textureMemory.push_back(VK_NULL_HANDLE);
         stencilImage = createImages(instanceDispatchTable,
                                    device,
@@ -70,12 +72,12 @@ namespace vkBasalt
                                    physicalDevice,
                                    1,
                                    {imageExtent.width, imageExtent.height, 1},
-                                   VK_FORMAT_D24_UNORM_S8_UINT,//TODO search for format and save it
+                                   stencilFormat,//TODO search for format and save it
                                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back())[0];
         
-        stencilImageView = createImageViews(device, dispatchTable, VK_FORMAT_D24_UNORM_S8_UINT, {stencilImage}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)[0];
+        stencilImageView = createImageViews(device, dispatchTable, stencilFormat, {stencilImage}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)[0];
         
         
         
@@ -420,7 +422,7 @@ namespace vkBasalt
                 
                 VkAttachmentDescription attachmentDescription;
                 attachmentDescription.flags = 0;
-                attachmentDescription.format = VK_FORMAT_D24_UNORM_S8_UINT;
+                attachmentDescription.format = stencilFormat;
                 attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
                 attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                 attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
