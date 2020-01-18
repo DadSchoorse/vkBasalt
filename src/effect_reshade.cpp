@@ -72,7 +72,7 @@ namespace vkBasalt
                                    physicalDevice,
                                    1,
                                    {imageExtent.width, imageExtent.height, 1},
-                                   stencilFormat,//TODO search for format and save it
+                                   stencilFormat,
                                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back())[0];
