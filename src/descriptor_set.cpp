@@ -98,7 +98,7 @@ namespace vkBasalt
             descriptorSetLayoutBinding.binding = i;
             descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             descriptorSetLayoutBinding.descriptorCount = 1;
-            descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT;
             descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
             bindigs[i] = descriptorSetLayoutBinding;
         }
