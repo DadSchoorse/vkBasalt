@@ -26,14 +26,11 @@
 
 namespace vkBasalt
 {
-    ReshadeEffect::ReshadeEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool, std::string effectName)
+    ReshadeEffect::ReshadeEffect(LogicalDevice logicalDevice,VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, std::string effectName)
     {
         std::cout << "in creating ReshadeEffect " << std::endl;
         
-        this->physicalDevice = physicalDevice;
-        this->instanceDispatchTable = instanceDispatchTable;
-        this->device = device;
-        this->dispatchTable = dispatchTable;
+        this->logicalDevice = logicalDevice;
         this->imageExtent = imageExtent;
         this->inputImages = inputImages;
         this->outputImages = outputImages;
@@ -43,11 +40,11 @@ namespace vkBasalt
         inputOutputFormatSRGB = convertToSRGB(format);
         
         
-        std::vector<VkImageView> inputImageViewsSRGB = createImageViews(device, dispatchTable, inputOutputFormatSRGB, inputImages);
-        std::vector<VkImageView> inputImageViewsUNORM = createImageViews(device, dispatchTable, inputOutputFormatUNORM, inputImages);
+        std::vector<VkImageView> inputImageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatSRGB, inputImages);
+        std::vector<VkImageView> inputImageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatUNORM, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        outputImageViewsSRGB = createImageViews(device, dispatchTable, inputOutputFormatSRGB, outputImages);
-        outputImageViewsUNORM = createImageViews(device, dispatchTable, inputOutputFormatUNORM, outputImages);
+        outputImageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatSRGB, outputImages);
+        outputImageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatUNORM, outputImages);
         std::cout << "after creating ImageViews" << std::endl;
         
         createReshadeModule();
@@ -59,17 +56,17 @@ namespace vkBasalt
         bufferSize = module.total_uniform_size;
         if(bufferSize)
         {
-            createBuffer(instanceDispatchTable, device, dispatchTable, physicalDevice, bufferSize,  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            createBuffer(logicalDevice.vki, logicalDevice.device, logicalDevice.vkd, logicalDevice.physicalDevice, bufferSize,  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
         }
         
-        stencilFormat = getStencilFormat(physicalDevice, instanceDispatchTable);
+        stencilFormat = getStencilFormat(logicalDevice.physicalDevice, logicalDevice.vki);
         std::cout << "Stencil Format: " << stencilFormat << std::endl;
         textureMemory.push_back(VK_NULL_HANDLE);
-        stencilImage = createImages(instanceDispatchTable,
-                                   device,
-                                   dispatchTable,
-                                   physicalDevice,
+        stencilImage = createImages(logicalDevice.vki,
+                                   logicalDevice.device,
+                                   logicalDevice.vkd,
+                                   logicalDevice.physicalDevice,
                                    1,
                                    {imageExtent.width, imageExtent.height, 1},
                                    stencilFormat,
@@ -77,7 +74,7 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back())[0];
         
-        stencilImageView = createImageViews(device, dispatchTable, stencilFormat, {stencilImage}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)[0];
+        stencilImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, stencilFormat, {stencilImage}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)[0];
         
         
         
@@ -107,10 +104,10 @@ namespace vkBasalt
             if(const auto source = std::find_if(module.textures[i].annotations.begin(), module.textures[i].annotations.end(), [](const auto &a) { return a.name == "source"; }); source == module.textures[i].annotations.end())
             {
                 textureMemory.push_back(VK_NULL_HANDLE);
-                std::vector<VkImage> images = createImages(instanceDispatchTable,
-                                   device,
-                                   dispatchTable,
-                                   physicalDevice,
+                std::vector<VkImage> images = createImages(logicalDevice.vki,
+                                   logicalDevice.device,
+                                   logicalDevice.vkd,
+                                   logicalDevice.physicalDevice,
                                    inputImages.size(),
                                    textureExtent,
                                    convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
@@ -119,28 +116,28 @@ namespace vkBasalt
                                    textureMemory.back());
                
                textureImages[module.textures[i].unique_name] = images;
-               std::vector<VkImageView> imageViewsUNORM = createImageViews(device, dispatchTable, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
-               std::vector<VkImageView> imageViewsSRGB = createImageViews(device, dispatchTable, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+               std::vector<VkImageView> imageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
+               std::vector<VkImageView> imageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
                textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
                textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
                textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
                textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
-               changeImageLayout(instanceDispatchTable,
-                               device,
-                               dispatchTable,
-                               physicalDevice,
+               changeImageLayout(logicalDevice.vki,
+                               logicalDevice.device,
+                               logicalDevice.vkd,
+                               logicalDevice.physicalDevice,
                                images,
-                               queue,
-                               commandPool);
+                               logicalDevice.queue,
+                               logicalDevice.commandPool);
                continue;
             }
             else
             {
                 textureMemory.push_back(VK_NULL_HANDLE);
-                std::vector<VkImage> images = createImages(instanceDispatchTable,
-                                   device,
-                                   dispatchTable,
-                                   physicalDevice,
+                std::vector<VkImage> images = createImages(logicalDevice.vki,
+                                   logicalDevice.device,
+                                   logicalDevice.vkd,
+                                   logicalDevice.physicalDevice,
                                    1,
                                    textureExtent,
                                    convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
@@ -148,9 +145,9 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back());
                 textureImages[module.textures[i].unique_name] = images;
-                std::vector<VkImageView> imageViews = createImageViews(device, dispatchTable, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
+                std::vector<VkImageView> imageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
                 std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
-                imageViews = createImageViews(device, dispatchTable, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+                imageViews = createImageViews(logicalDevice.device, logicalDevice.vkd, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
                 std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
                 textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
                 textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
@@ -220,15 +217,15 @@ namespace vkBasalt
                     stbir_resize_uint8(pixels, width, height, 0, resizedPixels.data(), textureExtent.width, textureExtent.height, 0, desiredChannels);
                 }
                 
-                uploadToImage(instanceDispatchTable,
-                       device,
-                       dispatchTable,
-                       physicalDevice,
+                uploadToImage(logicalDevice.vki,
+                       logicalDevice.device,
+                       logicalDevice.vkd,
+                       logicalDevice.physicalDevice,
                        images[0],
                        textureExtent,
                        size,
-                       queue,
-                       commandPool,
+                       logicalDevice.queue,
+                       logicalDevice.commandPool,
                        resizedPixels.size() ? resizedPixels.data() : pixels);
                 stbi_image_free(pixels);
             }
@@ -238,13 +235,13 @@ namespace vkBasalt
         for(size_t i = 0; i < module.samplers.size(); i++)
         {
             reshadefx::sampler_info info = module.samplers[i];
-            VkSampler sampler = createReshadeSampler(device, dispatchTable, info);
+            VkSampler sampler = createReshadeSampler(logicalDevice.device, logicalDevice.vkd, info);
             samplers.push_back(sampler);
             imageViewVector.push_back(info.srgb ? textureImageViewsSRGB[info.texture_name] : textureImageViewsUNORM[info.texture_name]);
         }
         
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(device, dispatchTable, module.samplers.size());
-        uniformDescriptorSetLayout = createUniformBufferDescriptorSetLayout(device, dispatchTable);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd, module.samplers.size());
+        uniformDescriptorSetLayout = createUniformBufferDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
@@ -257,22 +254,22 @@ namespace vkBasalt
         
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize, bufferPoolSize};
         
-        descriptorPool = createDescriptorPool(device, dispatchTable, poolSizes);
+        descriptorPool = createDescriptorPool(logicalDevice.device, logicalDevice.vkd, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {uniformDescriptorSetLayout,imageSamplerDescriptorSetLayout};
-        pipelineLayout = createGraphicsPipelineLayout(device, dispatchTable, descriptorSetLayouts);
+        pipelineLayout = createGraphicsPipelineLayout(logicalDevice.device, logicalDevice.vkd, descriptorSetLayouts);
         
         std::cout << "after creating Pipeline layout" << std::endl;
         
         std::cout << outputWrites << std::endl;
         if(bufferSize)
         {
-            bufferDescriptorSet = writeBufferDescriptorSet(device, dispatchTable, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
+            bufferDescriptorSet = writeBufferDescriptorSet(logicalDevice.device, logicalDevice.vkd, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
         }
         
-        inputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
-                                                                         dispatchTable,
+        inputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device,
+                                                                         logicalDevice.vkd,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          samplers,
@@ -291,22 +288,22 @@ namespace vkBasalt
         if(outputWrites > 1)
         {
             textureMemory.push_back(VK_NULL_HANDLE);
-            backBufferImages = createImages(instanceDispatchTable,
-                               device,
-                               dispatchTable,
-                               physicalDevice,
+            backBufferImages = createImages(logicalDevice.vki,
+                               logicalDevice.device,
+                               logicalDevice.vkd,
+                               logicalDevice.physicalDevice,
                                inputImages.size(),
                                {imageExtent.width, imageExtent.height, 1},
                                format,//TODO search for format and save it
                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                textureMemory.back());
-            backBufferImageViewsSRGB = createImageViews(device, dispatchTable, inputOutputFormatSRGB, backBufferImages);
-            backBufferImageViewsUNORM = createImageViews(device, dispatchTable, inputOutputFormatUNORM, backBufferImages);
+            backBufferImageViewsSRGB = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatSRGB, backBufferImages);
+            backBufferImageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatUNORM, backBufferImages);
             std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsSRGB, backBufferImageViewsSRGB);
             std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsUNORM, backBufferImageViewsUNORM);
-            backBufferDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
-                                                                         dispatchTable,
+            backBufferDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device,
+                                                                         logicalDevice.vkd,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          samplers,
@@ -316,8 +313,8 @@ namespace vkBasalt
         {
             std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViewsSRGB, outputImageViewsSRGB);
             std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViewsUNORM, outputImageViewsUNORM);
-            outputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(device,
-                                                                         dispatchTable,
+            outputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device,
+                                                                         logicalDevice.vkd,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          samplers,
@@ -471,7 +468,7 @@ namespace vkBasalt
             renderPassCreateInfo.pDependencies = &subpassDependency;
             
             VkRenderPass renderPass;
-            VkResult result = dispatchTable.CreateRenderPass(device,&renderPassCreateInfo,nullptr,&renderPass);
+            VkResult result = logicalDevice.vkd.CreateRenderPass(logicalDevice.device, &renderPassCreateInfo, nullptr, &renderPass);
             ASSERT_VULKAN(result);
             renderPasses.push_back(renderPass);
             
@@ -493,13 +490,13 @@ namespace vkBasalt
             {
                 std::vector<VkImageView> backBufferImageViews = pass.srgb_write_enable ? backBufferImageViewsSRGB : backBufferImageViewsUNORM;
                 std::vector<VkImageView> outputImageViews     = pass.srgb_write_enable ? outputImageViewsSRGB     : outputImageViewsUNORM;
-                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, imageExtent, {outputToBackBuffer ? backBufferImageViews : outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
+                framebuffers.push_back(createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass, imageExtent, {outputToBackBuffer ? backBufferImageViews : outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
                 outputToBackBuffer = !outputToBackBuffer;
                 switchSamplers.push_back(true);
             }
             else
             {
-                framebuffers.push_back(createFramebuffers(device, dispatchTable, renderPass, scissor.extent, attachmentImageViews));
+                framebuffers.push_back(createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass, scissor.extent, attachmentImageViews));
                 switchSamplers.push_back(false);
             }
             
@@ -695,7 +692,7 @@ namespace vkBasalt
             pipelineCreateInfo.basePipelineIndex = -1;
             
             VkPipeline pipeline;
-            result = dispatchTable.CreateGraphicsPipelines(device,VK_NULL_HANDLE,1,&pipelineCreateInfo,nullptr,&pipeline);
+            result = logicalDevice.vkd.CreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline);
             ASSERT_VULKAN(result);
                 
                 
@@ -713,13 +710,13 @@ namespace vkBasalt
         if(bufferSize)
         {
             void* data;
-            VkResult result = dispatchTable.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+            VkResult result = logicalDevice.vkd.MapMemory(logicalDevice.device, stagingBufferMemory, 0, bufferSize, 0, &data);
             ASSERT_VULKAN(result);
             for(auto& uniform: uniforms)
             {
                 uniform->update(data);
             }
-            dispatchTable.UnmapMemory(device, stagingBufferMemory);
+            logicalDevice.vkd.UnmapMemory(logicalDevice.device, stagingBufferMemory);
         }
     }
     
@@ -760,15 +757,15 @@ namespace vkBasalt
         secondBarrier.subresourceRange.baseArrayLayer = 0;
         secondBarrier.subresourceRange.layerCount = 1;
         
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         memoryBarrier.image = outputImages[imageIndex];
         memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         memoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         if(outputWrites > 1)
         {
             memoryBarrier.image = backBufferImages[imageIndex];
-            dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+            logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         }
         
         //stencil image
@@ -778,16 +775,16 @@ namespace vkBasalt
         memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         memoryBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT | VK_IMAGE_ASPECT_DEPTH_BIT;
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         
         std::cout << "after the first pipeline barrier" << std::endl;
         
-        dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(inputDescriptorSets[imageIndex]),0,nullptr);
+        logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(inputDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
         
         if(bufferSize)
         {
-            dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&bufferDescriptorSet,0,nullptr);
+            logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&bufferDescriptorSet,0,nullptr);
             std::cout << "after binding uniform buffer" << std::endl;
         }
         
@@ -797,34 +794,34 @@ namespace vkBasalt
             renderPassBeginInfos[i].framebuffer = framebuffers[i][imageIndex];
             
             std::cout << "before beginn renderpass" << std::endl;
-            dispatchTable.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfos[i],VK_SUBPASS_CONTENTS_INLINE);
+            logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfos[i],VK_SUBPASS_CONTENTS_INLINE);
             std::cout << "after beginn renderpass" << std::endl;
             
-            dispatchTable.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipelines[i]);
+            logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipelines[i]);
             std::cout << "after bind pipeliene" << std::endl;
             
-            dispatchTable.CmdDraw(commandBuffer, module.techniques[0].passes[i].num_vertices, 1, 0, 0);
+            logicalDevice.vkd.CmdDraw(commandBuffer, module.techniques[0].passes[i].num_vertices, 1, 0, 0);
             std::cout << "after draw" << std::endl;
 
-            dispatchTable.CmdEndRenderPass(commandBuffer);
+            logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
             std::cout << "after end renderpass" << std::endl;
             
             if(switchSamplers[i] && outputWrites > 1)
             {
                 if(backBufferNext)
                 {
-                    dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(backBufferDescriptorSets[imageIndex]),0,nullptr);
+                    logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(backBufferDescriptorSets[imageIndex]),0,nullptr);
                 }
                 else if(outputWrites > 2)
                 {
-                    dispatchTable.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(outputDescriptorSets[imageIndex]),0,nullptr);
+                    logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(outputDescriptorSets[imageIndex]),0,nullptr);
                 }
                 backBufferNext = !backBufferNext;
             }
         }
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         secondBarrier.image = outputImages[imageIndex];
-        dispatchTable.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
+        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         std::cout << "after the second pipeline barrier" << std::endl;
 
     }
@@ -833,50 +830,50 @@ namespace vkBasalt
         std::cout << "destroying ReshadeEffect" << this << std::endl;
         for(auto& pipeline: graphicsPipelines)
         {
-            dispatchTable.DestroyPipeline(device, pipeline, nullptr);
+            logicalDevice.vkd.DestroyPipeline(logicalDevice.device, pipeline, nullptr);
         }
         
         if(bufferSize)
         {
-            dispatchTable.FreeMemory(device, stagingBufferMemory, nullptr);
-            dispatchTable.DestroyBuffer(device, stagingBuffer, nullptr);
+            logicalDevice.vkd.FreeMemory(logicalDevice.device, stagingBufferMemory, nullptr);
+            logicalDevice.vkd.DestroyBuffer(logicalDevice.device, stagingBuffer, nullptr);
         }
         
-        dispatchTable.DestroyPipelineLayout(device, pipelineLayout, nullptr);
+        logicalDevice.vkd.DestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
         for(auto& renderPass: renderPasses)
         {
-            dispatchTable.DestroyRenderPass(device, renderPass, nullptr);
+            logicalDevice.vkd.DestroyRenderPass(logicalDevice.device, renderPass, nullptr);
         }
         
-        dispatchTable.DestroyDescriptorSetLayout(device, imageSamplerDescriptorSetLayout, nullptr);
-        dispatchTable.DestroyDescriptorSetLayout(device, uniformDescriptorSetLayout, nullptr);
+        logicalDevice.vkd.DestroyDescriptorSetLayout(logicalDevice.device, imageSamplerDescriptorSetLayout, nullptr);
+        logicalDevice.vkd.DestroyDescriptorSetLayout(logicalDevice.device, uniformDescriptorSetLayout, nullptr);
         
-        dispatchTable.DestroyShaderModule(device, shaderModule, nullptr);
+        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, shaderModule, nullptr);
         
-        dispatchTable.DestroyDescriptorPool(device, descriptorPool, nullptr);
+        logicalDevice.vkd.DestroyDescriptorPool(logicalDevice.device, descriptorPool, nullptr);
         for(auto& imageView: outputImageViewsSRGB)
         {
-            dispatchTable.DestroyImageView(device,imageView,nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device,imageView,nullptr);
         }
         for(auto& imageView: outputImageViewsUNORM)
         {
-            dispatchTable.DestroyImageView(device,imageView,nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device,imageView,nullptr);
         }
         
         for(auto& imageView: backBufferImageViewsSRGB)
         {
-            dispatchTable.DestroyImageView(device,imageView,nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device,imageView,nullptr);
         }
         for(auto& imageView: backBufferImageViewsUNORM)
         {
-            dispatchTable.DestroyImageView(device,imageView,nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device,imageView,nullptr);
         }
         
         for(auto& fbs: framebuffers)
         {
             for(auto& fb: fbs)
             {
-                dispatchTable.DestroyFramebuffer(device, fb, nullptr);
+                logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device, fb, nullptr);
             }
         }
         
@@ -899,33 +896,33 @@ namespace vkBasalt
         
         for(auto imageView: imageViewSet)
         {
-            dispatchTable.DestroyImageView(device, imageView, nullptr);
+            logicalDevice.vkd.DestroyImageView(logicalDevice.device, imageView, nullptr);
         }
-        dispatchTable.DestroyImageView(device, stencilImageView, nullptr);
+        logicalDevice.vkd.DestroyImageView(logicalDevice.device, stencilImageView, nullptr);
         
         for(auto& it: textureImages)
         {
             for(auto image: it.second)
             {
-                dispatchTable.DestroyImage(device, image, nullptr);
+                logicalDevice.vkd.DestroyImage(logicalDevice.device, image, nullptr);
             }
         }
         
         for(auto& image: backBufferImages)
         {
-            dispatchTable.DestroyImage(device,image,nullptr);
+            logicalDevice.vkd.DestroyImage(logicalDevice.device,image,nullptr);
         }
         
-        dispatchTable.DestroyImage(device, stencilImage, nullptr);
+        logicalDevice.vkd.DestroyImage(logicalDevice.device, stencilImage, nullptr);
         
         for(auto& sampler: samplers)
         {
-            dispatchTable.DestroySampler(device,sampler,nullptr);
+            logicalDevice.vkd.DestroySampler(logicalDevice.device, sampler, nullptr);
         }
         
         for(auto& memory: textureMemory)
         {
-            dispatchTable.FreeMemory(device,memory,nullptr);
+            logicalDevice.vkd.FreeMemory(logicalDevice.device, memory, nullptr);
         }
     }
     
@@ -974,7 +971,7 @@ namespace vkBasalt
         shaderCreateInfo.codeSize = module.spirv.size() * sizeof(uint32_t);
         shaderCreateInfo.pCode = module.spirv.data();
 
-        VkResult result = dispatchTable.CreateShaderModule(device, &shaderCreateInfo, nullptr, &shaderModule);
+        VkResult result = logicalDevice.vkd.CreateShaderModule(logicalDevice.device, &shaderCreateInfo, nullptr, &shaderModule);
         ASSERT_VULKAN(result);
             
         std::cout << "after creating shaderModule" << std::endl;

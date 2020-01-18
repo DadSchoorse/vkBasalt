@@ -14,6 +14,8 @@
 #include "config.hpp"
 #include "reshade_uniforms.hpp"
 
+#include "logical_device.hpp"
+
 #include "../reshade/source/effect_parser.hpp"
 #include "../reshade/source/effect_codegen.hpp"
 #include "../reshade/source/effect_preprocessor.hpp"
@@ -22,15 +24,12 @@ namespace vkBasalt{
     class ReshadeEffect : public Effect
     {
     public:
-        ReshadeEffect(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatchTable, VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, VkQueue queue, VkCommandPool commandPool, std::string effectName);
+        ReshadeEffect(LogicalDevice logicalDevice,VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, std::string effectName);
         void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
         void virtual updateEffect() override;
         virtual ~ReshadeEffect();
     private:
-        VkPhysicalDevice physicalDevice;
-        VkLayerInstanceDispatchTable instanceDispatchTable;
-        VkDevice device;
-        VkLayerDispatchTable dispatchTable;
+        LogicalDevice logicalDevice;
         std::vector<VkImage> inputImages;
         std::vector<VkImage> outputImages;
         std::vector<VkImageView> outputImageViewsSRGB;
