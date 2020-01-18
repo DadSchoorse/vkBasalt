@@ -235,7 +235,7 @@ namespace vkBasalt
         for(size_t i = 0; i < module.samplers.size(); i++)
         {
             reshadefx::sampler_info info = module.samplers[i];
-            VkSampler sampler = createReshadeSampler(logicalDevice.device, logicalDevice.vkd, info);
+            VkSampler sampler = createReshadeSampler(logicalDevice, info);
             samplers.push_back(sampler);
             imageViewVector.push_back(info.srgb ? textureImageViewsSRGB[info.texture_name] : textureImageViewsUNORM[info.texture_name]);
         }

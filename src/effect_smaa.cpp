@@ -58,7 +58,7 @@ namespace vkBasalt
         std::cout << "after creating blend ImageViews" << std::endl;
         outputImageViews = createImageViews(logicalDevice, format, outputImages);
         std::cout << "after creating output ImageViews" << std::endl;
-        sampler = createSampler(logicalDevice.device, logicalDevice.vkd);
+        sampler = createSampler(logicalDevice);
         std::cout << "after creating sampler" << std::endl;
 
         VkExtent3D areaImageExtent = {AREATEX_WIDTH, AREATEX_HEIGHT, 1};
