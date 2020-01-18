@@ -18,6 +18,10 @@ namespace vkBasalt
     //Returns true if format is UNORM
     //TODO currently return false if format is UNORM and not matching sRGB format exist
     bool isUNORM(VkFormat format);
+    
+    VkFormat getSupportedFormat(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatch, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
+    
+    VkFormat getStencilFormat(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatch);
 }
 
 
