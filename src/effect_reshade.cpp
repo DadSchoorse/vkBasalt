@@ -26,7 +26,7 @@
 
 namespace vkBasalt
 {
-    ReshadeEffect::ReshadeEffect(LogicalDevice logicalDevice,VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, std::string effectName)
+    ReshadeEffect::ReshadeEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, std::string effectName)
     {
         std::cout << "in creating ReshadeEffect " << std::endl;
         
@@ -60,7 +60,7 @@ namespace vkBasalt
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
         }
         
-        stencilFormat = getStencilFormat(logicalDevice.physicalDevice, logicalDevice.vki);
+        stencilFormat = getStencilFormat(logicalDevice);
         std::cout << "Stencil Format: " << stencilFormat << std::endl;
         textureMemory.push_back(VK_NULL_HANDLE);
         stencilImage = createImages(logicalDevice.vki,
