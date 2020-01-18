@@ -160,7 +160,7 @@ namespace vkBasalt
         unormRenderPass = createRenderPass(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_B8G8R8A8_UNORM);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
-        pipelineLayout = createGraphicsPipelineLayout(logicalDevice.device, logicalDevice.vkd, descriptorSetLayouts);
+        pipelineLayout = createGraphicsPipelineLayout(logicalDevice, descriptorSetLayouts);
 
         std::vector<VkSpecializationMapEntry> specMapEntrys(8);
         for(uint32_t i=0;i<specMapEntrys.size();i++)
@@ -180,9 +180,9 @@ namespace vkBasalt
         specializationInfo.dataSize = sizeof(smaaOptions);
         specializationInfo.pData = &smaaOptions;
 
-        edgePipeline     = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, edgeVertexModule, &specializationInfo, "main", edgeFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
-        blendPipeline    = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, blendVertexModule, &specializationInfo, "main", blendFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
-        neighborPipeline = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, neighborVertexModule, &specializationInfo, "main", neignborFragmentModule, &specializationInfo, "main", imageExtent, renderPass, pipelineLayout);
+        edgePipeline     = createGraphicsPipeline(logicalDevice, edgeVertexModule, &specializationInfo, "main", edgeFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        blendPipeline    = createGraphicsPipeline(logicalDevice, blendVertexModule, &specializationInfo, "main", blendFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        neighborPipeline = createGraphicsPipeline(logicalDevice, neighborVertexModule, &specializationInfo, "main", neignborFragmentModule, &specializationInfo, "main", imageExtent, renderPass, pipelineLayout);
 
 
         std::vector<std::vector<VkImageView>> imageViewsVector = {inputImageViews,

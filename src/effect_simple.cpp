@@ -54,9 +54,9 @@ namespace vkBasalt
         renderPass = createRenderPass(logicalDevice.device, logicalDevice.vkd, format);
         
         descriptorSetLayouts.insert(descriptorSetLayouts.begin(),imageSamplerDescriptorSetLayout);
-        pipelineLayout = createGraphicsPipelineLayout(logicalDevice.device, logicalDevice.vkd, descriptorSetLayouts);
+        pipelineLayout = createGraphicsPipelineLayout(logicalDevice, descriptorSetLayouts);
         
-        graphicsPipeline = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, vertexModule, pVertexSpecInfo, "main", fragmentModule, pFragmentSpecInfo, "main", imageExtent, renderPass, pipelineLayout);
+        graphicsPipeline = createGraphicsPipeline(logicalDevice, vertexModule, pVertexSpecInfo, "main", fragmentModule, pFragmentSpecInfo, "main", imageExtent, renderPass, pipelineLayout);
         
         
         imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
