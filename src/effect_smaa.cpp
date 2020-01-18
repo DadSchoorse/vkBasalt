@@ -36,10 +36,7 @@ namespace vkBasalt
         this->pConfig = pConfig;
 
         //create Images for the first and second pass at once -> less memory fragmentation
-        std::vector<VkImage> edgeAndBlendImages= createImages(logicalDevice.vki,
-                                                               logicalDevice.device,
-                                                               logicalDevice.vkd,
-                                                               logicalDevice.physicalDevice,
+        std::vector<VkImage> edgeAndBlendImages= createImages(logicalDevice,
                                                                inputImages.size()*2,
                                                                {imageExtent.width, imageExtent.height, 1},
                                                                VK_FORMAT_B8G8R8A8_UNORM,//TODO search for format and save it
@@ -62,10 +59,7 @@ namespace vkBasalt
         std::cout << "after creating sampler" << std::endl;
 
         VkExtent3D areaImageExtent = {AREATEX_WIDTH, AREATEX_HEIGHT, 1};
-        areaImage = createImages(logicalDevice.vki,
-                                 logicalDevice.device,
-                                 logicalDevice.vkd,
-                                 logicalDevice.physicalDevice,
+        areaImage = createImages(logicalDevice,
                                  1,
                                  areaImageExtent,
                                  VK_FORMAT_R8G8_UNORM,//TODO search for format and save it
@@ -73,10 +67,7 @@ namespace vkBasalt
                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                  areaMemory)[0];
         VkExtent3D searchImageExtent = {SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1};
-        searchImage = createImages(logicalDevice.vki,
-                                   logicalDevice.device,
-                                   logicalDevice.vkd,
-                                   logicalDevice.physicalDevice,
+        searchImage = createImages(logicalDevice,
                                    1,
                                    searchImageExtent,
                                    VK_FORMAT_R8_UNORM,//TODO search for format and save it
@@ -84,26 +75,16 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    searchMemory)[0];
 
-        uploadToImage(logicalDevice.vki,
-                       logicalDevice.device,
-                       logicalDevice.vkd,
-                       logicalDevice.physicalDevice,
+        uploadToImage(logicalDevice,
                        areaImage,
                        areaImageExtent,
                        AREATEX_SIZE,
-                       logicalDevice.queue,
-                       logicalDevice.commandPool,
                        areaTexBytes);
 
-        uploadToImage(logicalDevice.vki,
-                       logicalDevice.device,
-                       logicalDevice.vkd,
-                       logicalDevice.physicalDevice,
+        uploadToImage(logicalDevice,
                        searchImage,
                        searchImageExtent,
                        SEARCHTEX_SIZE,
-                       logicalDevice.queue,
-                       logicalDevice.commandPool,
                        searchTexBytes);
 
         areaImageView = createImageViews(logicalDevice, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1,areaImage))[0];

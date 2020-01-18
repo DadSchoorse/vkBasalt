@@ -8,36 +8,25 @@
 #include <cstring>
 
 #include "vulkan_include.hpp"
+
+#include "logical_device.hpp"
+
 namespace vkBasalt
 {
-    std::vector<VkImage> createImages(VkLayerInstanceDispatchTable instanceDispatchTable,
-                                      VkDevice device,
-                                      VkLayerDispatchTable dispatchTable,
-                                      VkPhysicalDevice physicalDevice,
+    std::vector<VkImage> createImages(LogicalDevice logicalDevice,
                                       uint32_t count,
                                       VkExtent3D extent,
                                       VkFormat format,
                                       VkImageUsageFlags usage,
                                       VkMemoryPropertyFlags properties,
                                       VkDeviceMemory& imageMemory);
-    void uploadToImage(VkLayerInstanceDispatchTable instanceDispatchTable,
-                       VkDevice device,
-                       VkLayerDispatchTable dispatchTable,
-                       VkPhysicalDevice physicalDevice,
+    void uploadToImage(LogicalDevice logicalDevice,
                        VkImage image,
                        VkExtent3D extent,
                        uint32_t size,
-                       VkQueue queue,
-                       VkCommandPool commandPool,
                        const unsigned char* writeData);
     
-    void changeImageLayout(VkLayerInstanceDispatchTable instanceDispatchTable,
-                       VkDevice device,
-                       VkLayerDispatchTable dispatchTable,
-                       VkPhysicalDevice physicalDevice,
-                       std::vector<VkImage> images,
-                       VkQueue queue,
-                       VkCommandPool commandPool);
+    void changeImageLayout(LogicalDevice logicalDevice, std::vector<VkImage> images);
 }
 
 
