@@ -51,7 +51,7 @@ namespace vkBasalt
         createShaderModule(logicalDevice.device, logicalDevice.vkd, vertexCode, &vertexModule);
         createShaderModule(logicalDevice.device, logicalDevice.vkd, fragmentCode, &fragmentModule);
         
-        renderPass = createRenderPass(logicalDevice.device, logicalDevice.vkd, format);
+        renderPass = createRenderPass(logicalDevice, format);
         
         descriptorSetLayouts.insert(descriptorSetLayouts.begin(),imageSamplerDescriptorSetLayout);
         pipelineLayout = createGraphicsPipelineLayout(logicalDevice, descriptorSetLayouts);

@@ -156,8 +156,8 @@ namespace vkBasalt
         shaderCode = readFile(smaaNeighborFragmentFile);
         createShaderModule(logicalDevice.device, logicalDevice.vkd, shaderCode, &neignborFragmentModule);
 
-        renderPass      = createRenderPass(logicalDevice.device, logicalDevice.vkd, format);
-        unormRenderPass = createRenderPass(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_B8G8R8A8_UNORM);
+        renderPass      = createRenderPass(logicalDevice, format);
+        unormRenderPass = createRenderPass(logicalDevice, VK_FORMAT_B8G8R8A8_UNORM);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
         pipelineLayout = createGraphicsPipelineLayout(logicalDevice, descriptorSetLayouts);

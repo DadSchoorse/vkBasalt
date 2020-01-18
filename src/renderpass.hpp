@@ -8,9 +8,11 @@
 
 #include "vulkan_include.hpp"
 
+#include "logical_device.hpp"
+
 namespace vkBasalt
 {
-    VkRenderPass createRenderPass(VkDevice device, VkLayerDispatchTable dispatchTable, VkFormat format);
+    VkRenderPass createRenderPass(LogicalDevice logicalDevice, VkFormat format);
 
 }
 
