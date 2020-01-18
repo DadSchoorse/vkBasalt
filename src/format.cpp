@@ -158,12 +158,12 @@ namespace vkBasalt
         return convertToSRGB(format) != format;
     }
     
-    VkFormat getSupportedFormat(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatch, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling)
+    VkFormat getSupportedFormat(LogicalDevice logicalDevice, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling)
     {
         for(auto& format: formats)
         {
             VkFormatProperties properties;
-            instanceDispatch.GetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
+            logicalDevice.vki.GetPhysicalDeviceFormatProperties(logicalDevice.physicalDevice, format, &properties);
             if((properties.optimalTilingFeatures & features) == features && tiling == VK_IMAGE_TILING_OPTIMAL)
             {
                 return format;
@@ -176,9 +176,9 @@ namespace vkBasalt
         throw std::runtime_error("No requested format supported");
     }
     
-    VkFormat getStencilFormat(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatch)
+    VkFormat getStencilFormat(LogicalDevice logicalDevice)
     {
         std::vector<VkFormat> stencilFormats = {VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT};
-        return getSupportedFormat(physicalDevice, instanceDispatch, stencilFormats, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+        return getSupportedFormat(logicalDevice, stencilFormats, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
     }
 }

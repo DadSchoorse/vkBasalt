@@ -7,6 +7,9 @@
 #include <vector>
 
 #include "vulkan_include.hpp"
+
+#include "logical_device.hpp"
+
 namespace vkBasalt
 {
     //Returns a matching sRGB format to a UNORM format if it exist, else returns format 
@@ -19,9 +22,9 @@ namespace vkBasalt
     //TODO currently return false if format is UNORM and not matching sRGB format exist
     bool isUNORM(VkFormat format);
     
-    VkFormat getSupportedFormat(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatch, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
+    VkFormat getSupportedFormat(LogicalDevice logicalDevice, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
     
-    VkFormat getStencilFormat(VkPhysicalDevice physicalDevice, VkLayerInstanceDispatchTable instanceDispatch);
+    VkFormat getStencilFormat(LogicalDevice logicalDevice);
 }
 
 
