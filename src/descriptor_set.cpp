@@ -3,11 +3,11 @@
 namespace vkBasalt
 {
         
-    VkDescriptorPool createDescriptorPool(VkDevice device, VkLayerDispatchTable dispatchTable, const std::vector<VkDescriptorPoolSize>& poolSizes)
+    VkDescriptorPool createDescriptorPool(LogicalDevice logicalDevice, const std::vector<VkDescriptorPoolSize>& poolSizes)
     {
         uint32_t setCount = 0;
         VkDescriptorPool descriptorPool;
-        for(uint32_t i=0;i<poolSizes.size();i++)
+        for(uint32_t i = 0; i < poolSizes.size(); i++)
         {
             setCount += poolSizes[i].descriptorCount;
         }
@@ -19,14 +19,14 @@ namespace vkBasalt
         descriptorPoolCreateInfo.poolSizeCount = poolSizes.size();
         descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
 
-        VkResult result =  dispatchTable.CreateDescriptorPool(device,&descriptorPoolCreateInfo,nullptr,&descriptorPool);
+        VkResult result =  logicalDevice.vkd.CreateDescriptorPool(logicalDevice.device, &descriptorPoolCreateInfo, nullptr, &descriptorPool);
         ASSERT_VULKAN(result);
         return descriptorPool;
     }
     
     
     
-    VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable)
+    VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(LogicalDevice logicalDevice)
     {
         VkDescriptorSetLayout descriptorSetLayout;
         
@@ -45,12 +45,13 @@ namespace vkBasalt
         descriptorSetCreateInfo.pBindings = &descriptorSetLayoutBinding;
 
         
-        VkResult result = dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&descriptorSetLayout);
+        VkResult result = logicalDevice.vkd.CreateDescriptorSetLayout(logicalDevice.device,&descriptorSetCreateInfo,nullptr,&descriptorSetLayout);
         ASSERT_VULKAN(result)
         
         return descriptorSetLayout;
     }
-    VkDescriptorSet writeBufferDescriptorSet(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer)
+    
+    VkDescriptorSet writeBufferDescriptorSet(LogicalDevice logicalDevice, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer)
     {
         VkDescriptorSet descriptorSet;
         
@@ -61,7 +62,7 @@ namespace vkBasalt
         descriptorSetAllocateInfo.descriptorSetCount = 1;
         descriptorSetAllocateInfo.pSetLayouts = &descriptorSetLayout;
         
-        VkResult result =  dispatchTable.AllocateDescriptorSets(device,&descriptorSetAllocateInfo,&descriptorSet);
+        VkResult result =  logicalDevice.vkd.AllocateDescriptorSets(logicalDevice.device, &descriptorSetAllocateInfo, &descriptorSet);
         ASSERT_VULKAN(result);
         
         VkDescriptorBufferInfo bufferInfo;
@@ -82,17 +83,17 @@ namespace vkBasalt
         writeDescriptorSet.pTexelBufferView = nullptr;
         
         std::cout << "before writing buffer descriptor Sets " << std::endl;
-        dispatchTable.UpdateDescriptorSets(device,1,&writeDescriptorSet,0,nullptr);
+        logicalDevice.vkd.UpdateDescriptorSets(logicalDevice.device, 1, &writeDescriptorSet, 0, nullptr);
         
         return descriptorSet;
     }
     
-    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(VkDevice device, VkLayerDispatchTable dispatchTable, uint32_t count)
+    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(LogicalDevice logicalDevice, uint32_t count)
     {
         VkDescriptorSetLayout descriptorSetLayout;
         
         std::vector<VkDescriptorSetLayoutBinding> bindigs(count);
-        for(uint32_t i=0;i<count;i++)
+        for(uint32_t i = 0; i < count; i++)
         {
             VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
             descriptorSetLayoutBinding.binding = i;
@@ -111,13 +112,13 @@ namespace vkBasalt
         descriptorSetCreateInfo.pBindings = bindigs.data();
 
         
-        VkResult result = dispatchTable.CreateDescriptorSetLayout(device,&descriptorSetCreateInfo,nullptr,&descriptorSetLayout);
+        VkResult result = logicalDevice.vkd.CreateDescriptorSetLayout(logicalDevice.device, &descriptorSetCreateInfo, nullptr, &descriptorSetLayout);
         ASSERT_VULKAN(result)
         return descriptorSetLayout;
         
     }
 
-    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(VkDevice device, VkLayerDispatchTable dispatchTable, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkSampler> samplers, std::vector<std::vector<VkImageView>> imageViewsVectors)
+    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(LogicalDevice logicalDevice, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkSampler> samplers, std::vector<std::vector<VkImageView>> imageViewsVectors)
     {
         std::vector<VkDescriptorSet> descriptorSets(imageViewsVectors[0].size());
         
@@ -129,8 +130,8 @@ namespace vkBasalt
         descriptorSetAllocateInfo.descriptorSetCount = descriptorSets.size();
         descriptorSetAllocateInfo.pSetLayouts = layouts.data();
         
-        std::cout << "before allocating descriptor Sets " << 1 << std::endl;
-        VkResult result =  dispatchTable.AllocateDescriptorSets(device,&descriptorSetAllocateInfo,descriptorSets.data());
+        std::cout << "before allocating descriptor Sets" << std::endl;
+        VkResult result =  logicalDevice.vkd.AllocateDescriptorSets(logicalDevice.device, &descriptorSetAllocateInfo, descriptorSets.data());
         ASSERT_VULKAN(result);
 
         VkDescriptorImageInfo imageInfo;
@@ -164,7 +165,7 @@ namespace vkBasalt
                 writeDescriptorSets[j].dstSet = descriptorSets[i];
             }
             std::cout << "before writing descriptor Sets " << std::endl;
-            dispatchTable.UpdateDescriptorSets(device,writeDescriptorSets.size(),writeDescriptorSets.data(),0,nullptr);
+            logicalDevice.vkd.UpdateDescriptorSets(logicalDevice.device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
             
         }
         return descriptorSets;

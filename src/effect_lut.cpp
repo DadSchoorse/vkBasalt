@@ -93,7 +93,7 @@ namespace vkBasalt
                        
         lutImageView = createImageViews(logicalDevice.device, logicalDevice.vkd, VK_FORMAT_R8G8B8A8_UNORM, std::vector<VkImage>(1,lutImage), VK_IMAGE_VIEW_TYPE_3D)[0];
         
-        lutDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd, 1);
+        lutDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 1);
         descriptorSetLayouts.push_back(lutDescriptorSetLayout);
         
         VkDescriptorPoolSize imagePoolSize;
@@ -102,12 +102,11 @@ namespace vkBasalt
 
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
         
-        lutDescriptorPool = createDescriptorPool(logicalDevice.device, logicalDevice.vkd, poolSizes);
+        lutDescriptorPool = createDescriptorPool(logicalDevice, poolSizes);
 
         init(logicalDevice, format,  imageExtent, inputImages, outputImages, pConfig);
         
-        lutDescriptorSet = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device,
-                                                                         logicalDevice.vkd,
+        lutDescriptorSet = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
                                                                          lutDescriptorPool,
                                                                          lutDescriptorSetLayout,
                                                                          {sampler},

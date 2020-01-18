@@ -240,8 +240,8 @@ namespace vkBasalt
             imageViewVector.push_back(info.srgb ? textureImageViewsSRGB[info.texture_name] : textureImageViewsUNORM[info.texture_name]);
         }
         
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd, module.samplers.size());
-        uniformDescriptorSetLayout = createUniformBufferDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, module.samplers.size());
+        uniformDescriptorSetLayout = createUniformBufferDescriptorSetLayout(logicalDevice);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
@@ -254,7 +254,7 @@ namespace vkBasalt
         
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize, bufferPoolSize};
         
-        descriptorPool = createDescriptorPool(logicalDevice.device, logicalDevice.vkd, poolSizes);
+        descriptorPool = createDescriptorPool(logicalDevice, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {uniformDescriptorSetLayout,imageSamplerDescriptorSetLayout};
@@ -265,11 +265,10 @@ namespace vkBasalt
         std::cout << outputWrites << std::endl;
         if(bufferSize)
         {
-            bufferDescriptorSet = writeBufferDescriptorSet(logicalDevice.device, logicalDevice.vkd, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
+            bufferDescriptorSet = writeBufferDescriptorSet(logicalDevice, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
         }
         
-        inputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device,
-                                                                         logicalDevice.vkd,
+        inputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          samplers,
@@ -302,8 +301,7 @@ namespace vkBasalt
             backBufferImageViewsUNORM = createImageViews(logicalDevice.device, logicalDevice.vkd, inputOutputFormatUNORM, backBufferImages);
             std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsSRGB, backBufferImageViewsSRGB);
             std::replace(imageViewVector.begin(), imageViewVector.end(), inputImageViewsUNORM, backBufferImageViewsUNORM);
-            backBufferDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device,
-                                                                         logicalDevice.vkd,
+            backBufferDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          samplers,
@@ -313,8 +311,7 @@ namespace vkBasalt
         {
             std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViewsSRGB, outputImageViewsSRGB);
             std::replace(imageViewVector.begin(), imageViewVector.end(), backBufferImageViewsUNORM, outputImageViewsUNORM);
-            outputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device,
-                                                                         logicalDevice.vkd,
+            outputDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          samplers,

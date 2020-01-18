@@ -35,7 +35,7 @@ namespace vkBasalt
         sampler = createSampler(logicalDevice.device, logicalDevice.vkd);
         std::cout << "after creating sampler" << std::endl;
         
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice.device, logicalDevice.vkd, 1);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 1);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
         
         VkDescriptorPoolSize imagePoolSize;
@@ -45,7 +45,7 @@ namespace vkBasalt
         
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
         
-        descriptorPool = createDescriptorPool(logicalDevice.device, logicalDevice.vkd, poolSizes);
+        descriptorPool = createDescriptorPool(logicalDevice, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
         
         createShaderModule(logicalDevice.device, logicalDevice.vkd, vertexCode, &vertexModule);
@@ -59,7 +59,7 @@ namespace vkBasalt
         graphicsPipeline = createGraphicsPipeline(logicalDevice.device, logicalDevice.vkd, vertexModule, pVertexSpecInfo, "main", fragmentModule, pFragmentSpecInfo, "main", imageExtent, renderPass, pipelineLayout);
         
         
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice.device, logicalDevice.vkd,
+        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
                                                                          descriptorPool,
                                                                          imageSamplerDescriptorSetLayout,
                                                                          {sampler},
