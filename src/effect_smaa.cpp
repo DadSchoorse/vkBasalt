@@ -192,9 +192,9 @@ namespace vkBasalt
                                                                   blendImageViews};
         imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
 
-        edgeFramebuffers     = createFramebuffers(logicalDevice.device, logicalDevice.vkd, unormRenderPass, imageExtent,   {edgeImageViews});
-        blendFramebuffers    = createFramebuffers(logicalDevice.device, logicalDevice.vkd, unormRenderPass, imageExtent,  {blendImageViews});
-        neignborFramebuffers = createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass,      imageExtent, {outputImageViews});
+        edgeFramebuffers     = createFramebuffers(logicalDevice, unormRenderPass, imageExtent,   {edgeImageViews});
+        blendFramebuffers    = createFramebuffers(logicalDevice, unormRenderPass, imageExtent,  {blendImageViews});
+        neignborFramebuffers = createFramebuffers(logicalDevice, renderPass,      imageExtent, {outputImageViews});
     }
     void SmaaEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {

@@ -8,9 +8,11 @@
 
 #include "vulkan_include.hpp"
 
+#include "logical_device.hpp"
+
 namespace vkBasalt
 {
-    std::vector<VkFramebuffer> createFramebuffers(VkDevice device, VkLayerDispatchTable dispatchTable, VkRenderPass renderPass, VkExtent2D& extent, std::vector<std::vector<VkImageView>> imageViews);
+    std::vector<VkFramebuffer> createFramebuffers(LogicalDevice logicalDevice, VkRenderPass renderPass, VkExtent2D& extent, std::vector<std::vector<VkImageView>> imageViews);
 }
 
 

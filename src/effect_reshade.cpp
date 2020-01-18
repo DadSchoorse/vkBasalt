@@ -487,13 +487,13 @@ namespace vkBasalt
             {
                 std::vector<VkImageView> backBufferImageViews = pass.srgb_write_enable ? backBufferImageViewsSRGB : backBufferImageViewsUNORM;
                 std::vector<VkImageView> outputImageViews     = pass.srgb_write_enable ? outputImageViewsSRGB     : outputImageViewsUNORM;
-                framebuffers.push_back(createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass, imageExtent, {outputToBackBuffer ? backBufferImageViews : outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
+                framebuffers.push_back(createFramebuffers(logicalDevice, renderPass, imageExtent, {outputToBackBuffer ? backBufferImageViews : outputImageViews, std::vector<VkImageView>(inputImages.size(), stencilImageView)}));
                 outputToBackBuffer = !outputToBackBuffer;
                 switchSamplers.push_back(true);
             }
             else
             {
-                framebuffers.push_back(createFramebuffers(logicalDevice.device, logicalDevice.vkd, renderPass, scissor.extent, attachmentImageViews));
+                framebuffers.push_back(createFramebuffers(logicalDevice, renderPass, scissor.extent, attachmentImageViews));
                 switchSamplers.push_back(false);
             }
             
