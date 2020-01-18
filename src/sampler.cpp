@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    VkSampler createSampler(VkDevice device, VkLayerDispatchTable dispatchTable)
+    VkSampler createSampler(LogicalDevice logicalDevice)
     {
         VkSampler sampler;
         
@@ -26,12 +26,12 @@ namespace vkBasalt
         samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
         
-        VkResult result = dispatchTable.CreateSampler(device,&samplerCreateInfo,nullptr,&sampler);
+        VkResult result = logicalDevice.vkd.CreateSampler(logicalDevice.device, &samplerCreateInfo, nullptr, &sampler);
         ASSERT_VULKAN(result);
         return sampler;
     }
     
-    VkSampler createReshadeSampler(VkDevice device, VkLayerDispatchTable dispatchTable, const reshadefx::sampler_info& samplerInfo)
+    VkSampler createReshadeSampler(LogicalDevice logicalDevice, const reshadefx::sampler_info& samplerInfo)
     {
         VkSampler sampler;
         
@@ -60,7 +60,7 @@ namespace vkBasalt
         samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
         samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
         
-        VkResult result = dispatchTable.CreateSampler(device,&samplerCreateInfo,nullptr,&sampler);
+        VkResult result = logicalDevice.vkd.CreateSampler(logicalDevice.device, &samplerCreateInfo, nullptr, &sampler);
         ASSERT_VULKAN(result);
         return sampler;
     }

@@ -32,7 +32,7 @@ namespace vkBasalt
         std::cout << "after creating input ImageViews" << std::endl;
         outputImageViews = createImageViews(logicalDevice, format, outputImages);
         std::cout << "after creating ImageViews" << std::endl;
-        sampler = createSampler(logicalDevice.device, logicalDevice.vkd);
+        sampler = createSampler(logicalDevice);
         std::cout << "after creating sampler" << std::endl;
         
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 1);

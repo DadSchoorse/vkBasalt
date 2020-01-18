@@ -8,11 +8,13 @@
 
 #include "vulkan_include.hpp"
 
+#include "logical_device.hpp"
+
 #include "../reshade/source/effect_module.hpp"
 namespace vkBasalt
 {
-    VkSampler createSampler(VkDevice device, VkLayerDispatchTable dispatchTable);
-    VkSampler createReshadeSampler(VkDevice device, VkLayerDispatchTable dispatchTable, const reshadefx::sampler_info& samplerInfo);
+    VkSampler createSampler(LogicalDevice logicalDevice);
+    VkSampler createReshadeSampler(LogicalDevice logicalDevice, const reshadefx::sampler_info& samplerInfo);
     VkSamplerAddressMode convertReshadeAddressMode(const reshadefx::texture_address_mode& addressMode);
     void convertReshadeFilter(const reshadefx::texture_filter& textureFilter, VkFilter& minFilter, VkFilter& magFilter, VkSamplerMipmapMode& mipmapMode);
 }
