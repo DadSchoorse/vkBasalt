@@ -1,5 +1,5 @@
 # vkBasalt
-vkBasalt is a Vulkan post processing layer to enhance the visual graphics of a game.
+vkBasalt is a Vulkan post processing layer to enhance the visual graphics of games.
 
 Currently, the only effects are:
 - Contrast Adaptive Sharpening 
@@ -9,7 +9,16 @@ Currently, the only effects are:
 - 3D color LookUp Table
 
 ## Disclaimer
-This one of my first projects ever, so expect it to have bugs. Use it at your own risk.
+This is one of my first projects ever, so expect it to have bugs. Use it at your own risk.
+
+## Install
+**There are binaries attached to each release, so manually building from source is not required**
+
+Once you have the binearies, either by downloading and unpacking them or by following the build instructions below, execute:
+```
+make install
+```
+**Note: do not run this with `sudo`. vkBasalt gets installed for the current user only.**
 
 ## Prerequisites
 Before building, you will need:
@@ -24,7 +33,6 @@ For Arch-based distributions, execute:
 ```
 pacman -Syu glslang vulkan-headers vulkan-tools vulkan-validation-layers
 ```
-If using the AUR, you can install the [vkBasalt](https://aur.archlinux.org/packages/?O=0&K=vkbasalt) package.
 ### Fedora
 For Fedora, execute:
 ```
@@ -46,9 +54,8 @@ To build and install the program, execute:
 git clone https://github.com/DadSchoorse/vkBasalt.git ~/vkBasalt
 cd ~/vkBasalt
 make
-make install
 ```
-##### TIP: Use the `-jX` (where X=number of CPUs) option to accelerate the building process.
+##### TIP: Use the `-jX` (where X=number of cpu threads) option to accelerate the building process.
 
 ## Usage
 Enable the layer with the environment variable (see below). Since vkBasalt 0.2.0 there is one unified variable for 64-bit and 32-bit games.
