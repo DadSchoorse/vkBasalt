@@ -38,11 +38,6 @@ For Fedora, execute:
 ```
 sudo dnf install vulkan-headers vulkan-tools vulkan-validation-layers vulkan-validation-layers-devel glslang glibc-devel.i686 libstdc++-devel.i686 spirv-tools
 ```
-### Solus
-For Solus, execute:
-```
-sudo eopkg it vulkan-headers vulkan-tools vulkan-validation-layers
-```
 ### Gentoo-based distributions
 For Gentoo-based distributions, execute:
 ```
