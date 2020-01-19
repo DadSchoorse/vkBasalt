@@ -1,6 +1,7 @@
 #include "util.hpp"
 
 #include <iostream>
+#include <unistd.h>
 
 namespace vkBasalt
 {
@@ -87,7 +88,7 @@ namespace vkBasalt
             magicString += magicNumber;
             first = false;
         }
-        if(magicString.size() == 0)
+        if(magicString.size() == 0 || !isatty(fileno(stdout)))
         {
             std::cout << output << std::endl;
         }
