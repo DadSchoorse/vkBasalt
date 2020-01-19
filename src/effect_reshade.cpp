@@ -20,6 +20,8 @@
 #include "image.hpp"
 #include "format.hpp"
 
+#include "util.hpp"
+
 #include "stb_image.h"
 #include "stb_image_dds.h"
 #include "stb_image_resize.h"
@@ -917,7 +919,11 @@ namespace vkBasalt
         preprocessor.add_macro_definition("BUFFER_RCP_WIDTH", "(1.0 / BUFFER_WIDTH)");
         preprocessor.add_macro_definition("BUFFER_RCP_HEIGHT", "(1.0 / BUFFER_HEIGHT)");
         preprocessor.add_include_path(pConfig->getOption("reshadeIncludePath"));
-        preprocessor.append_file(pConfig->getOption(effectName));
+        if(!preprocessor.append_file(pConfig->getOption(effectName)))
+        {
+            outputInColor("failed to load shader file: " + pConfig->getOption(effectName), Color::red);
+            outputInColor("Does the filepath exist and does it not include spaces?", Color::red);
+        }
 
         reshadefx::parser parser;
 
