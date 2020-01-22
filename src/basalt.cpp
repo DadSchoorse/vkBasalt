@@ -318,7 +318,6 @@ namespace vkBasalt
         LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
         
         VkSwapchainCreateInfoKHR modifiedCreateInfo = *pCreateInfo;
-        modifiedCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;//we want to use the swapchain images as output of the graphics pipeline
         
         VkFormat format = modifiedCreateInfo.imageFormat;
         
@@ -331,6 +330,7 @@ namespace vkBasalt
         VkImageFormatListCreateInfoKHR imageFormatListCreateInfo;
         if(logicalDevice.supportsMutableFormat)
         {
+            modifiedCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;//we want to use the swapchain images as output of the graphics pipeline
             modifiedCreateInfo.flags |= VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
             //TODO what if the application already uses multiple formats for the swapchain?
             
