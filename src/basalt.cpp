@@ -619,7 +619,7 @@ namespace vkBasalt
         LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
         VkResult result = logicalDevice.vkd.BindImageMemory(device, image, memory, memoryOffset);
         //TODO what if the application creates more than one image before binding memory?
-        if(image == logicalDevice.depthImages.back())
+        if(logicalDevice.depthImages.size() && image == logicalDevice.depthImages.back())
         {
             std::cout << "before creating depth image view" << std::endl;
             VkImageView depthImageView = createImageViews(logicalDevice, logicalDevice.depthFormats[logicalDevice.depthImages.size() - 1], {image}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT)[0];
@@ -652,8 +652,11 @@ namespace vkBasalt
             {
                 logicalDevice.depthImages.erase(logicalDevice.depthImages.begin() + i);
                 //TODO what if a image gets destroyed before binding memory?
-                logicalDevice.vkd.DestroyImageView(logicalDevice.device, logicalDevice.depthImageViews[i], nullptr);
-                logicalDevice.depthImageViews.erase(logicalDevice.depthImageViews.begin() + i);
+                if(logicalDevice.depthImageViews.size() - 1 >= i)
+                {
+                    logicalDevice.vkd.DestroyImageView(logicalDevice.device, logicalDevice.depthImageViews[i], nullptr);
+                    logicalDevice.depthImageViews.erase(logicalDevice.depthImageViews.begin() + i);
+                }
                 logicalDevice.depthFormats.erase(logicalDevice.depthFormats.begin() + i);
                 
                 VkImageView depthImageView = logicalDevice.depthImageViews.size() ? logicalDevice.depthImageViews.back() : VK_NULL_HANDLE;
