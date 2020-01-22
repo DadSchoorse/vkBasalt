@@ -44,7 +44,7 @@ namespace vkBasalt
     std::unordered_map<void *, VkLayerInstanceDispatchTable> instanceDispatchMap;
     std::unordered_map<void *, VkInstance>                   instanceMap;
     std::unordered_map<void *, LogicalDevice>                deviceMap;
-    std::unordered_map<VkSwapchainKHR, LogicalSwapchain>      swapchainMap;
+    std::unordered_map<VkSwapchainKHR, LogicalSwapchain>     swapchainMap;
     
     std::mutex globalLock;
     #ifdef _GCC_
@@ -592,16 +592,88 @@ namespace vkBasalt
         logicalDevice.vkd.DestroySwapchainKHR(device, swapchain,pAllocator);
     }
     
-    VKAPI_ATTR void VKAPI_CALL vkBasalt_CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
+    VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
     {
         scoped_lock l(globalLock);
         LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
         if(isDepthFormat(pCreateInfo->format))
         {
             std::cout << "detected depth image with format: " <<  pCreateInfo->format << std::endl;
+            VkImageCreateInfo modifiedCreateInfo = *pCreateInfo;
+            modifiedCreateInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+            VkResult result = logicalDevice.vkd.CreateImage(device, &modifiedCreateInfo, pAllocator, pImage);
+            logicalDevice.depthImages.push_back(*pImage);
+            logicalDevice.depthFormats.push_back(pCreateInfo->format);
+            
+            return result;
         }
-        logicalDevice.vkd.CreateImage(device, pCreateInfo, pAllocator, pImage);
+        else
+        {
+            return logicalDevice.vkd.CreateImage(device, pCreateInfo, pAllocator, pImage);
+        }
     }
+    
+    VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_BindImageMemory(VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset)
+    {
+        scoped_lock l(globalLock);
+        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        VkResult result = logicalDevice.vkd.BindImageMemory(device, image, memory, memoryOffset);
+        //TODO what if the application creates more than one image before binding memory?
+        if(image == logicalDevice.depthImages.back())
+        {
+            std::cout << "before creating depth image view" << std::endl;
+            VkImageView depthImageView = createImageViews(logicalDevice, logicalDevice.depthFormats[logicalDevice.depthImages.size() - 1], {image}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT)[0];
+            std::cout << "after creating depth image view" << std::endl;
+            logicalDevice.depthImageViews.push_back(depthImageView);
+            
+            for(auto& it: swapchainMap)
+            {
+                LogicalSwapchain& lSwapchain = it.second;
+                if(lSwapchain.logicalDevice.device == logicalDevice.device)
+                {
+                    for(auto& effect: lSwapchain.effects)
+                    {
+                        effect->useDepthImage(depthImageView);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    
+    VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroyImage(VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator)
+    {
+        scoped_lock l(globalLock);
+        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        
+        for(uint32_t i = 0; i < logicalDevice.depthImages.size(); i++)
+        {
+            if(logicalDevice.depthImages[i] == image)
+            {
+                logicalDevice.depthImages.erase(logicalDevice.depthImages.begin() + i);
+                //TODO what if a image gets destroyed before binding memory?
+                logicalDevice.vkd.DestroyImageView(logicalDevice.device, logicalDevice.depthImageViews[i], nullptr);
+                logicalDevice.depthImageViews.erase(logicalDevice.depthImageViews.begin() + i);
+                logicalDevice.depthFormats.erase(logicalDevice.depthFormats.begin() + i);
+                
+                VkImageView depthImageView = logicalDevice.depthImageViews.size() ? logicalDevice.depthImageViews.back() : VK_NULL_HANDLE;
+                for(auto& it: swapchainMap)
+                {
+                    LogicalSwapchain& lSwapchain = it.second;
+                    if(lSwapchain.logicalDevice.device == logicalDevice.device)
+                    {
+                        for(auto& effect: lSwapchain.effects)
+                        {
+                            effect->useDepthImage(depthImageView);
+                        }
+                    }
+                }
+            }
+        }
+        
+        logicalDevice.vkd.DestroyImage(logicalDevice.device, image, pAllocator);
+    }
+    
     
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enumeration function
@@ -694,6 +766,8 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevic
     GETPROCADDR(QueuePresentKHR);
     GETPROCADDR(DestroySwapchainKHR);
     GETPROCADDR(CreateImage);
+    GETPROCADDR(DestroyImage);
+    GETPROCADDR(BindImageMemory);
     {
         vkBasalt::scoped_lock l(vkBasalt::globalLock);
         return vkBasalt::deviceMap[vkBasalt::GetKey(device)].vkd.GetDeviceProcAddr(device, pName);
@@ -721,6 +795,8 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetInstanceProcAddr(VkIns
     GETPROCADDR(QueuePresentKHR);
     GETPROCADDR(DestroySwapchainKHR);
     GETPROCADDR(CreateImage);
+    GETPROCADDR(DestroyImage);
+    GETPROCADDR(BindImageMemory);
     {
         vkBasalt::scoped_lock l(vkBasalt::globalLock);
         return vkBasalt::instanceDispatchMap[vkBasalt::GetKey(instance)].GetInstanceProcAddr(instance, pName);
