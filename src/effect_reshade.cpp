@@ -104,16 +104,16 @@ namespace vkBasalt
             {
                 textureMemory.push_back(VK_NULL_HANDLE);
                 std::vector<VkImage> images = createImages(logicalDevice,
-                                   inputImages.size(),
+                                   1,
                                    textureExtent,
-                                   convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
+                                   convertReshadeFormat(module.textures[i].format),
                                    VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back());
                
                textureImages[module.textures[i].unique_name] = images;
-               std::vector<VkImageView> imageViewsUNORM = createImageViews(logicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
-               std::vector<VkImageView> imageViewsSRGB = createImageViews(logicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+               std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(),createImageViews(logicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images)[0]);
+               std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), createImageViews(logicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images)[0]);
                textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
                textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
                textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
