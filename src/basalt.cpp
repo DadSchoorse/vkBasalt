@@ -591,6 +591,18 @@ namespace vkBasalt
         
         logicalDevice.vkd.DestroySwapchainKHR(device, swapchain,pAllocator);
     }
+    
+    VKAPI_ATTR void VKAPI_CALL vkBasalt_CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
+    {
+        scoped_lock l(globalLock);
+        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        if(isDepthFormat(pCreateInfo->format))
+        {
+            std::cout << "detected depth image with format: " <<  pCreateInfo->format << std::endl;
+        }
+        logicalDevice.vkd.CreateImage(device, pCreateInfo, pAllocator, pImage);
+    }
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enumeration function
 
@@ -681,6 +693,7 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevic
     GETPROCADDR(GetSwapchainImagesKHR);
     GETPROCADDR(QueuePresentKHR);
     GETPROCADDR(DestroySwapchainKHR);
+    GETPROCADDR(CreateImage);
     {
         vkBasalt::scoped_lock l(vkBasalt::globalLock);
         return vkBasalt::deviceMap[vkBasalt::GetKey(device)].vkd.GetDeviceProcAddr(device, pName);
@@ -707,6 +720,7 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetInstanceProcAddr(VkIns
     GETPROCADDR(GetSwapchainImagesKHR);
     GETPROCADDR(QueuePresentKHR);
     GETPROCADDR(DestroySwapchainKHR);
+    GETPROCADDR(CreateImage);
     {
         vkBasalt::scoped_lock l(vkBasalt::globalLock);
         return vkBasalt::instanceDispatchMap[vkBasalt::GetKey(instance)].GetInstanceProcAddr(instance, pName);

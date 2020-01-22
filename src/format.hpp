@@ -25,6 +25,8 @@ namespace vkBasalt
     VkFormat getSupportedFormat(LogicalDevice logicalDevice, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
     
     VkFormat getStencilFormat(LogicalDevice logicalDevice);
+    
+    bool isDepthFormat(VkFormat format);
 }
 
 
