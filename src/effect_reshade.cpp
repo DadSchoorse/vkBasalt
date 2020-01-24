@@ -42,8 +42,8 @@ namespace vkBasalt
         inputOutputFormatSRGB = convertToSRGB(format);
         
         
-        std::vector<VkImageView> inputImageViewsSRGB = createImageViews(logicalDevice, inputOutputFormatSRGB, inputImages);
-        std::vector<VkImageView> inputImageViewsUNORM = createImageViews(logicalDevice, inputOutputFormatUNORM, inputImages);
+        inputImageViewsSRGB = createImageViews(logicalDevice, inputOutputFormatSRGB, inputImages);
+        inputImageViewsUNORM = createImageViews(logicalDevice, inputOutputFormatUNORM, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
         outputImageViewsSRGB = createImageViews(logicalDevice, inputOutputFormatSRGB, outputImages);
         outputImageViewsUNORM = createImageViews(logicalDevice, inputOutputFormatUNORM, outputImages);
@@ -696,6 +696,65 @@ namespace vkBasalt
         }
     }
     
+    void ReshadeEffect::useDepthImage(VkImageView depthImageView)
+    {
+        std::vector<std::string> depthTextureNames;
+        std::vector<VkWriteDescriptorSet> writeDescriptorSets;
+        
+        for(auto& texture: module.textures)
+        {
+            if(texture.semantic == "DEPTH")
+            {
+                depthTextureNames.push_back(texture.unique_name);
+            }
+        }
+        
+        for(size_t i = 0; i < module.samplers.size(); i++)
+        {
+            reshadefx::sampler_info info = module.samplers[i];
+            std::cout << info.texture_name << std::endl;
+            for(auto& name: depthTextureNames)
+            {
+                if(info.texture_name == name)
+                {
+                    for(uint32_t j = 0; j < inputImages.size(); j++)
+                    {
+                        VkDescriptorImageInfo imageInfo;
+                        imageInfo.sampler = samplers[i];
+                        imageInfo.imageView = depthImageView ? depthImageView : inputImageViewsUNORM[j]; //Use a input image if there is no depth image to prevent a crash
+                        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        
+                        VkWriteDescriptorSet writeDescriptorSet = {};
+                        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        writeDescriptorSet.pNext = nullptr;
+                        writeDescriptorSet.dstSet = inputDescriptorSets[j];
+                        writeDescriptorSet.dstBinding = i;
+                        writeDescriptorSet.dstArrayElement = 0;
+                        writeDescriptorSet.descriptorCount = 1;
+                        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        writeDescriptorSet.pImageInfo = &imageInfo;
+                        writeDescriptorSet.pBufferInfo = nullptr;
+                        writeDescriptorSet.pTexelBufferView = nullptr;
+                        
+                        writeDescriptorSets.push_back(writeDescriptorSet);
+                        if(outputWrites > 1)
+                        {
+                            writeDescriptorSet.dstSet = backBufferDescriptorSets[j];
+                            writeDescriptorSets.push_back(writeDescriptorSet);
+                        }
+                        if(outputWrites > 2)
+                        {
+                            writeDescriptorSet.dstSet = outputDescriptorSets[j];
+                            writeDescriptorSets.push_back(writeDescriptorSet);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        
+        logicalDevice.vkd.UpdateDescriptorSets(logicalDevice.device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
+    }
     void ReshadeEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
         std::cout << "applying ReshadeEffect" << commandBuffer << std::endl;
@@ -801,6 +860,7 @@ namespace vkBasalt
         std::cout << "after the second pipeline barrier" << std::endl;
 
     }
+    
     ReshadeEffect::~ReshadeEffect()
     {
         std::cout << "destroying ReshadeEffect" << this << std::endl;
