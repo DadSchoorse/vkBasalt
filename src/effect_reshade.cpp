@@ -699,7 +699,6 @@ namespace vkBasalt
     void ReshadeEffect::useDepthImage(VkImageView depthImageView)
     {
         std::vector<std::string> depthTextureNames;
-        std::vector<VkWriteDescriptorSet> writeDescriptorSets;
         
         for(auto& texture: module.textures)
         {
@@ -736,24 +735,22 @@ namespace vkBasalt
                         writeDescriptorSet.pBufferInfo = nullptr;
                         writeDescriptorSet.pTexelBufferView = nullptr;
                         
-                        writeDescriptorSets.push_back(writeDescriptorSet);
+                        logicalDevice.vkd.UpdateDescriptorSets(logicalDevice.device, 1, &writeDescriptorSet, 0, nullptr);
                         if(outputWrites > 1)
                         {
                             writeDescriptorSet.dstSet = backBufferDescriptorSets[j];
-                            writeDescriptorSets.push_back(writeDescriptorSet);
+                            logicalDevice.vkd.UpdateDescriptorSets(logicalDevice.device, 1, &writeDescriptorSet, 0, nullptr);
                         }
                         if(outputWrites > 2)
                         {
                             writeDescriptorSet.dstSet = outputDescriptorSets[j];
-                            writeDescriptorSets.push_back(writeDescriptorSet);
+                            logicalDevice.vkd.UpdateDescriptorSets(logicalDevice.device, 1, &writeDescriptorSet, 0, nullptr);
                         }
                     }
                     break;
                 }
             }
         }
-        
-        logicalDevice.vkd.UpdateDescriptorSets(logicalDevice.device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
     }
     void ReshadeEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
