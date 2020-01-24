@@ -195,4 +195,16 @@ namespace vkBasalt
             default: return false;
         }
     }
+    
+    bool isStencilFormat(VkFormat format)
+    {
+        switch(format)
+        {
+            case VK_FORMAT_S8_UINT: return true;
+            case VK_FORMAT_D16_UNORM_S8_UINT: return true;
+            case VK_FORMAT_D24_UNORM_S8_UINT: return true;
+            case VK_FORMAT_D32_SFLOAT_S8_UINT: return true;
+            default: return false;
+        }
+    }
 }

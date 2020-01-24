@@ -27,6 +27,8 @@ namespace vkBasalt
     VkFormat getStencilFormat(LogicalDevice logicalDevice);
     
     bool isDepthFormat(VkFormat format);
+    
+    bool isStencilFormat(VkFormat format);
 }
 
 
