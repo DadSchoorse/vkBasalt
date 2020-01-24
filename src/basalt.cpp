@@ -119,10 +119,6 @@ namespace vkBasalt
             scoped_lock l(globalLock);
             instanceDispatchMap[GetKey(*pInstance)] = dispatchTable;
             instanceMap[GetKey(*pInstance)]  = *pInstance;
-            if(pConfig == nullptr)
-            {
-                pConfig = std::shared_ptr<Config>(new Config());
-            }
         }
 
         return ret;
@@ -502,13 +498,18 @@ namespace vkBasalt
                                                              logicalSwapchain.images,
                                                              pConfig)));
         }
+        
+        VkImageView depthImageView = logicalDevice.depthImageViews.size() ? logicalDevice.depthImageViews[0] : VK_NULL_HANDLE;
+        VkImage     depthImage     = logicalDevice.depthImageViews.size() ? logicalDevice.depthImages[0]     : VK_NULL_HANDLE;
+        VkFormat    depthFormat    = logicalDevice.depthImageViews.size() ? logicalDevice.depthFormats[0]    : VK_FORMAT_UNDEFINED;
+        
         std::cout << "effect string count: " << effectStrings.size() << std::endl;
         std::cout << "effect count: " << logicalSwapchain.effects.size() << std::endl;
         
         logicalSwapchain.commandBuffers = allocateCommandBuffer(logicalDevice, logicalSwapchain.imageCount);
-        std::cout << "after allocateCommandBuffer " << std::endl;
+        std::cout << "after allocateCommandBuffer " << logicalSwapchain.commandBuffers.size() << " for swapchain " << swapchain << std::endl;
         
-        writeCommandBuffers(logicalDevice, logicalSwapchain.effects,  logicalSwapchain.commandBuffers);
+        writeCommandBuffers(logicalDevice, logicalSwapchain.effects, depthImage, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
         std::cout << "after write CommandBuffer" << std::endl;
         
         logicalSwapchain.semaphores = createSemaphores(logicalDevice, logicalSwapchain.imageCount);
@@ -587,6 +588,7 @@ namespace vkBasalt
         
         std::cout << "destroying swapchain " << swapchain << std::endl;
         swapchainMap[swapchain].destroy();
+        swapchainMap.erase(swapchain);
         LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
         
         logicalDevice.vkd.DestroySwapchainKHR(device, swapchain,pAllocator);
@@ -596,9 +598,11 @@ namespace vkBasalt
     {
         scoped_lock l(globalLock);
         LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
-        if(isDepthFormat(pCreateInfo->format))
+        if(isDepthFormat(pCreateInfo->format) && ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) )//&& pCreateInfo->extent.width == 2560 && pCreateInfo->extent.height == 1440)
         {
             std::cout << "detected depth image with format: " <<  pCreateInfo->format << std::endl;
+            std::cout << pCreateInfo->extent.width << "x" << pCreateInfo->extent.height << std::endl;
+            std::cout << ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) << std::endl;
             VkImageCreateInfo modifiedCreateInfo = *pCreateInfo;
             modifiedCreateInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
             VkResult result = logicalDevice.vkd.CreateImage(device, &modifiedCreateInfo, pAllocator, pImage);
@@ -623,17 +627,28 @@ namespace vkBasalt
         {
             std::cout << "before creating depth image view" << std::endl;
             VkImageView depthImageView = createImageViews(logicalDevice, logicalDevice.depthFormats[logicalDevice.depthImages.size() - 1], {image}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT)[0];
+            VkFormat depthFormat = logicalDevice.depthFormats[logicalDevice.depthImages.size() - 1];
             std::cout << "after creating depth image view" << std::endl;
             logicalDevice.depthImageViews.push_back(depthImageView);
+            if(logicalDevice.depthImageViews.size() > 1)
+            {
+                return result;
+            }
             
             for(auto& it: swapchainMap)
             {
-                LogicalSwapchain& lSwapchain = it.second;
-                if(lSwapchain.logicalDevice.device == logicalDevice.device)
+                LogicalSwapchain& logicalSwapchain = it.second;
+                if(logicalSwapchain.logicalDevice.device == logicalDevice.device)
                 {
-                    for(auto& effect: lSwapchain.effects)
+                    if(logicalSwapchain.commandBuffers.size())
                     {
-                        effect->useDepthImage(depthImageView);
+                        logicalDevice.vkd.FreeCommandBuffers(logicalDevice.device, logicalDevice.commandPool, logicalSwapchain.commandBuffers.size(), logicalSwapchain.commandBuffers.data());
+                        logicalSwapchain.commandBuffers.clear();
+                        logicalSwapchain.commandBuffers = allocateCommandBuffer(logicalDevice, logicalSwapchain.imageCount);
+                        std::cout << "after allocateCommandBuffer " << logicalSwapchain.commandBuffers.size() << " for swapchain " << it.first << std::endl;
+                        
+                        writeCommandBuffers(logicalDevice, logicalSwapchain.effects, image, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
+                        std::cout << "after write CommandBuffer" << std::endl;
                     }
                 }
             }
@@ -659,15 +674,23 @@ namespace vkBasalt
                 }
                 logicalDevice.depthFormats.erase(logicalDevice.depthFormats.begin() + i);
                 
-                VkImageView depthImageView = logicalDevice.depthImageViews.size() ? logicalDevice.depthImageViews.back() : VK_NULL_HANDLE;
+                VkImageView depthImageView = logicalDevice.depthImageViews.size() ? logicalDevice.depthImageViews[0] : VK_NULL_HANDLE;
+                VkImage     depthImage     = logicalDevice.depthImageViews.size() ? logicalDevice.depthImages[0]     : VK_NULL_HANDLE;
+                VkFormat    depthFormat    = logicalDevice.depthImageViews.size() ? logicalDevice.depthFormats[0]    : VK_FORMAT_UNDEFINED;
                 for(auto& it: swapchainMap)
                 {
-                    LogicalSwapchain& lSwapchain = it.second;
-                    if(lSwapchain.logicalDevice.device == logicalDevice.device)
+                    LogicalSwapchain& logicalSwapchain = it.second;
+                    if(logicalSwapchain.logicalDevice.device == logicalDevice.device)
                     {
-                        for(auto& effect: lSwapchain.effects)
+                        if(logicalSwapchain.commandBuffers.size())
                         {
-                            effect->useDepthImage(depthImageView);
+                            logicalDevice.vkd.FreeCommandBuffers(logicalDevice.device, logicalDevice.commandPool, logicalSwapchain.commandBuffers.size(), logicalSwapchain.commandBuffers.data());
+                            logicalSwapchain.commandBuffers.clear();
+                            logicalSwapchain.commandBuffers = allocateCommandBuffer(logicalDevice, logicalSwapchain.imageCount);
+                            std::cout << "after allocateCommandBuffer " << logicalSwapchain.commandBuffers.size() << " for swapchain " << it.first << std::endl;
+                            
+                            writeCommandBuffers(logicalDevice, logicalSwapchain.effects, depthImage, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
+                            std::cout << "after write CommandBuffer" << std::endl;
                         }
                     }
                 }
@@ -757,6 +780,10 @@ the macro takes the name and returns our vkBasalt_##func, if the name is equal
 */
 VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevice device, const char *pName)
 {
+    if(vkBasalt::pConfig == nullptr)
+    {
+        vkBasalt::pConfig = std::shared_ptr<vkBasalt::Config>(new vkBasalt::Config());
+    }
     // device chain functions we intercept
     if(!std::strcmp(pName, "vkGetDeviceProcAddr")) return (PFN_vkVoidFunction)&vkBasalt_GetDeviceProcAddr;
     GETPROCADDR(EnumerateDeviceLayerProperties);
@@ -768,9 +795,14 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevic
     GETPROCADDR(GetSwapchainImagesKHR);
     GETPROCADDR(QueuePresentKHR);
     GETPROCADDR(DestroySwapchainKHR);
-    GETPROCADDR(CreateImage);
-    GETPROCADDR(DestroyImage);
-    GETPROCADDR(BindImageMemory);
+    
+    if(vkBasalt::pConfig->getOption("depthCapture", "off") == "on")
+    {
+        GETPROCADDR(CreateImage);
+        GETPROCADDR(DestroyImage);
+        GETPROCADDR(BindImageMemory);
+    }
+    
     {
         vkBasalt::scoped_lock l(vkBasalt::globalLock);
         return vkBasalt::deviceMap[vkBasalt::GetKey(device)].vkd.GetDeviceProcAddr(device, pName);
@@ -779,6 +811,10 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevic
 
 VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetInstanceProcAddr(VkInstance instance, const char *pName)
 {
+    if(vkBasalt::pConfig == nullptr)
+    {
+        vkBasalt::pConfig = std::shared_ptr<vkBasalt::Config>(new vkBasalt::Config());
+    }
     // instance chain functions we intercept
     if(!std::strcmp(pName, "vkGetInstanceProcAddr")) return (PFN_vkVoidFunction)&vkBasalt_GetInstanceProcAddr;
     GETPROCADDR(EnumerateInstanceLayerProperties);
@@ -797,9 +833,14 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetInstanceProcAddr(VkIns
     GETPROCADDR(GetSwapchainImagesKHR);
     GETPROCADDR(QueuePresentKHR);
     GETPROCADDR(DestroySwapchainKHR);
-    GETPROCADDR(CreateImage);
-    GETPROCADDR(DestroyImage);
-    GETPROCADDR(BindImageMemory);
+    
+    if(vkBasalt::pConfig->getOption("depthCapture", "off") == "on")
+    {
+        GETPROCADDR(CreateImage);
+        GETPROCADDR(DestroyImage);
+        GETPROCADDR(BindImageMemory);
+    }
+    
     {
         vkBasalt::scoped_lock l(vkBasalt::globalLock);
         return vkBasalt::instanceDispatchMap[vkBasalt::GetKey(instance)].GetInstanceProcAddr(instance, pName);
