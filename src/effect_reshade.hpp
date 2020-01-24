@@ -27,11 +27,14 @@ namespace vkBasalt{
         ReshadeEffect(LogicalDevice logicalDevice,VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig, std::string effectName);
         void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
         void virtual updateEffect() override;
+        void virtual useDepthImage(VkImageView depthImageView) override;
         virtual ~ReshadeEffect();
     private:
         LogicalDevice logicalDevice;
         std::vector<VkImage> inputImages;
         std::vector<VkImage> outputImages;
+        std::vector<VkImageView> inputImageViewsSRGB;
+        std::vector<VkImageView> inputImageViewsUNORM;
         std::vector<VkImageView> outputImageViewsSRGB;
         std::vector<VkImageView> outputImageViewsUNORM;
         std::unordered_map<std::string, std::vector<VkImage>> textureImages;
