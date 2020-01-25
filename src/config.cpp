@@ -13,11 +13,16 @@ namespace vkBasalt
         std::string userConfigFile = tmpHomeEnv
             ? std::string(tmpHomeEnv) + "/vkBasalt/vkBasalt.conf"
             : std::string(std::getenv("HOME")) + "/.local/share/vkBasalt/vkBasalt.conf";
+        const char* tmpConfigEnv = std::getenv("XDG_CONFIG_HOME");
+        std::string userXdgConfigFile = tmpConfigEnv
+            ? std::string(tmpConfigEnv) + "/vkBasalt/vkBasalt.conf"
+            : std::string(std::getenv("HOME")) + "/.config/vkBasalt/vkBasalt.conf";
 
         // Allowed config paths
-        const std::array<std::string, 5> configPath = {
+        const std::array<std::string, 6> configPath = {
             customConfigFile,                          // custom config (VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf)
             "vkBasalt.conf",                           // per game config
+            userXdgConfigFile,                         // user-global config
             userConfigFile,                            // default config
             "/usr/share/vkBasalt/vkBasalt.conf",       // system-wide config
             "/usr/local/share/vkBasalt/vkBasalt.conf", // system-wide config (alternative)
