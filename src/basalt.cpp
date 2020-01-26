@@ -376,7 +376,7 @@ namespace vkBasalt
         // If the images got already requested once, return them again instead of creating new images
         if(logicalSwapchain.fakeImages.size())
         {
-            std::memcpy(pSwapchainImages, logicalSwapchain.fakeImages.data(), sizeof(VkImage) * *pCount);
+            std::memcpy(pSwapchainImages, logicalSwapchain.fakeImages.data(), sizeof(VkImage) * (*pCount));
             return VK_SUCCESS;
         }
         
