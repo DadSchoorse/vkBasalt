@@ -79,6 +79,7 @@ Settings like the CAS sharpening strength can be changed in the config file.
 The config file will be searched for in the following locations:
 * a file set with the environment variable`VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf`
 * `vkBasalt.conf` in the working directory of the game
+* `$XDG_CONFIG_HOME/vkBasalt/vkBasalt.conf` or `~/.config/vkBasalt/vkBasalt.conf` if `XDG_CONFIG_HOME` is not set
 * `$XDG_DATA_HOME/vkBasalt/vkBasalt.conf` or `~/.local/share/vkBasalt/vkBasalt.conf` if `XDG_DATA_HOME` is not set
 * `/usr/share/vkBasalt/vkBasalt.conf`
 * `/usr/local/share/vkBasalt/vkBasalt.conf`
