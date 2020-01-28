@@ -1,15 +1,28 @@
 #include "fake_swapchain.hpp"
 #include "memory.hpp"
+#include "format.hpp"
 
 namespace vkBasalt
 {
     std::vector<VkImage> createFakeSwapchainImages(LogicalDevice logicalDevice, VkSwapchainCreateInfoKHR swapchainCreateInfo, uint32_t count, VkDeviceMemory& deviceMemory)
     {
         std::vector<VkImage> fakeImages(count);
+        
+        VkFormat srgbFormat = isSRGB(swapchainCreateInfo.imageFormat) ? swapchainCreateInfo.imageFormat : convertToSRGB(swapchainCreateInfo.imageFormat);
+        VkFormat unormFormat = isSRGB(swapchainCreateInfo.imageFormat) ? convertToUNORM(swapchainCreateInfo.imageFormat) : swapchainCreateInfo.imageFormat;
+        
+        VkFormat formats[] = {unormFormat, srgbFormat};
+        
+        VkImageFormatListCreateInfoKHR imageFormatListCreateInfo;
+        imageFormatListCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO_KHR;
+        imageFormatListCreateInfo.pNext = nullptr;
+        imageFormatListCreateInfo.viewFormatCount = 2;
+        imageFormatListCreateInfo.pViewFormats = formats;
+        
         VkImageCreateInfo imageCreateInfo;
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageCreateInfo.pNext = nullptr;
-        imageCreateInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+        imageCreateInfo.pNext = (unormFormat == srgbFormat) ? nullptr : &imageFormatListCreateInfo;
+        imageCreateInfo.flags = (unormFormat == srgbFormat) ? 0 : VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
         imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
         imageCreateInfo.format = swapchainCreateInfo.imageFormat;
         imageCreateInfo.extent.width = swapchainCreateInfo.imageExtent.width;

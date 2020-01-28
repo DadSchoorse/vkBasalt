@@ -1,6 +1,7 @@
 #include "image.hpp"
 #include "memory.hpp"
 #include "buffer.hpp"
+#include "format.hpp"
 
 namespace vkBasalt
 {
@@ -13,10 +14,22 @@ namespace vkBasalt
                                       VkDeviceMemory& imageMemory)
     {
         std::vector<VkImage> images(count);
+        
+        VkFormat srgbFormat = isSRGB(format) ? format : convertToSRGB(format);
+        VkFormat unormFormat = isSRGB(format) ? convertToUNORM(format) : format;
+        
+        VkFormat formats[] = {unormFormat, srgbFormat};
+        
+        VkImageFormatListCreateInfoKHR imageFormatListCreateInfo;
+        imageFormatListCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO_KHR;
+        imageFormatListCreateInfo.pNext = nullptr;
+        imageFormatListCreateInfo.viewFormatCount = 2;
+        imageFormatListCreateInfo.pViewFormats = formats;
+        
         VkImageCreateInfo imageCreateInfo;
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageCreateInfo.pNext = nullptr;
-        imageCreateInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+        imageCreateInfo.pNext = (unormFormat == srgbFormat) ? nullptr : &imageFormatListCreateInfo;
+        imageCreateInfo.flags = (unormFormat == srgbFormat) ? 0 : VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
         if(extent.depth == 1)
         {
             imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
