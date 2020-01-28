@@ -202,8 +202,8 @@ namespace vkBasalt
         {
             std::cout << "activating mutable_format" << std::endl;
             addUniqueCString(enabledExtensionNames, "VK_KHR_swapchain_mutable_format");
-            addUniqueCString(enabledExtensionNames, "VK_KHR_image_format_list");
         }
+        addUniqueCString(enabledExtensionNames, "VK_KHR_image_format_list");
         modifiedCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
         modifiedCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
         
