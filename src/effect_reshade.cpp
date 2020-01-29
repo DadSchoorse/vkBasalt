@@ -109,7 +109,8 @@ namespace vkBasalt
                                    convertReshadeFormat(module.textures[i].format),
                                    VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                                   textureMemory.back());
+                                   textureMemory.back(),
+                                   module.textures[i].levels);
                
                textureImages[module.textures[i].unique_name] = images;
                std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(),createImageViews(logicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images)[0]);
@@ -118,7 +119,7 @@ namespace vkBasalt
                textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
                textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
                textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
-               changeImageLayout(logicalDevice, images);
+               changeImageLayout(logicalDevice, images, module.textures[i].levels);
                continue;
             }
             else
@@ -711,7 +712,6 @@ namespace vkBasalt
         for(size_t i = 0; i < module.samplers.size(); i++)
         {
             reshadefx::sampler_info info = module.samplers[i];
-            std::cout << info.texture_name << std::endl;
             for(auto& name: depthTextureNames)
             {
                 if(info.texture_name == name)
