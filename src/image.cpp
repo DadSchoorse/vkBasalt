@@ -11,7 +11,8 @@ namespace vkBasalt
                                       VkFormat format,
                                       VkImageUsageFlags usage,
                                       VkMemoryPropertyFlags properties,
-                                      VkDeviceMemory& imageMemory)
+                                      VkDeviceMemory& imageMemory,
+                                      uint32_t mipLevels)
     {
         std::vector<VkImage> images(count);
         
@@ -40,7 +41,7 @@ namespace vkBasalt
         }
         imageCreateInfo.format = format;
         imageCreateInfo.extent = extent;
-        imageCreateInfo.mipLevels = 1;
+        imageCreateInfo.mipLevels = mipLevels;
         imageCreateInfo.arrayLayers = 1;
         imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -188,7 +189,7 @@ namespace vkBasalt
         logicalDevice.vkd.DestroyBuffer(logicalDevice.device, stagingBuffer, nullptr);
     }
     
-    void changeImageLayout(LogicalDevice logicalDevice, std::vector<VkImage> images)
+    void changeImageLayout(LogicalDevice logicalDevice, std::vector<VkImage> images, uint32_t mipLevels)
     {
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -218,7 +219,7 @@ namespace vkBasalt
         memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         memoryBarrier.subresourceRange.baseMipLevel = 0;
-        memoryBarrier.subresourceRange.levelCount = 1;
+        memoryBarrier.subresourceRange.levelCount = mipLevels;
         memoryBarrier.subresourceRange.baseArrayLayer = 0;
         memoryBarrier.subresourceRange.layerCount = 1;
         
