@@ -19,14 +19,15 @@ namespace vkBasalt
                                       VkFormat format,
                                       VkImageUsageFlags usage,
                                       VkMemoryPropertyFlags properties,
-                                      VkDeviceMemory& imageMemory);
+                                      VkDeviceMemory& imageMemory,
+                                      uint32_t mipLevels = 1);
     void uploadToImage(LogicalDevice logicalDevice,
                        VkImage image,
                        VkExtent3D extent,
                        uint32_t size,
                        const unsigned char* writeData);
     
-    void changeImageLayout(LogicalDevice logicalDevice, std::vector<VkImage> images);
+    void changeImageLayout(LogicalDevice logicalDevice, std::vector<VkImage> images, uint32_t mipLevels = 1);
 }
 
 
