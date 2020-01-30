@@ -19,11 +19,11 @@ namespace vkBasalt{
     class SmaaEffect : public Effect
     {
     public:
-        SmaaEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
+        SmaaEffect(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
         void applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override; 
         ~SmaaEffect();
     private:
-        LogicalDevice logicalDevice;
+        std::shared_ptr<LogicalDevice> pLogicalDevice;
         std::vector<VkImage> inputImages;
         std::vector<VkImage> edgeImages;
         std::vector<VkImage> blendImages;

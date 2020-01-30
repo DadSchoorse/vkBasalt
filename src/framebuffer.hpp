@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
@@ -12,7 +13,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkFramebuffer> createFramebuffers(LogicalDevice logicalDevice, VkRenderPass renderPass, VkExtent2D& extent, std::vector<std::vector<VkImageView>> imageViews);
+    std::vector<VkFramebuffer> createFramebuffers(std::shared_ptr<LogicalDevice> pLogicalDevice, VkRenderPass renderPass, VkExtent2D& extent, std::vector<std::vector<VkImageView>> imageViews);
 }
 
 

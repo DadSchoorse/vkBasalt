@@ -15,9 +15,9 @@
 namespace vkBasalt
 {
     
-    std::vector<VkCommandBuffer> allocateCommandBuffer(LogicalDevice logicalDevice, uint32_t count);
-    void writeCommandBuffers(LogicalDevice logicalDevice, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, VkImage depthImage, VkImageView depthImageView, VkFormat depthFormat, std::vector<VkCommandBuffer> commandBuffers);
-    std::vector<VkSemaphore> createSemaphores(LogicalDevice logicalDevice, uint32_t count);
+    std::vector<VkCommandBuffer> allocateCommandBuffer(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count);
+    void writeCommandBuffers(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, VkImage depthImage, VkImageView depthImageView, VkFormat depthFormat, std::vector<VkCommandBuffer> commandBuffers);
+    std::vector<VkSemaphore> createSemaphores(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count);
 }
 
 #endif // COMMAND_BUFFER_HPP_INCLUDED

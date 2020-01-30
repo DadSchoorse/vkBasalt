@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
@@ -19,12 +20,12 @@ namespace vkBasalt
     //Returns true if format is SRGB
     bool isSRGB(VkFormat format);
     //Returns true if format is UNORM
-    //TODO currently return false if format is UNORM and not matching sRGB format exist
+    //TODO currently return false if format is UNORM and no matching sRGB format exist
     bool isUNORM(VkFormat format);
     
-    VkFormat getSupportedFormat(LogicalDevice logicalDevice, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
+    VkFormat getSupportedFormat(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
     
-    VkFormat getStencilFormat(LogicalDevice logicalDevice);
+    VkFormat getStencilFormat(std::shared_ptr<LogicalDevice> pLogicalDevice);
     
     bool isDepthFormat(VkFormat format);
     

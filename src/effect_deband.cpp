@@ -13,7 +13,7 @@
 
 namespace vkBasalt
 {
-    DebandEffect::DebandEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
+    DebandEffect::DebandEffect(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
         std::string debandFragmentFile = "deband.frag.spv";
@@ -62,7 +62,7 @@ namespace vkBasalt
         pVertexSpecInfo = nullptr;
         pFragmentSpecInfo = &specializationInfo;
 
-        init(logicalDevice, format,  imageExtent, inputImages, outputImages, pConfig);
+        init(pLogicalDevice, format,  imageExtent, inputImages, outputImages, pConfig);
     }
     DebandEffect::~DebandEffect()
     {

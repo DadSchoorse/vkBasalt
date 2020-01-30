@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
@@ -12,7 +13,7 @@
 
 namespace vkBasalt
 {
-    void createBuffer(LogicalDevice logicalDevice, VkDeviceSize size,  VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    void createBuffer(std::shared_ptr<LogicalDevice> pLogicalDevice, VkDeviceSize size,  VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 }
 
 

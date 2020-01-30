@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
@@ -13,8 +14,8 @@
 #include "../reshade/source/effect_module.hpp"
 namespace vkBasalt
 {
-    VkSampler createSampler(LogicalDevice logicalDevice);
-    VkSampler createReshadeSampler(LogicalDevice logicalDevice, const reshadefx::sampler_info& samplerInfo);
+    VkSampler createSampler(std::shared_ptr<LogicalDevice> pLogicalDevice);
+    VkSampler createReshadeSampler(std::shared_ptr<LogicalDevice> pLogicalDevice, const reshadefx::sampler_info& samplerInfo);
     VkSamplerAddressMode convertReshadeAddressMode(const reshadefx::texture_address_mode& addressMode);
     void convertReshadeFilter(const reshadefx::texture_filter& textureFilter, VkFilter& minFilter, VkFilter& magFilter, VkSamplerMipmapMode& mipmapMode);
 }

@@ -4,7 +4,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImage> createFakeSwapchainImages(LogicalDevice logicalDevice, VkSwapchainCreateInfoKHR swapchainCreateInfo, uint32_t count, VkDeviceMemory& deviceMemory)
+    std::vector<VkImage> createFakeSwapchainImages(std::shared_ptr<LogicalDevice> pLogicalDevice, VkSwapchainCreateInfoKHR swapchainCreateInfo, uint32_t count, VkDeviceMemory& deviceMemory)
     {
         std::vector<VkImage> fakeImages(count);
         
@@ -41,13 +41,13 @@ namespace vkBasalt
         VkResult result;
         for(uint32_t i=0;i<count;i++)
         {
-            result = logicalDevice.vkd.CreateImage(logicalDevice.device, &imageCreateInfo, nullptr, &(fakeImages[i]));
+            result = pLogicalDevice->vkd.CreateImage(pLogicalDevice->device, &imageCreateInfo, nullptr, &(fakeImages[i]));
             ASSERT_VULKAN(result);
         }
         
         //Allocate a bunch of memory for all images at one
         VkMemoryRequirements memoryRequirements;
-        logicalDevice.vkd.GetImageMemoryRequirements(logicalDevice.device, fakeImages[0], &memoryRequirements);
+        pLogicalDevice->vkd.GetImageMemoryRequirements(pLogicalDevice->device, fakeImages[0], &memoryRequirements);
         
         std::cout << "fake image size: " << memoryRequirements.size << std::endl;
         std::cout << "fake image alignment: " << memoryRequirements.alignment << std::endl;
@@ -62,14 +62,14 @@ namespace vkBasalt
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.pNext = nullptr;
         memoryAllocateInfo.allocationSize = memoryRequirements.size * count;
-        memoryAllocateInfo.memoryTypeIndex = findMemoryTypeIndex(logicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        memoryAllocateInfo.memoryTypeIndex = findMemoryTypeIndex(pLogicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         
-        result = logicalDevice.vkd.AllocateMemory(logicalDevice.device, &memoryAllocateInfo, nullptr, &deviceMemory);
+        result = pLogicalDevice->vkd.AllocateMemory(pLogicalDevice->device, &memoryAllocateInfo, nullptr, &deviceMemory);
         ASSERT_VULKAN(result);
         
         for(uint32_t i=0;i<count;i++)
         {
-            result = logicalDevice.vkd.BindImageMemory(logicalDevice.device, fakeImages[i], deviceMemory, memoryRequirements.size*i);
+            result = pLogicalDevice->vkd.BindImageMemory(pLogicalDevice->device, fakeImages[i], deviceMemory, memoryRequirements.size*i);
             ASSERT_VULKAN(result);
         }
         return fakeImages;

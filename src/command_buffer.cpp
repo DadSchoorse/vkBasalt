@@ -4,7 +4,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkCommandBuffer> allocateCommandBuffer(LogicalDevice logicalDevice, uint32_t count)
+    std::vector<VkCommandBuffer> allocateCommandBuffer(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count)
     {
         std::vector<VkCommandBuffer> commandBuffers(count);
         
@@ -12,21 +12,21 @@ namespace vkBasalt
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.pNext = nullptr;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = logicalDevice.commandPool;
+        allocInfo.commandPool = pLogicalDevice->commandPool;
         allocInfo.commandBufferCount = count;
         
-        VkResult result = logicalDevice.vkd.AllocateCommandBuffers(logicalDevice.device, &allocInfo, commandBuffers.data());
+        VkResult result = pLogicalDevice->vkd.AllocateCommandBuffers(pLogicalDevice->device, &allocInfo, commandBuffers.data());
         ASSERT_VULKAN(result);
         for(uint32_t i = 0; i < count; i++)
         {
             //initialize dispatch tables for commandBuffers since the are dispatchable objects
-            *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(logicalDevice.device);
+            *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(pLogicalDevice->device);
         }
         
         return commandBuffers;
     
     }
-    void writeCommandBuffers(LogicalDevice logicalDevice, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, VkImage depthImage, VkImageView depthImageView, VkFormat depthFormat, std::vector<VkCommandBuffer> commandBuffers)
+    void writeCommandBuffers(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, VkImage depthImage, VkImageView depthImageView, VkFormat depthFormat, std::vector<VkCommandBuffer> commandBuffers)
     {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -39,10 +39,10 @@ namespace vkBasalt
             effect->useDepthImage(depthImageView);
         }
         
-        for(uint32_t i=0;i<commandBuffers.size();i++)
+        for(uint32_t i = 0; i < commandBuffers.size(); i++)
         {
             
-            VkResult result = logicalDevice.vkd.BeginCommandBuffer(commandBuffers[i],&beginInfo);
+            VkResult result = pLogicalDevice->vkd.BeginCommandBuffer(commandBuffers[i],&beginInfo);
             ASSERT_VULKAN(result);
             
             VkImageMemoryBarrier memoryBarrier;
@@ -63,7 +63,7 @@ namespace vkBasalt
             
             if(depthImageView)
             {
-                logicalDevice.vkd.CmdPipelineBarrier(commandBuffers[i], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+                pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffers[i], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
             }
             
             for(uint32_t j=0;j<effects.size();j++)
@@ -77,16 +77,16 @@ namespace vkBasalt
             memoryBarrier.dstAccessMask = 0;
             if(depthImageView)
             {
-                logicalDevice.vkd.CmdPipelineBarrier(commandBuffers[i], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+                pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffers[i], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
             }
             
-            result = logicalDevice.vkd.EndCommandBuffer(commandBuffers[i]);
+            result = pLogicalDevice->vkd.EndCommandBuffer(commandBuffers[i]);
             ASSERT_VULKAN(result);
         }
     }
 
 
-    std::vector<VkSemaphore> createSemaphores(LogicalDevice logicalDevice, uint32_t count)
+    std::vector<VkSemaphore> createSemaphores(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count)
     {
         std::vector<VkSemaphore> semaphores(count);
         VkSemaphoreCreateInfo info;
@@ -96,7 +96,7 @@ namespace vkBasalt
 
         for (uint32_t i = 0; i < count; i++)
         {
-            logicalDevice.vkd.CreateSemaphore(logicalDevice.device, &info, nullptr, &semaphores[i]);
+            pLogicalDevice->vkd.CreateSemaphore(pLogicalDevice->device, &info, nullptr, &semaphores[i]);
         }
         return semaphores;
     }
