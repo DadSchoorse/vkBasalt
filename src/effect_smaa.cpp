@@ -17,7 +17,7 @@
 
 namespace vkBasalt
 {
-    SmaaEffect::SmaaEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
+    SmaaEffect::SmaaEffect(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string smaaEdgeVertexFile        = "smaa_edge.vert.spv";
         std::string smaaEdgeLumaFragmentFile  = "smaa_edge_luma.frag.spv";
@@ -28,7 +28,7 @@ namespace vkBasalt
         std::string smaaNeighborFragmentFile  = "smaa_neighbor.frag.spv";
         std::cout << "in creating SmaaEffect " << std::endl;
 
-        this->logicalDevice = logicalDevice;
+        this->pLogicalDevice = pLogicalDevice;
         this->format = format;
         this->imageExtent = imageExtent;
         this->inputImages = inputImages;
@@ -36,7 +36,7 @@ namespace vkBasalt
         this->pConfig = pConfig;
 
         //create Images for the first and second pass at once -> less memory fragmentation
-        std::vector<VkImage> edgeAndBlendImages= createImages(logicalDevice,
+        std::vector<VkImage> edgeAndBlendImages= createImages(pLogicalDevice,
                                                                inputImages.size()*2,
                                                                {imageExtent.width, imageExtent.height, 1},
                                                                VK_FORMAT_B8G8R8A8_UNORM,//TODO search for format and save it
@@ -47,19 +47,19 @@ namespace vkBasalt
         edgeImages  = std::vector<VkImage>(edgeAndBlendImages.begin(), edgeAndBlendImages.begin() + edgeAndBlendImages.size()/2);
         blendImages = std::vector<VkImage>(edgeAndBlendImages.begin() + edgeAndBlendImages.size()/2, edgeAndBlendImages.end());
 
-        inputImageViews = createImageViews(logicalDevice, format, inputImages);
+        inputImageViews = createImageViews(pLogicalDevice, format, inputImages);
         std::cout << "after creating input ImageViews" << std::endl;
-        edgeImageViews = createImageViews(logicalDevice, VK_FORMAT_B8G8R8A8_UNORM, edgeImages);
+        edgeImageViews = createImageViews(pLogicalDevice, VK_FORMAT_B8G8R8A8_UNORM, edgeImages);
         std::cout << "after creating edge  ImageViews" << std::endl;
-        blendImageViews = createImageViews(logicalDevice, VK_FORMAT_B8G8R8A8_UNORM, blendImages);
+        blendImageViews = createImageViews(pLogicalDevice, VK_FORMAT_B8G8R8A8_UNORM, blendImages);
         std::cout << "after creating blend ImageViews" << std::endl;
-        outputImageViews = createImageViews(logicalDevice, format, outputImages);
+        outputImageViews = createImageViews(pLogicalDevice, format, outputImages);
         std::cout << "after creating output ImageViews" << std::endl;
-        sampler = createSampler(logicalDevice);
+        sampler = createSampler(pLogicalDevice);
         std::cout << "after creating sampler" << std::endl;
 
         VkExtent3D areaImageExtent = {AREATEX_WIDTH, AREATEX_HEIGHT, 1};
-        areaImage = createImages(logicalDevice,
+        areaImage = createImages(pLogicalDevice,
                                  1,
                                  areaImageExtent,
                                  VK_FORMAT_R8G8_UNORM,//TODO search for format and save it
@@ -67,7 +67,7 @@ namespace vkBasalt
                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                  areaMemory)[0];
         VkExtent3D searchImageExtent = {SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1};
-        searchImage = createImages(logicalDevice,
+        searchImage = createImages(pLogicalDevice,
                                    1,
                                    searchImageExtent,
                                    VK_FORMAT_R8_UNORM,//TODO search for format and save it
@@ -75,24 +75,24 @@ namespace vkBasalt
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    searchMemory)[0];
 
-        uploadToImage(logicalDevice,
+        uploadToImage(pLogicalDevice,
                        areaImage,
                        areaImageExtent,
                        AREATEX_SIZE,
                        areaTexBytes);
 
-        uploadToImage(logicalDevice,
+        uploadToImage(pLogicalDevice,
                        searchImage,
                        searchImageExtent,
                        SEARCHTEX_SIZE,
                        searchTexBytes);
 
-        areaImageView = createImageViews(logicalDevice, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1,areaImage))[0];
+        areaImageView = createImageViews(pLogicalDevice, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1,areaImage))[0];
         std::cout << "after creating area ImageView" << std::endl;
-        searchImageView = createImageViews(logicalDevice, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
+        searchImageView = createImageViews(pLogicalDevice, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1,searchImage))[0];
         std::cout << "after creating search ImageView" << std::endl;
 
-        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 5);
+        imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(pLogicalDevice, 5);
         std::cout << "after creating descriptorSetLayouts" << std::endl;
 
         VkDescriptorPoolSize imagePoolSize;
@@ -101,7 +101,7 @@ namespace vkBasalt
 
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
 
-        descriptorPool = createDescriptorPool(logicalDevice, poolSizes);
+        descriptorPool = createDescriptorPool(pLogicalDevice, poolSizes);
         std::cout << "after creating descriptorPool" << std::endl;
 
         //get config options
@@ -123,25 +123,25 @@ namespace vkBasalt
         smaaOptions.cornerRounding      = std::stoi(pConfig->getOption("smaaCornerRounding", "25"));
 
         auto shaderCode = readFile(smaaEdgeVertexFile);
-        createShaderModule(logicalDevice, shaderCode, &edgeVertexModule);
+        createShaderModule(pLogicalDevice, shaderCode, &edgeVertexModule);
         shaderCode = pConfig->getOption("smaaEdgeDetection", "luma") == "color"
             ? readFile(smaaEdgeColorFragmentFile)
             : readFile(smaaEdgeLumaFragmentFile);
-        createShaderModule(logicalDevice, shaderCode, &edgeFragmentModule);
+        createShaderModule(pLogicalDevice, shaderCode, &edgeFragmentModule);
         shaderCode = readFile(smaaBlendVertexFile);
-        createShaderModule(logicalDevice, shaderCode, &blendVertexModule);
+        createShaderModule(pLogicalDevice, shaderCode, &blendVertexModule);
         shaderCode = readFile(smaaBlendFragmentFile);
-        createShaderModule(logicalDevice, shaderCode, &blendFragmentModule);
+        createShaderModule(pLogicalDevice, shaderCode, &blendFragmentModule);
         shaderCode = readFile(smaaNeighborVertexFile);
-        createShaderModule(logicalDevice, shaderCode, &neighborVertexModule);
+        createShaderModule(pLogicalDevice, shaderCode, &neighborVertexModule);
         shaderCode = readFile(smaaNeighborFragmentFile);
-        createShaderModule(logicalDevice, shaderCode, &neignborFragmentModule);
+        createShaderModule(pLogicalDevice, shaderCode, &neignborFragmentModule);
 
-        renderPass      = createRenderPass(logicalDevice, format);
-        unormRenderPass = createRenderPass(logicalDevice, VK_FORMAT_B8G8R8A8_UNORM);
+        renderPass      = createRenderPass(pLogicalDevice, format);
+        unormRenderPass = createRenderPass(pLogicalDevice, VK_FORMAT_B8G8R8A8_UNORM);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {imageSamplerDescriptorSetLayout};
-        pipelineLayout = createGraphicsPipelineLayout(logicalDevice, descriptorSetLayouts);
+        pipelineLayout = createGraphicsPipelineLayout(pLogicalDevice, descriptorSetLayouts);
 
         std::vector<VkSpecializationMapEntry> specMapEntrys(8);
         for(uint32_t i=0;i<specMapEntrys.size();i++)
@@ -161,9 +161,9 @@ namespace vkBasalt
         specializationInfo.dataSize = sizeof(smaaOptions);
         specializationInfo.pData = &smaaOptions;
 
-        edgePipeline     = createGraphicsPipeline(logicalDevice, edgeVertexModule, &specializationInfo, "main", edgeFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
-        blendPipeline    = createGraphicsPipeline(logicalDevice, blendVertexModule, &specializationInfo, "main", blendFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
-        neighborPipeline = createGraphicsPipeline(logicalDevice, neighborVertexModule, &specializationInfo, "main", neignborFragmentModule, &specializationInfo, "main", imageExtent, renderPass, pipelineLayout);
+        edgePipeline     = createGraphicsPipeline(pLogicalDevice, edgeVertexModule, &specializationInfo, "main", edgeFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        blendPipeline    = createGraphicsPipeline(pLogicalDevice, blendVertexModule, &specializationInfo, "main", blendFragmentModule, &specializationInfo, "main", imageExtent, unormRenderPass, pipelineLayout);
+        neighborPipeline = createGraphicsPipeline(pLogicalDevice, neighborVertexModule, &specializationInfo, "main", neignborFragmentModule, &specializationInfo, "main", imageExtent, renderPass, pipelineLayout);
 
 
         std::vector<std::vector<VkImageView>> imageViewsVector = {inputImageViews,
@@ -171,11 +171,11 @@ namespace vkBasalt
                                                                   std::vector<VkImageView>(inputImageViews.size(), areaImageView),
                                                                   std::vector<VkImageView>(inputImageViews.size(), searchImageView),
                                                                   blendImageViews};
-        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(logicalDevice, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
+        imageDescriptorSets = allocateAndWriteImageSamplerDescriptorSets(pLogicalDevice, descriptorPool, imageSamplerDescriptorSetLayout, std::vector<VkSampler>(imageViewsVector.size(),sampler), imageViewsVector);
 
-        edgeFramebuffers     = createFramebuffers(logicalDevice, unormRenderPass, imageExtent,   {edgeImageViews});
-        blendFramebuffers    = createFramebuffers(logicalDevice, unormRenderPass, imageExtent,  {blendImageViews});
-        neignborFramebuffers = createFramebuffers(logicalDevice, renderPass,      imageExtent, {outputImageViews});
+        edgeFramebuffers     = createFramebuffers(pLogicalDevice, unormRenderPass, imageExtent,   {edgeImageViews});
+        blendFramebuffers    = createFramebuffers(pLogicalDevice, unormRenderPass, imageExtent,  {blendImageViews});
+        neignborFramebuffers = createFramebuffers(pLogicalDevice, renderPass,      imageExtent, {outputImageViews});
     }
     void SmaaEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
@@ -214,7 +214,7 @@ namespace vkBasalt
         secondBarrier.subresourceRange.baseArrayLayer = 0;
         secondBarrier.subresourceRange.layerCount = 1;
 
-        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
 
         VkRenderPassBeginInfo renderPassBeginInfo;
@@ -229,105 +229,105 @@ namespace vkBasalt
         renderPassBeginInfo.pClearValues = &clearValue;
         //edge renderPass
         std::cout << "before beginn edge renderpass" << std::endl;
-        logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
 
-        logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
+        pLogicalDevice->vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,0,1,&(imageDescriptorSets[imageIndex]),0,nullptr);
         std::cout << "after binding image sampler" << std::endl;
 
-        logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,edgePipeline);
+        pLogicalDevice->vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,edgePipeline);
         std::cout << "after bind pipeliene" << std::endl;
 
-        logicalDevice.vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
+        pLogicalDevice->vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
-        logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
+        pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
 
         memoryBarrier.image = edgeImages[imageIndex];
         renderPassBeginInfo.framebuffer = blendFramebuffers[imageIndex];
         //blend renderPass
-        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
 
         std::cout << "before beginn blend renderpass" << std::endl;
-        logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
 
-        logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,blendPipeline);
+        pLogicalDevice->vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,blendPipeline);
         std::cout << "after bind pipeliene" << std::endl;
 
-        logicalDevice.vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
+        pLogicalDevice->vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
-        logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
+        pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
 
         memoryBarrier.image = blendImages[imageIndex];
         renderPassBeginInfo.framebuffer = neignborFramebuffers[imageIndex];
         renderPassBeginInfo.renderPass = renderPass;
         //neighbor renderPass
-        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
+        pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &memoryBarrier);
         std::cout << "after the first pipeline barrier" << std::endl;
 
         std::cout << "before beginn neighbor renderpass" << std::endl;
-        logicalDevice.vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
         std::cout << "after beginn renderpass" << std::endl;
 
-        logicalDevice.vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,neighborPipeline);
+        pLogicalDevice->vkd.CmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,neighborPipeline);
         std::cout << "after bind pipeliene" << std::endl;
 
-        logicalDevice.vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
+        pLogicalDevice->vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
         std::cout << "after draw" << std::endl;
 
-        logicalDevice.vkd.CmdEndRenderPass(commandBuffer);
+        pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
         std::cout << "after end renderpass" << std::endl;
 
-        logicalDevice.vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
+        pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         std::cout << "after the second pipeline barrier" << std::endl;
 
     }
     SmaaEffect::~SmaaEffect()
     {
         std::cout << "destroying smaa effect " << this << std::endl;
-        logicalDevice.vkd.DestroyPipeline(logicalDevice.device, edgePipeline,     nullptr);
-        logicalDevice.vkd.DestroyPipeline(logicalDevice.device, blendPipeline,    nullptr);
-        logicalDevice.vkd.DestroyPipeline(logicalDevice.device, neighborPipeline, nullptr);
+        pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, edgePipeline,     nullptr);
+        pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, blendPipeline,    nullptr);
+        pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, neighborPipeline, nullptr);
 
-        logicalDevice.vkd.DestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
-        logicalDevice.vkd.DestroyRenderPass(logicalDevice.device, renderPass, nullptr);
-        logicalDevice.vkd.DestroyRenderPass(logicalDevice.device, unormRenderPass, nullptr);
-        logicalDevice.vkd.DestroyDescriptorSetLayout(logicalDevice.device, imageSamplerDescriptorSetLayout, nullptr);
+        pLogicalDevice->vkd.DestroyPipelineLayout(pLogicalDevice->device, pipelineLayout, nullptr);
+        pLogicalDevice->vkd.DestroyRenderPass(pLogicalDevice->device, renderPass, nullptr);
+        pLogicalDevice->vkd.DestroyRenderPass(pLogicalDevice->device, unormRenderPass, nullptr);
+        pLogicalDevice->vkd.DestroyDescriptorSetLayout(pLogicalDevice->device, imageSamplerDescriptorSetLayout, nullptr);
 
-        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, edgeVertexModule,       nullptr);
-        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, edgeFragmentModule,     nullptr);
-        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, blendVertexModule,      nullptr);
-        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, blendFragmentModule,    nullptr);
-        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, neighborVertexModule,   nullptr);
-        logicalDevice.vkd.DestroyShaderModule(logicalDevice.device, neignborFragmentModule, nullptr);
+        pLogicalDevice->vkd.DestroyShaderModule(pLogicalDevice->device, edgeVertexModule,       nullptr);
+        pLogicalDevice->vkd.DestroyShaderModule(pLogicalDevice->device, edgeFragmentModule,     nullptr);
+        pLogicalDevice->vkd.DestroyShaderModule(pLogicalDevice->device, blendVertexModule,      nullptr);
+        pLogicalDevice->vkd.DestroyShaderModule(pLogicalDevice->device, blendFragmentModule,    nullptr);
+        pLogicalDevice->vkd.DestroyShaderModule(pLogicalDevice->device, neighborVertexModule,   nullptr);
+        pLogicalDevice->vkd.DestroyShaderModule(pLogicalDevice->device, neignborFragmentModule, nullptr);
 
-        logicalDevice.vkd.DestroyDescriptorPool(logicalDevice.device, descriptorPool, nullptr);
-        logicalDevice.vkd.FreeMemory(logicalDevice.device, imageMemory, nullptr);
-        logicalDevice.vkd.FreeMemory(logicalDevice.device, areaMemory, nullptr);
-        logicalDevice.vkd.FreeMemory(logicalDevice.device, searchMemory, nullptr);
+        pLogicalDevice->vkd.DestroyDescriptorPool(pLogicalDevice->device, descriptorPool, nullptr);
+        pLogicalDevice->vkd.FreeMemory(pLogicalDevice->device, imageMemory, nullptr);
+        pLogicalDevice->vkd.FreeMemory(pLogicalDevice->device, areaMemory, nullptr);
+        pLogicalDevice->vkd.FreeMemory(pLogicalDevice->device, searchMemory, nullptr);
         for(unsigned int i=0;i<edgeFramebuffers.size();i++)
         {
-            logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device, edgeFramebuffers[i], nullptr);
-            logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device, blendFramebuffers[i], nullptr);
-            logicalDevice.vkd.DestroyFramebuffer(logicalDevice.device, neignborFramebuffers[i], nullptr);
-            logicalDevice.vkd.DestroyImageView(logicalDevice.device, inputImageViews[i], nullptr);
-            logicalDevice.vkd.DestroyImageView(logicalDevice.device, edgeImageViews[i], nullptr);
-            logicalDevice.vkd.DestroyImageView(logicalDevice.device, blendImageViews[i], nullptr);
-            logicalDevice.vkd.DestroyImageView(logicalDevice.device, outputImageViews[i], nullptr);
-            logicalDevice.vkd.DestroyImage(logicalDevice.device, edgeImages[i], nullptr);
-            logicalDevice.vkd.DestroyImage(logicalDevice.device, blendImages[i], nullptr);
+            pLogicalDevice->vkd.DestroyFramebuffer(pLogicalDevice->device, edgeFramebuffers[i], nullptr);
+            pLogicalDevice->vkd.DestroyFramebuffer(pLogicalDevice->device, blendFramebuffers[i], nullptr);
+            pLogicalDevice->vkd.DestroyFramebuffer(pLogicalDevice->device, neignborFramebuffers[i], nullptr);
+            pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, inputImageViews[i], nullptr);
+            pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, edgeImageViews[i], nullptr);
+            pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, blendImageViews[i], nullptr);
+            pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, outputImageViews[i], nullptr);
+            pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, edgeImages[i], nullptr);
+            pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, blendImages[i], nullptr);
         }
         std::cout << "after DestroyImageView" << std::endl;
-        logicalDevice.vkd.DestroyImageView(logicalDevice.device, areaImageView, nullptr);
-        logicalDevice.vkd.DestroyImage(logicalDevice.device, areaImage, nullptr);
-        logicalDevice.vkd.DestroyImageView(logicalDevice.device, searchImageView, nullptr);
-        logicalDevice.vkd.DestroyImage(logicalDevice.device, searchImage, nullptr);
+        pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, areaImageView, nullptr);
+        pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, areaImage, nullptr);
+        pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, searchImageView, nullptr);
+        pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, searchImage, nullptr);
 
-        logicalDevice.vkd.DestroySampler(logicalDevice.device, sampler, nullptr);
+        pLogicalDevice->vkd.DestroySampler(pLogicalDevice->device, sampler, nullptr);
     }
 }

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
@@ -13,7 +14,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImage> createImages(LogicalDevice logicalDevice,
+    std::vector<VkImage> createImages(std::shared_ptr<LogicalDevice> pLogicalDevice,
                                       uint32_t count,
                                       VkExtent3D extent,
                                       VkFormat format,
@@ -21,13 +22,13 @@ namespace vkBasalt
                                       VkMemoryPropertyFlags properties,
                                       VkDeviceMemory& imageMemory,
                                       uint32_t mipLevels = 1);
-    void uploadToImage(LogicalDevice logicalDevice,
+    void uploadToImage(std::shared_ptr<LogicalDevice> pLogicalDevice,
                        VkImage image,
                        VkExtent3D extent,
                        uint32_t size,
                        const unsigned char* writeData);
     
-    void changeImageLayout(LogicalDevice logicalDevice, std::vector<VkImage> images, uint32_t mipLevels = 1);
+    void changeImageLayout(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<VkImage> images, uint32_t mipLevels = 1);
 }
 
 

@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImageView> createImageViews(LogicalDevice logicalDevice, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType, VkImageAspectFlags aspectMask)
+    std::vector<VkImageView> createImageViews(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType, VkImageAspectFlags aspectMask)
     {
         std::vector<VkImageView> imageViews(images.size());
         
@@ -27,7 +27,7 @@ namespace vkBasalt
         for(uint32_t i = 0; i < images.size(); i++)
         {
             imageViewCreateInfo.image = images[i];
-            VkResult result = logicalDevice.vkd.CreateImageView(logicalDevice.device, &imageViewCreateInfo, nullptr, &(imageViews[i]));
+            VkResult result = pLogicalDevice->vkd.CreateImageView(pLogicalDevice->device, &imageViewCreateInfo, nullptr, &(imageViews[i]));
             ASSERT_VULKAN(result);
         }
         

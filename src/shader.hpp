@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
@@ -13,7 +14,7 @@
 
 namespace vkBasalt{
     std::vector<char> readFile(const std::string &filename);
-    void createShaderModule(LogicalDevice logicalDevice, const std::vector<char> &code, VkShaderModule *shaderModule);
+    void createShaderModule(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<char> &code, VkShaderModule *shaderModule);
 }
 
 

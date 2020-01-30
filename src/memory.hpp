@@ -5,13 +5,14 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
 #include "logical_device.hpp"
 
 namespace vkBasalt{
-    uint32_t findMemoryTypeIndex(LogicalDevice logicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    uint32_t findMemoryTypeIndex(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 }
 
 

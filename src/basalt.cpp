@@ -41,9 +41,9 @@ namespace vkBasalt
     std::shared_ptr<Config> pConfig = nullptr;
     
     // layer book-keeping information, to store dispatch tables by key
-    std::unordered_map<void *, VkLayerInstanceDispatchTable> instanceDispatchMap;
-    std::unordered_map<void *, VkInstance>                   instanceMap;
-    std::unordered_map<void *, LogicalDevice>                deviceMap;
+    std::unordered_map<void *, VkLayerInstanceDispatchTable>                  instanceDispatchMap;
+    std::unordered_map<void *, VkInstance>                                    instanceMap;
+    std::unordered_map<void *, std::shared_ptr<LogicalDevice>>                deviceMap;
     std::unordered_map<VkSwapchainKHR, LogicalSwapchain>     swapchainMap;
     
     std::mutex globalLock;
@@ -223,21 +223,21 @@ namespace vkBasalt
         VkLayerDispatchTable dispatchTable;
         layer_init_device_dispatch_table(*pDevice,&dispatchTable,gdpa);
         
-        LogicalDevice logicalDevice;
-        logicalDevice.vkd = dispatchTable;
-        logicalDevice.vki = instanceDispatchMap[GetKey(physicalDevice)];
-        logicalDevice.device = *pDevice;
-        logicalDevice.physicalDevice = physicalDevice;
-        logicalDevice.instance = instanceMap[GetKey(physicalDevice)];
-        logicalDevice.queue = VK_NULL_HANDLE;
-        logicalDevice.queueFamilyIndex = 0;
-        logicalDevice.commandPool = VK_NULL_HANDLE;
-        logicalDevice.supportsMutableFormat = supportsMutableFormat;
+        std::shared_ptr<LogicalDevice> pLogicalDevice(new LogicalDevice());
+        pLogicalDevice->vkd = dispatchTable;
+        pLogicalDevice->vki = instanceDispatchMap[GetKey(physicalDevice)];
+        pLogicalDevice->device = *pDevice;
+        pLogicalDevice->physicalDevice = physicalDevice;
+        pLogicalDevice->instance = instanceMap[GetKey(physicalDevice)];
+        pLogicalDevice->queue = VK_NULL_HANDLE;
+        pLogicalDevice->queueFamilyIndex = 0;
+        pLogicalDevice->commandPool = VK_NULL_HANDLE;
+        pLogicalDevice->supportsMutableFormat = supportsMutableFormat;
         
         // store the table by key
         {
             scoped_lock l(globalLock);
-            deviceMap[GetKey(*pDevice)] = logicalDevice;
+            deviceMap[GetKey(*pDevice)] = pLogicalDevice;
         }
 
         return ret;
@@ -246,14 +246,14 @@ namespace vkBasalt
     VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
     {
         scoped_lock l(globalLock);
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
-        if(logicalDevice.commandPool != VK_NULL_HANDLE)
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        if(pLogicalDevice->commandPool != VK_NULL_HANDLE)
         {
             std::cout << "DestroyCommandPool" << std::endl;
-            logicalDevice.vkd.DestroyCommandPool(device, logicalDevice.commandPool, pAllocator);
+            pLogicalDevice->vkd.DestroyCommandPool(device, pLogicalDevice->commandPool, pAllocator);
         }
         
-        logicalDevice.vkd.DestroyDevice(device,pAllocator);
+        pLogicalDevice->vkd.DestroyDevice(device,pAllocator);
         
         deviceMap.erase(GetKey(device));
         std::cout << "after  Destroy Device" << std::endl;
@@ -262,11 +262,11 @@ namespace vkBasalt
     VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue *pQueue)
     {
         scoped_lock l(globalLock);
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
         
-        logicalDevice.vkd.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+        pLogicalDevice->vkd.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
         
-        if(logicalDevice.queue != VK_NULL_HANDLE)
+        if(pLogicalDevice->queue != VK_NULL_HANDLE)
         {
             return;//we allready have a queue
         }
@@ -275,13 +275,13 @@ namespace vkBasalt
         uint32_t count;
         VkBool32 graphicsCapable = VK_FALSE;
         //TODO also check if the queue is present capable
-        logicalDevice.vki.GetPhysicalDeviceQueueFamilyProperties(logicalDevice.physicalDevice, &count, nullptr);
+        pLogicalDevice->vki.GetPhysicalDeviceQueueFamilyProperties(pLogicalDevice->physicalDevice, &count, nullptr);
         
         std::vector<VkQueueFamilyProperties> queueProperties(count);
         
         if(count > 0)
         {
-            logicalDevice.vki.GetPhysicalDeviceQueueFamilyProperties(logicalDevice.physicalDevice, &count, queueProperties.data());
+            pLogicalDevice->vki.GetPhysicalDeviceQueueFamilyProperties(pLogicalDevice->physicalDevice, &count, queueProperties.data());
             if((queueProperties[queueFamilyIndex].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
             {
                 graphicsCapable = VK_TRUE;
@@ -302,16 +302,16 @@ namespace vkBasalt
             commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
             
             std::cout << "found graphic capable queue" << std::endl;
-            logicalDevice.vkd.CreateCommandPool(device, &commandPoolCreateInfo, nullptr, &logicalDevice.commandPool);
-            logicalDevice.queue = *pQueue;
-            logicalDevice.queueFamilyIndex = queueFamilyIndex;
+            pLogicalDevice->vkd.CreateCommandPool(device, &commandPoolCreateInfo, nullptr, &pLogicalDevice->commandPool);
+            pLogicalDevice->queue = *pQueue;
+            pLogicalDevice->queueFamilyIndex = queueFamilyIndex;
         }
     }
 
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
     {
         scoped_lock l(globalLock);
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
         
         VkSwapchainCreateInfoKHR modifiedCreateInfo = *pCreateInfo;
         
@@ -324,7 +324,7 @@ namespace vkBasalt
         VkFormat formats[] = {unormFormat, srgbFormat};
         
         VkImageFormatListCreateInfoKHR imageFormatListCreateInfo;
-        if(logicalDevice.supportsMutableFormat)
+        if(pLogicalDevice->supportsMutableFormat)
         {
             modifiedCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;//we want to use the swapchain images as output of the graphics pipeline
             modifiedCreateInfo.flags |= VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
@@ -344,13 +344,13 @@ namespace vkBasalt
         
         std::cout << "format " << modifiedCreateInfo.imageFormat << std::endl;
         LogicalSwapchain logicalSwapchain;
-        logicalSwapchain.logicalDevice = logicalDevice;
+        logicalSwapchain.pLogicalDevice = pLogicalDevice;
         logicalSwapchain.swapchainCreateInfo = *pCreateInfo;
         logicalSwapchain.imageExtent = modifiedCreateInfo.imageExtent;
         logicalSwapchain.format = modifiedCreateInfo.imageFormat;
         logicalSwapchain.imageCount = 0;
         
-        VkResult result = logicalDevice.vkd.CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
+        VkResult result = pLogicalDevice->vkd.CreateSwapchainKHR(device, &modifiedCreateInfo, pAllocator, pSwapchain);
         
         swapchainMap[*pSwapchain] = logicalSwapchain;
         
@@ -364,11 +364,11 @@ namespace vkBasalt
         scoped_lock l(globalLock);
         std::cout << "Interrupted get swapchain images " << *pCount << std::endl;
         
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
         
         if(pSwapchainImages == nullptr)
         {
-            return logicalDevice.vkd.GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
+            return pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
         }
         
         LogicalSwapchain& logicalSwapchain = swapchainMap[swapchain];
@@ -400,14 +400,14 @@ namespace vkBasalt
             }
         }
         
-        logicalSwapchain.fakeImages = createFakeSwapchainImages(logicalDevice,
+        logicalSwapchain.fakeImages = createFakeSwapchainImages(pLogicalDevice,
                                                                 logicalSwapchain.swapchainCreateInfo,
-                                                                *pCount * (effectStrings.size() + !logicalDevice.supportsMutableFormat), // create 1 more set of images when we can't use the swapchain it self
+                                                                *pCount * (effectStrings.size() + !pLogicalDevice->supportsMutableFormat), // create 1 more set of images when we can't use the swapchain it self
                                                                 logicalSwapchain.fakeImageMemory);
         std::cout << "after createFakeSwapchainImages " << std::endl;
         
         
-        VkResult result = logicalDevice.vkd.GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
+        VkResult result = pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
         for(unsigned int i=0;i<*pCount;i++)
         {
             logicalSwapchain.images.push_back(pSwapchainImages[i]);
@@ -427,7 +427,7 @@ namespace vkBasalt
             std::vector<VkImage> secondImages;
             if(i == effectStrings.size() - 1)
             {
-                secondImages = logicalDevice.supportsMutableFormat ? logicalSwapchain.images : std::vector<VkImage>(logicalSwapchain.fakeImages.end() - logicalSwapchain.imageCount, logicalSwapchain.fakeImages.end());
+                secondImages = pLogicalDevice->supportsMutableFormat ? logicalSwapchain.images : std::vector<VkImage>(logicalSwapchain.fakeImages.end() - logicalSwapchain.imageCount, logicalSwapchain.fakeImages.end());
                 std::cout << "using swapchain images as second images" << std::endl;
             }
             else
@@ -439,7 +439,7 @@ namespace vkBasalt
             std::cout << secondImages.size() << " images in secondImages" << std::endl;
             if(effectStrings[i] == std::string("fxaa"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new FxaaEffect(logicalDevice,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new FxaaEffect(pLogicalDevice,
                                                              convertToSRGB(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -449,7 +449,7 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("cas"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new CasEffect(logicalDevice,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new CasEffect(pLogicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -459,7 +459,7 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("deband"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new DebandEffect(logicalDevice,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new DebandEffect(pLogicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -469,7 +469,7 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("smaa"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new SmaaEffect(logicalDevice,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new SmaaEffect(pLogicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -478,7 +478,7 @@ namespace vkBasalt
             }
             else if(effectStrings[i] == std::string("lut"))
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new LutEffect(logicalDevice,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new LutEffect(pLogicalDevice,
                                                              convertToUNORM(logicalSwapchain.format),
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -487,7 +487,7 @@ namespace vkBasalt
             }
             else
             {
-                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new ReshadeEffect(logicalDevice,
+                logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new ReshadeEffect(pLogicalDevice,
                                                              logicalSwapchain.format,
                                                              logicalSwapchain.imageExtent,
                                                              firstImages,
@@ -497,9 +497,9 @@ namespace vkBasalt
             }
         }
         
-        if(!logicalDevice.supportsMutableFormat)
+        if(!pLogicalDevice->supportsMutableFormat)
         {
-            logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new TransferEffect(logicalDevice,
+            logicalSwapchain.effects.push_back(std::shared_ptr<Effect>(new TransferEffect(pLogicalDevice,
                                                              logicalSwapchain.format,
                                                              logicalSwapchain.imageExtent,
                                                              std::vector<VkImage>(logicalSwapchain.fakeImages.end() - logicalSwapchain.imageCount, logicalSwapchain.fakeImages.end()),
@@ -507,20 +507,20 @@ namespace vkBasalt
                                                              pConfig)));
         }
         
-        VkImageView depthImageView = logicalDevice.depthImageViews.size() ? logicalDevice.depthImageViews[0] : VK_NULL_HANDLE;
-        VkImage     depthImage     = logicalDevice.depthImageViews.size() ? logicalDevice.depthImages[0]     : VK_NULL_HANDLE;
-        VkFormat    depthFormat    = logicalDevice.depthImageViews.size() ? logicalDevice.depthFormats[0]    : VK_FORMAT_UNDEFINED;
+        VkImageView depthImageView = pLogicalDevice->depthImageViews.size() ? pLogicalDevice->depthImageViews[0] : VK_NULL_HANDLE;
+        VkImage     depthImage     = pLogicalDevice->depthImageViews.size() ? pLogicalDevice->depthImages[0]     : VK_NULL_HANDLE;
+        VkFormat    depthFormat    = pLogicalDevice->depthImageViews.size() ? pLogicalDevice->depthFormats[0]    : VK_FORMAT_UNDEFINED;
         
         std::cout << "effect string count: " << effectStrings.size() << std::endl;
         std::cout << "effect count: " << logicalSwapchain.effects.size() << std::endl;
         
-        logicalSwapchain.commandBuffers = allocateCommandBuffer(logicalDevice, logicalSwapchain.imageCount);
+        logicalSwapchain.commandBuffers = allocateCommandBuffer(pLogicalDevice, logicalSwapchain.imageCount);
         std::cout << "after allocateCommandBuffer " << logicalSwapchain.commandBuffers.size() << " for swapchain " << swapchain << std::endl;
         
-        writeCommandBuffers(logicalDevice, logicalSwapchain.effects, depthImage, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
+        writeCommandBuffers(pLogicalDevice, logicalSwapchain.effects, depthImage, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
         std::cout << "after write CommandBuffer" << std::endl;
         
-        logicalSwapchain.semaphores = createSemaphores(logicalDevice, logicalSwapchain.imageCount);
+        logicalSwapchain.semaphores = createSemaphores(pLogicalDevice, logicalSwapchain.imageCount);
         std::cout << "after create semaphores" << std::endl;
         for(unsigned int i = 0; i < logicalSwapchain.imageCount; i++)
         {
@@ -535,7 +535,7 @@ namespace vkBasalt
     {
         scoped_lock l(globalLock);
         
-        LogicalDevice& logicalDevice = deviceMap[GetKey(queue)];
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(queue)];
         
         std::vector<VkSemaphore> presentSemaphores;
         presentSemaphores.reserve(pPresentInfo->swapchainCount);
@@ -575,7 +575,7 @@ namespace vkBasalt
                 submitInfo.pWaitDstStageMask = waitStages.data();
             }
 
-            VkResult vr = logicalDevice.vkd.QueueSubmit(logicalDevice.queue, 1, &submitInfo, VK_NULL_HANDLE);
+            VkResult vr = pLogicalDevice->vkd.QueueSubmit(pLogicalDevice->queue, 1, &submitInfo, VK_NULL_HANDLE);
 
             if (vr != VK_SUCCESS)
             {
@@ -586,7 +586,7 @@ namespace vkBasalt
         presentInfo.waitSemaphoreCount = presentSemaphores.size();
         presentInfo.pWaitSemaphores = presentSemaphores.data();
 
-        return logicalDevice.vkd.QueuePresentKHR(queue, &presentInfo);
+        return pLogicalDevice->vkd.QueuePresentKHR(queue, &presentInfo);
     }
 
     VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain,const VkAllocationCallbacks* pAllocator)
@@ -597,15 +597,15 @@ namespace vkBasalt
         std::cout << "destroying swapchain " << swapchain << std::endl;
         swapchainMap[swapchain].destroy();
         swapchainMap.erase(swapchain);
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
         
-        logicalDevice.vkd.DestroySwapchainKHR(device, swapchain,pAllocator);
+        pLogicalDevice->vkd.DestroySwapchainKHR(device, swapchain,pAllocator);
     }
     
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
     {
         scoped_lock l(globalLock);
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
         if(isDepthFormat(pCreateInfo->format) && ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) )//&& pCreateInfo->extent.width == 2560 && pCreateInfo->extent.height == 1440)
         {
             std::cout << "detected depth image with format: " <<  pCreateInfo->format << std::endl;
@@ -613,32 +613,32 @@ namespace vkBasalt
             std::cout << ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) << std::endl;
             VkImageCreateInfo modifiedCreateInfo = *pCreateInfo;
             modifiedCreateInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
-            VkResult result = logicalDevice.vkd.CreateImage(device, &modifiedCreateInfo, pAllocator, pImage);
-            logicalDevice.depthImages.push_back(*pImage);
-            logicalDevice.depthFormats.push_back(pCreateInfo->format);
+            VkResult result = pLogicalDevice->vkd.CreateImage(device, &modifiedCreateInfo, pAllocator, pImage);
+            pLogicalDevice->depthImages.push_back(*pImage);
+            pLogicalDevice->depthFormats.push_back(pCreateInfo->format);
             
             return result;
         }
         else
         {
-            return logicalDevice.vkd.CreateImage(device, pCreateInfo, pAllocator, pImage);
+            return pLogicalDevice->vkd.CreateImage(device, pCreateInfo, pAllocator, pImage);
         }
     }
     
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_BindImageMemory(VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset)
     {
         scoped_lock l(globalLock);
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
-        VkResult result = logicalDevice.vkd.BindImageMemory(device, image, memory, memoryOffset);
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        VkResult result = pLogicalDevice->vkd.BindImageMemory(device, image, memory, memoryOffset);
         //TODO what if the application creates more than one image before binding memory?
-        if(logicalDevice.depthImages.size() && image == logicalDevice.depthImages.back())
+        if(pLogicalDevice->depthImages.size() && image == pLogicalDevice->depthImages.back())
         {
             std::cout << "before creating depth image view" << std::endl;
-            VkImageView depthImageView = createImageViews(logicalDevice, logicalDevice.depthFormats[logicalDevice.depthImages.size() - 1], {image}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT)[0];
-            VkFormat depthFormat = logicalDevice.depthFormats[logicalDevice.depthImages.size() - 1];
+            VkImageView depthImageView = createImageViews(pLogicalDevice, pLogicalDevice->depthFormats[pLogicalDevice->depthImages.size() - 1], {image}, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT)[0];
+            VkFormat depthFormat = pLogicalDevice->depthFormats[pLogicalDevice->depthImages.size() - 1];
             std::cout << "after creating depth image view" << std::endl;
-            logicalDevice.depthImageViews.push_back(depthImageView);
-            if(logicalDevice.depthImageViews.size() > 1)
+            pLogicalDevice->depthImageViews.push_back(depthImageView);
+            if(pLogicalDevice->depthImageViews.size() > 1)
             {
                 return result;
             }
@@ -646,16 +646,16 @@ namespace vkBasalt
             for(auto& it: swapchainMap)
             {
                 LogicalSwapchain& logicalSwapchain = it.second;
-                if(logicalSwapchain.logicalDevice.device == logicalDevice.device)
+                if(logicalSwapchain.pLogicalDevice->device == pLogicalDevice->device)
                 {
                     if(logicalSwapchain.commandBuffers.size())
                     {
-                        logicalDevice.vkd.FreeCommandBuffers(logicalDevice.device, logicalDevice.commandPool, logicalSwapchain.commandBuffers.size(), logicalSwapchain.commandBuffers.data());
+                        pLogicalDevice->vkd.FreeCommandBuffers(pLogicalDevice->device, pLogicalDevice->commandPool, logicalSwapchain.commandBuffers.size(), logicalSwapchain.commandBuffers.data());
                         logicalSwapchain.commandBuffers.clear();
-                        logicalSwapchain.commandBuffers = allocateCommandBuffer(logicalDevice, logicalSwapchain.imageCount);
+                        logicalSwapchain.commandBuffers = allocateCommandBuffer(pLogicalDevice, logicalSwapchain.imageCount);
                         std::cout << "after allocateCommandBuffer " << logicalSwapchain.commandBuffers.size() << " for swapchain " << it.first << std::endl;
                         
-                        writeCommandBuffers(logicalDevice, logicalSwapchain.effects, image, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
+                        writeCommandBuffers(pLogicalDevice, logicalSwapchain.effects, image, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
                         std::cout << "after write CommandBuffer" << std::endl;
                     }
                 }
@@ -667,37 +667,37 @@ namespace vkBasalt
     VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroyImage(VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator)
     {
         scoped_lock l(globalLock);
-        LogicalDevice& logicalDevice = deviceMap[GetKey(device)];
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
         
-        for(uint32_t i = 0; i < logicalDevice.depthImages.size(); i++)
+        for(uint32_t i = 0; i < pLogicalDevice->depthImages.size(); i++)
         {
-            if(logicalDevice.depthImages[i] == image)
+            if(pLogicalDevice->depthImages[i] == image)
             {
-                logicalDevice.depthImages.erase(logicalDevice.depthImages.begin() + i);
+                pLogicalDevice->depthImages.erase(pLogicalDevice->depthImages.begin() + i);
                 //TODO what if a image gets destroyed before binding memory?
-                if(logicalDevice.depthImageViews.size() - 1 >= i)
+                if(pLogicalDevice->depthImageViews.size() - 1 >= i)
                 {
-                    logicalDevice.vkd.DestroyImageView(logicalDevice.device, logicalDevice.depthImageViews[i], nullptr);
-                    logicalDevice.depthImageViews.erase(logicalDevice.depthImageViews.begin() + i);
+                    pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, pLogicalDevice->depthImageViews[i], nullptr);
+                    pLogicalDevice->depthImageViews.erase(pLogicalDevice->depthImageViews.begin() + i);
                 }
-                logicalDevice.depthFormats.erase(logicalDevice.depthFormats.begin() + i);
+                pLogicalDevice->depthFormats.erase(pLogicalDevice->depthFormats.begin() + i);
                 
-                VkImageView depthImageView = logicalDevice.depthImageViews.size() ? logicalDevice.depthImageViews[0] : VK_NULL_HANDLE;
-                VkImage     depthImage     = logicalDevice.depthImageViews.size() ? logicalDevice.depthImages[0]     : VK_NULL_HANDLE;
-                VkFormat    depthFormat    = logicalDevice.depthImageViews.size() ? logicalDevice.depthFormats[0]    : VK_FORMAT_UNDEFINED;
+                VkImageView depthImageView = pLogicalDevice->depthImageViews.size() ? pLogicalDevice->depthImageViews[0] : VK_NULL_HANDLE;
+                VkImage     depthImage     = pLogicalDevice->depthImageViews.size() ? pLogicalDevice->depthImages[0]     : VK_NULL_HANDLE;
+                VkFormat    depthFormat    = pLogicalDevice->depthImageViews.size() ? pLogicalDevice->depthFormats[0]    : VK_FORMAT_UNDEFINED;
                 for(auto& it: swapchainMap)
                 {
                     LogicalSwapchain& logicalSwapchain = it.second;
-                    if(logicalSwapchain.logicalDevice.device == logicalDevice.device)
+                    if(logicalSwapchain.pLogicalDevice->device == pLogicalDevice->device)
                     {
                         if(logicalSwapchain.commandBuffers.size())
                         {
-                            logicalDevice.vkd.FreeCommandBuffers(logicalDevice.device, logicalDevice.commandPool, logicalSwapchain.commandBuffers.size(), logicalSwapchain.commandBuffers.data());
+                            pLogicalDevice->vkd.FreeCommandBuffers(pLogicalDevice->device, pLogicalDevice->commandPool, logicalSwapchain.commandBuffers.size(), logicalSwapchain.commandBuffers.data());
                             logicalSwapchain.commandBuffers.clear();
-                            logicalSwapchain.commandBuffers = allocateCommandBuffer(logicalDevice, logicalSwapchain.imageCount);
+                            logicalSwapchain.commandBuffers = allocateCommandBuffer(pLogicalDevice, logicalSwapchain.imageCount);
                             std::cout << "after allocateCommandBuffer " << logicalSwapchain.commandBuffers.size() << " for swapchain " << it.first << std::endl;
                             
-                            writeCommandBuffers(logicalDevice, logicalSwapchain.effects, depthImage, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
+                            writeCommandBuffers(pLogicalDevice, logicalSwapchain.effects, depthImage, depthImageView, depthFormat, logicalSwapchain.commandBuffers);
                             std::cout << "after write CommandBuffer" << std::endl;
                         }
                     }
@@ -705,7 +705,7 @@ namespace vkBasalt
             }
         }
         
-        logicalDevice.vkd.DestroyImage(logicalDevice.device, image, pAllocator);
+        pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, image, pAllocator);
     }
     
     
@@ -813,7 +813,7 @@ VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevic
     
     {
         vkBasalt::scoped_lock l(vkBasalt::globalLock);
-        return vkBasalt::deviceMap[vkBasalt::GetKey(device)].vkd.GetDeviceProcAddr(device, pName);
+        return vkBasalt::deviceMap[vkBasalt::GetKey(device)]->vkd.GetDeviceProcAddr(device, pName);
     }
 }
 

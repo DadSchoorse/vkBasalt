@@ -17,7 +17,7 @@
 
 namespace vkBasalt
 {
-    LutEffect::LutEffect(LogicalDevice logicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
+    LutEffect::LutEffect(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
         std::string lutFragmentFile = "lut.frag.spv";
@@ -64,7 +64,7 @@ namespace vkBasalt
         pFragmentSpecInfo = &fragmentSpecializationInfo;
         
         VkExtent3D lutImageExtent = {(uint32_t) height, (uint32_t) height, (uint32_t) height};
-        lutImage = createImages(logicalDevice,
+        lutImage = createImages(pLogicalDevice,
                                  1,
                                  lutImageExtent,
                                  VK_FORMAT_R8G8B8A8_UNORM,//TODO search for format and save it
@@ -72,7 +72,7 @@ namespace vkBasalt
                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                  lutMemory)[0];
         
-        uploadToImage(logicalDevice,
+        uploadToImage(pLogicalDevice,
                        lutImage,
                        lutImageExtent,
                        height*height*height*4,
@@ -83,9 +83,9 @@ namespace vkBasalt
             stbi_image_free(pixels);
         }
                        
-        lutImageView = createImageViews(logicalDevice, VK_FORMAT_R8G8B8A8_UNORM, std::vector<VkImage>(1,lutImage), VK_IMAGE_VIEW_TYPE_3D)[0];
+        lutImageView = createImageViews(pLogicalDevice, VK_FORMAT_R8G8B8A8_UNORM, std::vector<VkImage>(1,lutImage), VK_IMAGE_VIEW_TYPE_3D)[0];
         
-        lutDescriptorSetLayout = createImageSamplerDescriptorSetLayout(logicalDevice, 1);
+        lutDescriptorSetLayout = createImageSamplerDescriptorSetLayout(pLogicalDevice, 1);
         descriptorSetLayouts.push_back(lutDescriptorSetLayout);
         
         VkDescriptorPoolSize imagePoolSize;
@@ -94,11 +94,11 @@ namespace vkBasalt
 
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
         
-        lutDescriptorPool = createDescriptorPool(logicalDevice, poolSizes);
+        lutDescriptorPool = createDescriptorPool(pLogicalDevice, poolSizes);
 
-        init(logicalDevice, format,  imageExtent, inputImages, outputImages, pConfig);
+        init(pLogicalDevice, format,  imageExtent, inputImages, outputImages, pConfig);
         
-        lutDescriptorSet = allocateAndWriteImageSamplerDescriptorSets(logicalDevice,
+        lutDescriptorSet = allocateAndWriteImageSamplerDescriptorSets(pLogicalDevice,
                                                                          lutDescriptorPool,
                                                                          lutDescriptorSetLayout,
                                                                          {sampler},
@@ -106,16 +106,16 @@ namespace vkBasalt
     }
     LutEffect::~LutEffect()
     {
-        logicalDevice.vkd.DestroyImageView(logicalDevice.device, lutImageView, nullptr);
-        logicalDevice.vkd.DestroyImage(logicalDevice.device, lutImage, nullptr);
-        logicalDevice.vkd.DestroyDescriptorSetLayout(logicalDevice.device, lutDescriptorSetLayout, nullptr);
-        logicalDevice.vkd.DestroyDescriptorPool(logicalDevice.device, lutDescriptorPool, nullptr);
-        logicalDevice.vkd.FreeMemory(logicalDevice.device, lutMemory, nullptr);
+        pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, lutImageView, nullptr);
+        pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, lutImage, nullptr);
+        pLogicalDevice->vkd.DestroyDescriptorSetLayout(pLogicalDevice->device, lutDescriptorSetLayout, nullptr);
+        pLogicalDevice->vkd.DestroyDescriptorPool(pLogicalDevice->device, lutDescriptorPool, nullptr);
+        pLogicalDevice->vkd.FreeMemory(pLogicalDevice->device, lutMemory, nullptr);
         
     }
     void LutEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
-        logicalDevice.vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(lutDescriptorSet),0,nullptr);
+        pLogicalDevice->vkd.CmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout,1,1,&(lutDescriptorSet),0,nullptr);
         SimpleEffect::applyEffect(imageIndex, commandBuffer);
     }
 }

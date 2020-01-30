@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "vulkan_include.hpp"
 
@@ -12,7 +13,7 @@
 
 namespace vkBasalt
 {
-    VkRenderPass createRenderPass(LogicalDevice logicalDevice, VkFormat format);
+    VkRenderPass createRenderPass(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format);
 
 }
 
