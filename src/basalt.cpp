@@ -646,7 +646,7 @@ namespace vkBasalt
             for(auto& it: swapchainMap)
             {
                 LogicalSwapchain& logicalSwapchain = it.second;
-                if(logicalSwapchain.pLogicalDevice->device == pLogicalDevice->device)
+                if(logicalSwapchain.pLogicalDevice == pLogicalDevice)
                 {
                     if(logicalSwapchain.commandBuffers.size())
                     {
@@ -688,7 +688,7 @@ namespace vkBasalt
                 for(auto& it: swapchainMap)
                 {
                     LogicalSwapchain& logicalSwapchain = it.second;
-                    if(logicalSwapchain.pLogicalDevice->device == pLogicalDevice->device)
+                    if(logicalSwapchain.pLogicalDevice == pLogicalDevice)
                     {
                         if(logicalSwapchain.commandBuffers.size())
                         {
