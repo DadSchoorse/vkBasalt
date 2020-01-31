@@ -1047,58 +1047,65 @@ namespace vkBasalt
         }
     }
     
-    VkCompareOp ReshadeEffect::convertReshadeCompareOp(uint32_t compareOp)
+    VkCompareOp ReshadeEffect::convertReshadeCompareOp(reshadefx::pass_stencil_func compareOp)
     {
         switch(compareOp)
 		{
-		    case 1: return VK_COMPARE_OP_NEVER;
-		    case 2: return VK_COMPARE_OP_LESS;
-		    case 3: return VK_COMPARE_OP_EQUAL;
-		    case 4: return VK_COMPARE_OP_LESS_OR_EQUAL;
-		    case 5: return VK_COMPARE_OP_GREATER;
-		    case 6: return VK_COMPARE_OP_NOT_EQUAL;
-		    case 7: return VK_COMPARE_OP_GREATER_OR_EQUAL;
-		    case 8: return VK_COMPARE_OP_ALWAYS;
+		    case reshadefx::pass_stencil_func::never:         return VK_COMPARE_OP_NEVER;
+		    case reshadefx::pass_stencil_func::less:          return VK_COMPARE_OP_LESS;
+		    case reshadefx::pass_stencil_func::equal:         return VK_COMPARE_OP_EQUAL;
+		    case reshadefx::pass_stencil_func::less_equal:    return VK_COMPARE_OP_LESS_OR_EQUAL;
+		    case reshadefx::pass_stencil_func::greater:       return VK_COMPARE_OP_GREATER;
+		    case reshadefx::pass_stencil_func::not_equal:     return VK_COMPARE_OP_NOT_EQUAL;
+		    case reshadefx::pass_stencil_func::greater_equal: return VK_COMPARE_OP_GREATER_OR_EQUAL;
+		    case reshadefx::pass_stencil_func::always:        return VK_COMPARE_OP_ALWAYS;
 		    default: return VK_COMPARE_OP_ALWAYS;
 		}
     }
     
-    VkStencilOp ReshadeEffect::convertReshadeStencilOp(uint32_t stencilOp)
+    VkStencilOp ReshadeEffect::convertReshadeStencilOp(reshadefx::pass_stencil_op stencilOp)
     {
         switch(stencilOp)
         {
-	        case 0: return VK_STENCIL_OP_ZERO;
-	        case 1: return VK_STENCIL_OP_KEEP;
-	        //TODO what is 2?
-	        case 3: return VK_STENCIL_OP_REPLACE;
-	        case 4: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
-	        case 5: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
-	        case 6: return VK_STENCIL_OP_INVERT;
-	        case 7: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
-	        case 8: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+	        case reshadefx::pass_stencil_op::zero:     return VK_STENCIL_OP_ZERO;
+	        case reshadefx::pass_stencil_op::keep:     return VK_STENCIL_OP_KEEP;
+	        case reshadefx::pass_stencil_op::replace:  return VK_STENCIL_OP_REPLACE;
+	        case reshadefx::pass_stencil_op::incr_sat: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+	        case reshadefx::pass_stencil_op::decr_sat: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+	        case reshadefx::pass_stencil_op::invert:   return VK_STENCIL_OP_INVERT;
+	        case reshadefx::pass_stencil_op::incr:     return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+	        case reshadefx::pass_stencil_op::decr:     return VK_STENCIL_OP_DECREMENT_AND_WRAP;
 	        default: return VK_STENCIL_OP_KEEP;
 	    }
     }
     
-    VkBlendOp ReshadeEffect::convertReshadeBlendOp(uint32_t blendOp)
+    VkBlendOp ReshadeEffect::convertReshadeBlendOp(reshadefx::pass_blend_op blendOp)
     {
-        return static_cast<VkBlendOp>(blendOp - 1);
+        switch(blendOp)
+		{
+		    case reshadefx::pass_blend_op::add:          return VK_BLEND_OP_ADD;
+		    case reshadefx::pass_blend_op::subtract:     return VK_BLEND_OP_SUBTRACT;
+		    case reshadefx::pass_blend_op::rev_subtract: return VK_BLEND_OP_REVERSE_SUBTRACT;
+		    case reshadefx::pass_blend_op::min:          return VK_BLEND_OP_MIN;
+		    case reshadefx::pass_blend_op::max:          return VK_BLEND_OP_MAX;
+		    default: return VK_BLEND_OP_ADD;
+		}
     }
     
-    VkBlendFactor ReshadeEffect::convertReshadeBlendFactor(uint32_t blendFactor)
+    VkBlendFactor ReshadeEffect::convertReshadeBlendFactor(reshadefx::pass_blend_func blendFactor)
     {
         switch(blendFactor)
 		{
-		    case 0: return VK_BLEND_FACTOR_ZERO;
-		    case 1: return VK_BLEND_FACTOR_ONE;
-		    case 2: return VK_BLEND_FACTOR_SRC_COLOR;
-		    case 3: return VK_BLEND_FACTOR_SRC_ALPHA;
-		    case 4: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
-		    case 5: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		    case 6: return VK_BLEND_FACTOR_DST_ALPHA;
-		    case 7: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
-		    case 8: return VK_BLEND_FACTOR_DST_COLOR;
-		    case 9: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+		    case reshadefx::pass_blend_func::zero:          return VK_BLEND_FACTOR_ZERO;
+		    case reshadefx::pass_blend_func::one:           return VK_BLEND_FACTOR_ONE;
+		    case reshadefx::pass_blend_func::src_color:     return VK_BLEND_FACTOR_SRC_COLOR;
+		    case reshadefx::pass_blend_func::src_alpha:     return VK_BLEND_FACTOR_SRC_ALPHA;
+		    case reshadefx::pass_blend_func::inv_src_color: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+		    case reshadefx::pass_blend_func::inv_src_alpha: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		    case reshadefx::pass_blend_func::dst_alpha:     return VK_BLEND_FACTOR_DST_ALPHA;
+		    case reshadefx::pass_blend_func::inv_dst_alpha: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+		    case reshadefx::pass_blend_func::dst_color:     return VK_BLEND_FACTOR_DST_COLOR;
+		    case reshadefx::pass_blend_func::inv_dst_color: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
 		    default: return VK_BLEND_FACTOR_ZERO;
 		}
     }
