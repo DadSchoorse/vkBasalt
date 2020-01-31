@@ -80,10 +80,10 @@ namespace vkBasalt{
         
         void createReshadeModule();
         VkFormat      convertReshadeFormat(reshadefx::texture_format texFormat);
-        VkCompareOp   convertReshadeCompareOp(uint32_t compareOp);
-        VkStencilOp   convertReshadeStencilOp(uint32_t stencilOp);
-        VkBlendOp     convertReshadeBlendOp(uint32_t blendOp);
-        VkBlendFactor convertReshadeBlendFactor(uint32_t blendFactor);
+        VkCompareOp   convertReshadeCompareOp(reshadefx::pass_stencil_func compareOp);
+        VkStencilOp   convertReshadeStencilOp(reshadefx::pass_stencil_op stencilOp);
+        VkBlendOp     convertReshadeBlendOp(reshadefx::pass_blend_op blendOp);
+        VkBlendFactor convertReshadeBlendFactor(reshadefx::pass_blend_func blendFactor);
     };
 }
 
