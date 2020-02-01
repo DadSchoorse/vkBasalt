@@ -26,9 +26,12 @@ namespace vkBasalt
                        VkImage image,
                        VkExtent3D extent,
                        uint32_t size,
-                       const unsigned char* writeData);
+                       const unsigned char* writeData,
+                       uint32_t mipLevels = 1);
     
     void changeImageLayout(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<VkImage> images, uint32_t mipLevels = 1);
+    
+    void generateMipMaps(std::shared_ptr<LogicalDevice> pLogicalDevice, VkCommandBuffer commandBuffer, VkImage image, VkExtent3D extent, uint32_t mipLevels);
 }
 
 
