@@ -277,7 +277,7 @@ namespace vkBasalt
         memoryBarrier.subresourceRange.baseArrayLayer = 0;
         memoryBarrier.subresourceRange.layerCount = 1;
         
-        for(uint32_t i = 0; i < mipLevels; i++)
+        for(uint32_t i = 1; i < mipLevels; i++)
         {
             VkImageBlit imageBlit;
             
