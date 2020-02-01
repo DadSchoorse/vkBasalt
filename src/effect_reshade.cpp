@@ -81,10 +81,16 @@ namespace vkBasalt
         
         for(size_t i = 0; i < module.textures.size(); i++)
         {
+            textureMipLevels[module.textures[i].unique_name] = module.textures[i].levels;
+            textureExtents[module.textures[i].unique_name] = {module.textures[i].width, module.textures[i].height, 1};
             if(module.textures[i].semantic == "COLOR")
             {
                 textureImageViewsUNORM[module.textures[i].unique_name] = inputImageViewsUNORM;
+                renderImageViewsUNORM[module.textures[i].unique_name] = inputImageViewsUNORM;
+                
                 textureImageViewsSRGB[module.textures[i].unique_name] = inputImageViewsSRGB;
+                renderImageViewsSRGB[module.textures[i].unique_name] = inputImageViewsSRGB;
+                
                 textureFormatsUNORM[module.textures[i].unique_name] = inputOutputFormatUNORM;
                 textureFormatsSRGB[module.textures[i].unique_name] = inputOutputFormatSRGB;
                 continue;
@@ -92,7 +98,11 @@ namespace vkBasalt
             if(module.textures[i].semantic == "DEPTH")
             {
                 textureImageViewsUNORM[module.textures[i].unique_name] = inputImageViewsUNORM;
-                textureImageViewsSRGB[module.textures[i].unique_name] = inputImageViewsSRGB;//TODO Depth buffer access
+                renderImageViewsUNORM[module.textures[i].unique_name] = inputImageViewsUNORM;
+                
+                textureImageViewsSRGB[module.textures[i].unique_name] = inputImageViewsSRGB;
+                renderImageViewsSRGB[module.textures[i].unique_name] = inputImageViewsSRGB;
+                
                 textureFormatsUNORM[module.textures[i].unique_name] = inputOutputFormatUNORM;
                 textureFormatsSRGB[module.textures[i].unique_name] = inputOutputFormatSRGB;
                 continue;
@@ -107,20 +117,36 @@ namespace vkBasalt
                                    1,
                                    textureExtent,
                                    convertReshadeFormat(module.textures[i].format),
-                                   VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                                   VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                    textureMemory.back(),
                                    module.textures[i].levels);
                
-               textureImages[module.textures[i].unique_name] = images;
-               std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(),createImageViews(pLogicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images)[0]);
-               std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), createImageViews(pLogicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images)[0]);
-               textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
-               textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
-               textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
-               textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
-               changeImageLayout(pLogicalDevice, images, module.textures[i].levels);
-               continue;
+                textureImages[module.textures[i].unique_name] = images;
+                std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(),createImageViews(pLogicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images,
+                                                                                                        VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT, module.textures[i].levels)[0]);
+                std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), createImageViews(pLogicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images,
+                                                                                                        VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT, module.textures[i].levels)[0]);
+
+                textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
+                textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
+
+                if(module.textures[i].levels > 1)
+                {
+                    
+                    renderImageViewsUNORM[module.textures[i].unique_name] = std::vector<VkImageView>(inputImages.size(),createImageViews(pLogicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images)[0]);;
+                    renderImageViewsSRGB[module.textures[i].unique_name] = std::vector<VkImageView>(inputImages.size(), createImageViews(pLogicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images)[0]);;
+                }
+                else
+                {
+                    renderImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
+                    renderImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
+                }
+
+                textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
+                textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
+                changeImageLayout(pLogicalDevice, images, module.textures[i].levels);
+                continue;
             }
             else
             {
@@ -138,8 +164,13 @@ namespace vkBasalt
                 std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
                 imageViews = createImageViews(pLogicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT, module.textures[i].levels);
                 std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
+                
                 textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
                 textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
+                
+                renderImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
+                renderImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
+                
                 textureFormatsUNORM[module.textures[i].unique_name] = convertToUNORM(convertReshadeFormat(module.textures[i].format));
                 textureFormatsSRGB[module.textures[i].unique_name] = convertToSRGB(convertReshadeFormat(module.textures[i].format));
                 
@@ -311,6 +342,7 @@ namespace vkBasalt
             std::vector<VkAttachmentDescription>             attachmentDescriptions;
             std::vector<VkPipelineColorBlendAttachmentState> attachmentBlendStates;
             std::vector<std::vector<VkImageView>>            attachmentImageViews;
+            std::vector<std::string>                         currentRenderTargets;
             
             for(int i = 0; i < 8; i++)
             {
@@ -361,11 +393,14 @@ namespace vkBasalt
                 
                 attachmentBlendStates.push_back(colorBlendAttachment);
                 
-                attachmentImageViews.push_back(pass.srgb_write_enable ? textureImageViewsSRGB[target] : textureImageViewsUNORM[target]);
-                
-                
-                
+                attachmentImageViews.push_back(pass.srgb_write_enable ? renderImageViewsSRGB[target] : renderImageViewsUNORM[target]);
+                if(target != "")
+                {
+                    currentRenderTargets.push_back(target);
+                }
             }
+            
+            renderTargets.push_back(currentRenderTargets);
             
             VkRect2D scissor;
             scissor.offset = {0,0};
@@ -852,6 +887,11 @@ namespace vkBasalt
                 }
                 backBufferNext = !backBufferNext;
             }
+            
+            for(auto& renderTarget : renderTargets[i])
+            {
+                generateMipMaps(pLogicalDevice, commandBuffer, textureImages[renderTarget][0], textureExtents[renderTarget], textureMipLevels[renderTarget]);
+            }
         }
         pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0, nullptr,0, nullptr,1, &secondBarrier);
         secondBarrier.image = outputImages[imageIndex];
@@ -922,6 +962,21 @@ namespace vkBasalt
             }
         }
         for(auto& it: textureImageViewsUNORM)
+        {
+            for(auto imageView: it.second)
+            {
+                imageViewSet.insert(imageView);
+            }
+        }
+        
+        for(auto& it: renderImageViewsSRGB)
+        {
+            for(auto imageView: it.second)
+            {
+                imageViewSet.insert(imageView);
+            }
+        }
+        for(auto& it: renderImageViewsUNORM)
         {
             for(auto imageView: it.second)
             {

@@ -40,8 +40,12 @@ namespace vkBasalt{
         std::unordered_map<std::string, std::vector<VkImage>> textureImages;
         std::unordered_map<std::string, std::vector<VkImageView>> textureImageViewsUNORM;
         std::unordered_map<std::string, std::vector<VkImageView>> textureImageViewsSRGB;
+        std::unordered_map<std::string, std::vector<VkImageView>> renderImageViewsSRGB;
+        std::unordered_map<std::string, std::vector<VkImageView>> renderImageViewsUNORM;
         std::unordered_map<std::string, VkFormat> textureFormatsUNORM;
         std::unordered_map<std::string, VkFormat> textureFormatsSRGB;
+        std::unordered_map<std::string, uint32_t> textureMipLevels;
+        std::unordered_map<std::string, VkExtent3D> textureExtents;
         std::vector<VkDescriptorSet> inputDescriptorSets;
         std::vector<VkDescriptorSet> outputDescriptorSets;
         std::vector<VkDescriptorSet> backBufferDescriptorSets;
@@ -51,6 +55,7 @@ namespace vkBasalt{
         VkShaderModule shaderModule;
         VkDescriptorPool descriptorPool;
         std::vector<VkRenderPass> renderPasses;
+        std::vector<std::vector<std::string>> renderTargets;
         std::vector<VkRenderPassBeginInfo> renderPassBeginInfos;
         VkPipelineLayout pipelineLayout;
         std::vector<VkPipeline> graphicsPipelines;
