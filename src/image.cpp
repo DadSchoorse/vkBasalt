@@ -87,7 +87,8 @@ namespace vkBasalt
                        VkImage image,
                        VkExtent3D extent,
                        uint32_t size,
-                       const unsigned char* writeData)
+                       const unsigned char* writeData,
+                       uint32_t mipLevels)
     {
         
         VkBuffer stagingBuffer;
@@ -174,6 +175,8 @@ namespace vkBasalt
             1, &memoryBarrier
         );
         
+        generateMipMaps(pLogicalDevice, commandBuffer, image, extent, mipLevels);
+        
         pLogicalDevice->vkd.EndCommandBuffer(commandBuffer);
 
         VkSubmitInfo submitInfo = {};
@@ -246,5 +249,115 @@ namespace vkBasalt
         pLogicalDevice->vkd.QueueWaitIdle(pLogicalDevice->queue);
 
         pLogicalDevice->vkd.FreeCommandBuffers(pLogicalDevice->device, pLogicalDevice->commandPool, 1, &commandBuffer);
+    }
+    
+    void generateMipMaps(std::shared_ptr<LogicalDevice> pLogicalDevice, VkCommandBuffer commandBuffer, VkImage image, VkExtent3D extent, uint32_t mipLevels)
+    {
+        if(mipLevels < 2)
+        {
+            return;
+        }
+        int32_t width  = extent.width;
+        int32_t height = extent.height;
+        int32_t depth  = extent.depth;
+        
+        VkImageMemoryBarrier memoryBarrier;
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        memoryBarrier.pNext = nullptr;
+        memoryBarrier.image = image;
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        memoryBarrier.srcAccessMask = 0;
+        memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        memoryBarrier.subresourceRange.baseMipLevel = 0;
+        memoryBarrier.subresourceRange.levelCount = 1;
+        memoryBarrier.subresourceRange.baseArrayLayer = 0;
+        memoryBarrier.subresourceRange.layerCount = 1;
+        
+        for(uint32_t i = 0; i < mipLevels; i++)
+        {
+            VkImageBlit imageBlit;
+            
+            imageBlit.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageBlit.srcSubresource.mipLevel       = i - 1;
+            imageBlit.srcSubresource.baseArrayLayer = 0;
+            imageBlit.srcSubresource.layerCount     = 1;
+            imageBlit.srcOffsets[0] = {0, 0, 0};
+            imageBlit.srcOffsets[1] = {width, height, depth};
+            
+            width  = (width  == 1) ? 1 : width  / 2;
+            height = (height == 1) ? 1 : height / 2;
+            depth  = (depth  == 1) ? 1 : depth  / 2;
+            
+            imageBlit.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageBlit.dstSubresource.mipLevel       = i;
+            imageBlit.dstSubresource.baseArrayLayer = 0;
+            imageBlit.dstSubresource.layerCount     = 1;
+            imageBlit.dstOffsets[0] = {0, 0, 0};
+            imageBlit.dstOffsets[1] = {width, height, depth};
+            
+            memoryBarrier.subresourceRange.baseMipLevel = i - 1;
+            memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            memoryBarrier.srcAccessMask = 0;
+            memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            
+            pLogicalDevice->vkd.CmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &memoryBarrier);
+                
+            memoryBarrier.subresourceRange.baseMipLevel = i;
+            memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            memoryBarrier.srcAccessMask = 0;
+            memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            
+            pLogicalDevice->vkd.CmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &memoryBarrier);
+                
+            pLogicalDevice->vkd.CmdBlitImage(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlit, VK_FILTER_LINEAR);
+            
+            memoryBarrier.subresourceRange.baseMipLevel = i - 1;
+            memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            memoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            
+            pLogicalDevice->vkd.CmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &memoryBarrier);
+                
+            memoryBarrier.subresourceRange.baseMipLevel = i;
+            memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            memoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            
+            pLogicalDevice->vkd.CmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &memoryBarrier);
+            
+            
+        }
     }
 }
