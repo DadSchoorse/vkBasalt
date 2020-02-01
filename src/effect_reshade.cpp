@@ -129,13 +129,14 @@ namespace vkBasalt
                                    1,
                                    textureExtent,
                                    convertReshadeFormat(module.textures[i].format),//TODO search for format and save it
-                                   VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                                   VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                                   textureMemory.back());
+                                   textureMemory.back(),
+                                   module.textures[i].levels);
                 textureImages[module.textures[i].unique_name] = images;
-                std::vector<VkImageView> imageViews = createImageViews(pLogicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images);
+                std::vector<VkImageView> imageViews = createImageViews(pLogicalDevice, convertToUNORM(convertReshadeFormat(module.textures[i].format)), images, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT, module.textures[i].levels);
                 std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
-                imageViews = createImageViews(pLogicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images);
+                imageViews = createImageViews(pLogicalDevice, convertToSRGB(convertReshadeFormat(module.textures[i].format)), images, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT, module.textures[i].levels);
                 std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
                 textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
                 textureImageViewsSRGB[module.textures[i].unique_name] = imageViewsSRGB;
@@ -209,7 +210,8 @@ namespace vkBasalt
                        images[0],
                        textureExtent,
                        size,
-                       resizedPixels.size() ? resizedPixels.data() : pixels);
+                       resizedPixels.size() ? resizedPixels.data() : pixels,
+                       module.textures[i].levels);
                 stbi_image_free(pixels);
             }
         }
