@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImageView> createImageViews(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType, VkImageAspectFlags aspectMask)
+    std::vector<VkImageView> createImageViews(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format, std::vector<VkImage> images, VkImageViewType viewType, VkImageAspectFlags aspectMask, uint32_t mipLevels)
     {
         std::vector<VkImageView> imageViews(images.size());
         
@@ -20,7 +20,7 @@ namespace vkBasalt
         imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
         imageViewCreateInfo.subresourceRange.aspectMask = aspectMask;
         imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-        imageViewCreateInfo.subresourceRange.levelCount = 1;
+        imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
         imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
         imageViewCreateInfo.subresourceRange.layerCount = 1;
         
