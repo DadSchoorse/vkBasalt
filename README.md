@@ -101,5 +101,24 @@ reshadeTexturePath = /home/user/reshade-shaders/Textures
 reshadeIncludePath = /home/user/reshade-shaders/Shaders
 ```
 
+## FAQ
+
+#### Why is it called vkBasalt?
+It's a joke: vulkan post processing &#8594; after vulcan &#8594; basalt
+#### Will vkBasalt get me banned?
+Maybe. To my knowledge this hasn't happened yet but don't blame me if your frog dies.
+#### Will there be a openGl version?
+No. I don't know anything about openGl and I don't want to either. Also openGl has no layer system like vulkan.
+#### Will there be a GUI in the future?
+Maybe, but not soon.
+#### So is vkBasalt just a reshade port for linux?
+Not really, most of the code was written from scratch. vkBasalt directly uses reshade source code for the shader compiler (thanks [@crosire](https://github.com/crosire)), but that's about it.
+#### Does every reshade shader work?
+No. Shaders that need multiple techniques do not work, there might still be problems with stencil and blending and depth buffer access isn't ready yet.
+#### You said that "depth buffer access isn't ready yet", what does this mean?
+There is a wip version that you can enable with `depthCapture = on`. It will lead to many problems especially on non nvidia hardware. Also the selected depth buffer isn't always the one you would want.
+#### Is there a way to change settings for reshade shaders
+There is some support for it [#46](https://github.com/DadSchoorse/vkBasalt/pull/46). One easy way so to simply edit the shader file.
+
 ## Previews
 [YouTube](https://www.youtube.com/watch?v=hSlaGkbTRi8)
