@@ -105,6 +105,8 @@ reshadeIncludePath = /home/user/reshade-shaders/Shaders
 
 #### Why is it called vkBasalt?
 It's a joke: vulkan post processing &#8594; after vulcan &#8594; basalt
+#### Does vkBasalt work with dxvk and vkd3d?
+Yes.
 #### Will vkBasalt get me banned?
 Maybe. To my knowledge this hasn't happened yet but don't blame me if your frog dies.
 #### Will there be a openGl version?
