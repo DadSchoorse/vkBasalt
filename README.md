@@ -1,12 +1,14 @@
 # vkBasalt
 vkBasalt is a Vulkan post processing layer to enhance the visual graphics of games.
 
-Currently, the only effects are:
+Currently, the build in effects are:
 - Contrast Adaptive Sharpening 
 - Fast Approximate Anti-Aliasing
 - Enhanced Subpixel Morphological Anti-Aliasing
 - Deband/Dithering
 - 3D color LookUp Table
+
+It is also possible to use Reshade Fx shaders.
 
 ## Disclaimer
 This is one of my first projects ever, so expect it to have bugs. Use it at your own risk.
@@ -24,7 +26,7 @@ make install
 Before building, you will need:
 - Vulkan SDK
 - glslangValidator - To compile the shader
-- GCC >=7
+- GCC >=9
 
 See below on how to install them.
 
@@ -85,6 +87,19 @@ The config file will be searched for in the following locations:
 * `/usr/local/share/vkBasalt/vkBasalt.conf`
 
 If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the values there.
+
+#### Reshade Fx shaders
+
+To run reshade fx shaders e.g. shaders from the [reshade repo](https://github.com/crosire/reshade-shaders), you have to set `reshadeTexturePath` and `reshadeIncludePath` to the matching dirctories from the repo. To then use a specific shader you need to set a custom effect name to the shader path and then add that effect name to `effects` like every other effect.
+
+```ini
+effects = colourfulness:denoise
+
+colourfulness = /home/user/reshade-shaders/Shaders/Colourfulness.fx
+denoise = /home/user/reshade-shaders/Shaders/Denoise.fx
+reshadeTexturePath = /home/user/reshade-shaders/Textures
+reshadeIncludePath = /home/user/reshade-shaders/Shaders
+```
 
 ## Previews
 [YouTube](https://www.youtube.com/watch?v=hSlaGkbTRi8)
