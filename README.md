@@ -48,7 +48,7 @@ sudo emerge -v dev-util/glslang dev-util/vulkan-headers dev-util/vulkan-tools me
 ## Build
 To build and install the program, execute:
 ```
-git clone https://github.com/DadSchoorse/vkBasalt.git ~/vkBasalt
+git clone --recurse-submodules https://github.com/DadSchoorse/vkBasalt.git ~/vkBasalt
 cd ~/vkBasalt
 make
 ```
