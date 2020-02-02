@@ -16,7 +16,7 @@ This is one of my first projects ever, so expect it to have bugs. Use it at your
 ## Install
 **There are binaries attached to each release, so manually building from source is not required**
 
-Once you have the binearies, either by downloading and unpacking them or by following the build instructions below, execute:
+Once you have the binaries, either by downloading and unpacking them or by following the build instructions below, execute:
 ```
 make install
 ```
