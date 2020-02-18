@@ -3,16 +3,16 @@ src_directory = include_directories('.')
 vulkan = dependency('vulkan')
 
 reshade_dir = join_paths('..', 'reshade')
-reshade_spirv_include_dir = include_directories(reshade_dir / 'deps/spirv/include/spirv/unified1')
+reshade_spirv_include_dir = include_directories(join_paths(reshade_dir, 'deps/spirv/include/spirv/unified1'))
 reshade_effects = static_library(
   'reshade-effects',
   [
-    reshade_dir / 'source/effect_lexer.cpp',
-    reshade_dir / 'source/effect_expression.cpp',
-    reshade_dir / 'source/effect_preprocessor.cpp',
-    reshade_dir / 'source/effect_codegen_spirv.cpp',
-    reshade_dir / 'source/effect_symbol_table.cpp',
-    reshade_dir / 'source/effect_parser.cpp'
+    join_paths(reshade_dir, 'source/effect_lexer.cpp'),
+    join_paths(reshade_dir, 'source/effect_expression.cpp'),
+    join_paths(reshade_dir, 'source/effect_preprocessor.cpp'),
+    join_paths(reshade_dir, 'source/effect_codegen_spirv.cpp'),
+    join_paths(reshade_dir, 'source/effect_symbol_table.cpp'),
+    join_paths(reshade_dir, 'source/effect_parser.cpp')
   ],
   include_directories: [reshade_spirv_include_dir],
   cpp_args: ['-Wno-missing-field-initializers', '-Wno-switch', '-Wno-unknown-pragmas', '-Wno-char-subscripts'],
