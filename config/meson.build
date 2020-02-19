@@ -2,6 +2,7 @@ conf_data = configuration_data()
 conf_data.set('LIBPATH', join_paths(get_option('prefix'),
                                     get_option('libdir'),
                                     'lib@0@.so'.format(meson.project_name().to_lower())))
+conf_data.set('LAYER_SUFFIX', target_machine.cpu_family())
 
 configure_file(input: '@0@.json.in'.format(meson.project_name()),
                output: '@0@.@1@.json'.format(meson.project_name(), target_machine.cpu_family()),

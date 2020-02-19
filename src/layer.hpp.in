@@ -1,0 +1,3 @@
+#pragma once
+
+#define VKBASALT_POSTPROCESS_LAYER_NAME "VK_LAYER_VKBASALT_PostProcess_@LAYER_SUFFIX@"

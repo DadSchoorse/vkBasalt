@@ -19,6 +19,14 @@ reshade_effects = static_library(
   pic: true
 )
 
+conf_data = configuration_data()
+conf_data.set('LAYER_SUFFIX', target_machine.cpu_family())
+configure_file(
+  input: 'layer.hpp.in',
+  output: 'layer.hpp',
+  configuration: conf_data,
+)
+
 vkbasalt = shared_library(
   meson.project_name().to_lower(),
   [

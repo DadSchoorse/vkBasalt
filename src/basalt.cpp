@@ -26,6 +26,7 @@
 #include "fake_swapchain.hpp"
 #include "renderpass.hpp"
 #include "format.hpp"
+#include "layer.hpp"
 
 #include "effect.hpp"
 #include "effect_fxaa.hpp"
@@ -719,11 +720,7 @@ namespace vkBasalt
 
         if(pProperties)
         {
-            #ifdef __x86_64__
-            std::strcpy(pProperties->layerName, "VK_LAYER_VKBASALT_PostProcess64");
-            #else
-            std::strcpy(pProperties->layerName, "VK_LAYER_VKBASALT_PostProcess32");
-            #endif
+            std::strcpy(pProperties->layerName, VKBASALT_POSTPROCESS_LAYER_NAME);
             std::strcpy(pProperties->description, "a post processing layer");
             pProperties->implementationVersion = 1;
             pProperties->specVersion = VK_API_VERSION_1_0;
@@ -741,7 +738,7 @@ namespace vkBasalt
     VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceExtensionProperties(
         const char *pLayerName, uint32_t *pPropertyCount, VkExtensionProperties *pProperties)
     {
-        if(pLayerName == NULL || (std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess32") && std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess64")))
+        if(pLayerName == NULL || std::strcmp(pLayerName, VKBASALT_POSTPROCESS_LAYER_NAME))
         {
             return VK_ERROR_LAYER_NOT_PRESENT;
         }
