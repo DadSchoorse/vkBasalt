@@ -20,7 +20,7 @@ namespace vkBasalt
         for(uint32_t i = 0; i < count; i++)
         {
             //initialize dispatch tables for commandBuffers since the are dispatchable objects
-            *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(pLogicalDevice->device);
+            initializeDispatchTable(commandBuffers[i], pLogicalDevice->device);
         }
         
         return commandBuffers;

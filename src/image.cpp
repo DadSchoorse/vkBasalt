@@ -115,7 +115,7 @@ namespace vkBasalt
         VkCommandBuffer commandBuffer;
         pLogicalDevice->vkd.AllocateCommandBuffers(pLogicalDevice->device, &allocInfo, &commandBuffer);
         //initialize dispatch table for commandBuffer since it is a dispatchable object
-        *reinterpret_cast<void**>(commandBuffer) = *reinterpret_cast<void**>(pLogicalDevice->device);
+        initializeDispatchTable(commandBuffer, pLogicalDevice->device);
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -203,7 +203,7 @@ namespace vkBasalt
         VkCommandBuffer commandBuffer;
         pLogicalDevice->vkd.AllocateCommandBuffers(pLogicalDevice->device, &allocInfo, &commandBuffer);
         //initialize dispatch table for commandBuffer since it is a dispatchable object
-        *reinterpret_cast<void**>(commandBuffer) = *reinterpret_cast<void**>(pLogicalDevice->device);
+        initializeDispatchTable(commandBuffer, pLogicalDevice->device);
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
