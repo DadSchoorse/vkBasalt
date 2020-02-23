@@ -15,9 +15,13 @@
 namespace vkBasalt
 {
     VkSampler createSampler(std::shared_ptr<LogicalDevice> pLogicalDevice);
+
     VkSampler createReshadeSampler(std::shared_ptr<LogicalDevice> pLogicalDevice, const reshadefx::sampler_info& samplerInfo);
+
     VkSamplerAddressMode convertReshadeAddressMode(const reshadefx::texture_address_mode& addressMode);
-    void convertReshadeFilter(const reshadefx::texture_filter& textureFilter, VkFilter& minFilter, VkFilter& magFilter, VkSamplerMipmapMode& mipmapMode);
-}
+
+    void
+    convertReshadeFilter(const reshadefx::texture_filter& textureFilter, VkFilter& minFilter, VkFilter& magFilter, VkSamplerMipmapMode& mipmapMode);
+} // namespace vkBasalt
 
 #endif // SAMPLER_HPP_INCLUDED

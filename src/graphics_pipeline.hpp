@@ -13,20 +13,21 @@
 
 namespace vkBasalt
 {
-    VkPipelineLayout createGraphicsPipelineLayout(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
+    VkPipelineLayout createGraphicsPipelineLayout(std::shared_ptr<LogicalDevice>     pLogicalDevice,
+                                                  std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
+
     VkPipeline createGraphicsPipeline(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                                      VkShaderModule vertexModule,
-                                      VkSpecializationInfo* vertexSpecializationInfo,
-                                      std::string vertexEntryPoint,
-                                      VkShaderModule fragmentModule,
-                                      VkSpecializationInfo* fragmentSpecializationInfo,
-                                      std::string fragmentEntryPoint,
-                                      VkExtent2D extent,
-                                      VkRenderPass renderPass,
-                                      VkPipelineLayout pipelineLayout,
-                                      bool flip = false);
+                                      VkShaderModule                 vertexModule,
+                                      VkSpecializationInfo*          vertexSpecializationInfo,
+                                      std::string                    vertexEntryPoint,
+                                      VkShaderModule                 fragmentModule,
+                                      VkSpecializationInfo*          fragmentSpecializationInfo,
+                                      std::string                    fragmentEntryPoint,
+                                      VkExtent2D                     extent,
+                                      VkRenderPass                   renderPass,
+                                      VkPipelineLayout               pipelineLayout,
+                                      bool                           flip = false);
 
-}
-
+} // namespace vkBasalt
 
 #endif // GRAPHICS_PIPELINE_HPP_INCLUDED

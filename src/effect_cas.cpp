@@ -13,35 +13,38 @@
 
 namespace vkBasalt
 {
-    CasEffect::CasEffect(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig)
+    CasEffect::CasEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
+                         VkFormat                          format,
+                         VkExtent2D                        imageExtent,
+                         std::vector<VkImage>              inputImages,
+                         std::vector<VkImage>              outputImages,
+                         std::shared_ptr<vkBasalt::Config> pConfig)
     {
         std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
-        std::string casFragmentFile = "cas.frag.spv";
+        std::string casFragmentFile    = "cas.frag.spv";
 
         float sharpness = std::stod(pConfig->getOption("casSharpness", "0.4"));
 
-        vertexCode = readFile(fullScreenRectFile);
+        vertexCode   = readFile(fullScreenRectFile);
         fragmentCode = readFile(casFragmentFile);
-
 
         VkSpecializationMapEntry sharpnessMapEntry;
         sharpnessMapEntry.constantID = 0;
-        sharpnessMapEntry.offset = 0;
-        sharpnessMapEntry.size = sizeof(float);
+        sharpnessMapEntry.offset     = 0;
+        sharpnessMapEntry.size       = sizeof(float);
 
         VkSpecializationInfo fragmentSpecializationInfo;
         fragmentSpecializationInfo.mapEntryCount = 1;
-        fragmentSpecializationInfo.pMapEntries = &sharpnessMapEntry;
-        fragmentSpecializationInfo.dataSize = sizeof(float);
-        fragmentSpecializationInfo.pData = &sharpness;
+        fragmentSpecializationInfo.pMapEntries   = &sharpnessMapEntry;
+        fragmentSpecializationInfo.dataSize      = sizeof(float);
+        fragmentSpecializationInfo.pData         = &sharpness;
 
-        pVertexSpecInfo = nullptr;
+        pVertexSpecInfo   = nullptr;
         pFragmentSpecInfo = &fragmentSpecializationInfo;
 
-        init(pLogicalDevice, format,  imageExtent, inputImages, outputImages, pConfig);
+        init(pLogicalDevice, format, imageExtent, inputImages, outputImages, pConfig);
     }
     CasEffect::~CasEffect()
     {
-
     }
-}
+} // namespace vkBasalt

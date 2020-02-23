@@ -11,14 +11,24 @@
 
 #include "logical_device.hpp"
 
-namespace vkBasalt{
+namespace vkBasalt
+{
     VkDescriptorPool createDescriptorPool(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<VkDescriptorPoolSize>& poolSizes);
 
     VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(std::shared_ptr<LogicalDevice> pLogicalDevice);
-    VkDescriptorSet writeBufferDescriptorSet(std::shared_ptr<LogicalDevice> pLogicalDevice, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkBuffer buffer);
-    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count);
-    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(std::shared_ptr<LogicalDevice> pLogicalDevice, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkSampler> samplers, std::vector<std::vector<VkImageView>> imageViewsVectors);
-}
 
+    VkDescriptorSet writeBufferDescriptorSet(std::shared_ptr<LogicalDevice> pLogicalDevice,
+                                             VkDescriptorPool               descriptorPool,
+                                             VkDescriptorSetLayout          descriptorSetLayout,
+                                             VkBuffer                       buffer);
+
+    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count);
+
+    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(std::shared_ptr<LogicalDevice>        pLogicalDevice,
+                                                                            VkDescriptorPool                      descriptorPool,
+                                                                            VkDescriptorSetLayout                 descriptorSetLayout,
+                                                                            std::vector<VkSampler>                samplers,
+                                                                            std::vector<std::vector<VkImageView>> imageViewsVectors);
+} // namespace vkBasalt
 
 #endif // DESCRIPTOR_SET_HPP_INCLUDED

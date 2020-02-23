@@ -7,11 +7,11 @@
 namespace vkBasalt
 {
     void addUniqueCString(std::vector<const char*>& stringVector, const char* addString);
-    
+
     enum class Color
     {
         defaultColor,
-        
+
         black,
         red,
         green,
@@ -21,8 +21,8 @@ namespace vkBasalt
         cyan,
         white
     };
-    
+
     void outputInColor(std::string output, Color foreground = Color::defaultColor, Color background = Color::defaultColor);
-}
+} // namespace vkBasalt
 
 #endif // UTIL_HPP_INCLUDED
