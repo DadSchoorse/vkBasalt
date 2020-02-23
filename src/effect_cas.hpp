@@ -13,14 +13,19 @@
 #include "effect_simple.hpp"
 #include "config.hpp"
 
-namespace vkBasalt{
+namespace vkBasalt
+{
     class CasEffect : public SimpleEffect
     {
     public:
-        CasEffect(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
+        CasEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
+                  VkFormat                          format,
+                  VkExtent2D                        imageExtent,
+                  std::vector<VkImage>              inputImages,
+                  std::vector<VkImage>              outputImages,
+                  std::shared_ptr<vkBasalt::Config> pConfig);
         ~CasEffect();
     };
-}
-
+} // namespace vkBasalt
 
 #endif // EFFECT_CAS_HPP_INCLUDED

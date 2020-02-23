@@ -13,14 +13,19 @@
 #include "effect_simple.hpp"
 #include "config.hpp"
 
-namespace vkBasalt{
+namespace vkBasalt
+{
     class DebandEffect : public SimpleEffect
     {
     public:
-        DebandEffect(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format,  VkExtent2D imageExtent, std::vector<VkImage> inputImages, std::vector<VkImage> outputImages, std::shared_ptr<vkBasalt::Config> pConfig);
+        DebandEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
+                     VkFormat                          format,
+                     VkExtent2D                        imageExtent,
+                     std::vector<VkImage>              inputImages,
+                     std::vector<VkImage>              outputImages,
+                     std::shared_ptr<vkBasalt::Config> pConfig);
         ~DebandEffect();
     };
-}
-
+} // namespace vkBasalt
 
 #endif // EFFECT_DEBAND_HPP_INCLUDED

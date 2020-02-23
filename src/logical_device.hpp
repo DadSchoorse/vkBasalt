@@ -25,7 +25,6 @@ namespace vkBasalt
         std::vector<VkFormat>        depthFormats;
         std::vector<VkImageView>     depthImageViews;
     };
-}
-
+} // namespace vkBasalt
 
 #endif // LOGICAL_DEVICE_HPP_INCLUDED

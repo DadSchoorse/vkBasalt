@@ -9,7 +9,8 @@
 
 #include "vulkan_include.hpp"
 
-namespace vkBasalt{
+namespace vkBasalt
+{
     class Effect
     {
     public:
@@ -17,9 +18,9 @@ namespace vkBasalt{
         void virtual updateEffect(){};
         void virtual useDepthImage(VkImageView depthImageView){};
         virtual ~Effect(){};
+
     private:
     };
-}
-
+} // namespace vkBasalt
 
 #endif // EFFECT_HPP_INCLUDED

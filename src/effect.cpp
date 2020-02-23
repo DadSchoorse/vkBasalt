@@ -1,5 +1,6 @@
 #include "effect.hpp"
 
-namespace vkBasalt{
+namespace vkBasalt
+{
 
 }

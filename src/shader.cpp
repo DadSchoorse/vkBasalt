@@ -3,21 +3,22 @@
 #include <array>
 #include <filesystem>
 
-namespace vkBasalt{
-    std::vector<char> readFile(const std::string &filename)
+namespace vkBasalt
+{
+    std::vector<char> readFile(const std::string& filename)
     {
         static std::string shaderDir;
 
-        if (shaderDir.empty()) {
+        if (shaderDir.empty())
+        {
             // Custom shader directory path
-            const char* tmpShaderEnv = std::getenv("VKBASALT_SHADER_PATH");
+            const char* tmpShaderEnv    = std::getenv("VKBASALT_SHADER_PATH");
             std::string customShaderDir = tmpShaderEnv ? std::string(tmpShaderEnv) : "";
 
             // User shader directory path
             const char* tmpHomeEnv = std::getenv("XDG_DATA_HOME");
-            std::string userShaderDir = tmpHomeEnv
-                ? std::string(tmpHomeEnv) + "/vkBasalt/shader"
-                : std::string(std::getenv("HOME")) + "/.local/share/vkBasalt/shader";
+            std::string userShaderDir =
+                tmpHomeEnv ? std::string(tmpHomeEnv) + "/vkBasalt/shader" : std::string(std::getenv("HOME")) + "/.local/share/vkBasalt/shader";
 
             // Allowed config paths
             const std::array<std::string, 4> shaderPath = {
@@ -27,8 +28,10 @@ namespace vkBasalt{
                 "/usr/local/share/vkBasalt/shader", // system-wide shaders (alternative)
             };
 
-            for(const auto& sDir: shaderPath){
-                if (!std::filesystem::is_directory(sDir)) continue;
+            for (const auto& sDir : shaderPath)
+            {
+                if (!std::filesystem::is_directory(sDir))
+                    continue;
 
                 std::cout << sDir << std::endl;
                 shaderDir = sDir + "/";
@@ -36,8 +39,8 @@ namespace vkBasalt{
             }
         }
         std::ifstream file;
-        
-        if(filename[0]!='/')
+
+        if (filename[0] != '/')
         {
             file = std::ifstream(shaderDir + filename, std::ios::binary | std::ios::ate);
         }
@@ -45,13 +48,13 @@ namespace vkBasalt{
         {
             file = std::ifstream(filename, std::ios::binary | std::ios::ate);
         }
-        
-        if(file)
+
+        if (file)
         {
-            size_t fileSize = (size_t) file.tellg();
+            size_t            fileSize = (size_t) file.tellg();
             std::vector<char> fileBuffer(fileSize);
             file.seekg(0);
-            file.read(fileBuffer.data(),fileSize);
+            file.read(fileBuffer.data(), fileSize);
             file.close();
             return fileBuffer;
         }
@@ -61,18 +64,17 @@ namespace vkBasalt{
         }
     }
 
-
-    void createShaderModule(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<char> &code, VkShaderModule *shaderModule)
+    void createShaderModule(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<char>& code, VkShaderModule* shaderModule)
     {
         VkShaderModuleCreateInfo shaderCreateInfo;
 
-        shaderCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderCreateInfo.pNext = nullptr;
-        shaderCreateInfo.flags = 0;
+        shaderCreateInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        shaderCreateInfo.pNext    = nullptr;
+        shaderCreateInfo.flags    = 0;
         shaderCreateInfo.codeSize = code.size();
-        shaderCreateInfo.pCode = (uint32_t*) code.data();
+        shaderCreateInfo.pCode    = (uint32_t*) code.data();
 
         VkResult result = pLogicalDevice->vkd.CreateShaderModule(pLogicalDevice->device, &shaderCreateInfo, nullptr, shaderModule);
         ASSERT_VULKAN(result);
     }
-}
+} // namespace vkBasalt
