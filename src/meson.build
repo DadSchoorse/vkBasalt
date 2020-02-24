@@ -3,7 +3,13 @@ src_directory = include_directories('.')
 vulkan = dependency('vulkan')
 
 reshade_dir = join_paths('..', 'reshade')
-reshade_spirv_include_dir = include_directories(join_paths(reshade_dir, 'deps/spirv/include/spirv/unified1'))
+
+if get_option('spirv_dir') == ''
+  spirv_include_dir = include_directories(join_paths(reshade_dir, 'deps/spirv/include/spirv/unified1'))
+else
+  spirv_include_dir = include_directories(join_paths(get_option('spirv_dir'), 'include/spirv/unified1'))
+endif
+
 reshade_effects = static_library(
   'reshade-effects',
   [
@@ -14,7 +20,7 @@ reshade_effects = static_library(
     join_paths(reshade_dir, 'source/effect_symbol_table.cpp'),
     join_paths(reshade_dir, 'source/effect_parser.cpp')
   ],
-  include_directories: [reshade_spirv_include_dir],
+  include_directories: [spirv_include_dir],
   cpp_args: ['-Wno-missing-field-initializers', '-Wno-switch', '-Wno-unknown-pragmas', '-Wno-char-subscripts'],
   pic: true
 )
@@ -61,7 +67,7 @@ vkbasalt = shared_library(
     'effect_fxaa.cpp',
     'reshade_uniforms.cpp'
   ],
-  include_directories: [reshade_spirv_include_dir],
+  include_directories: [spirv_include_dir],
   cpp_args: ['-Wno-unused-parameter'],
   dependencies: [vulkan],
   link_with: [reshade_effects],
