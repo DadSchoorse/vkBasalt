@@ -7,7 +7,7 @@ PREFIX ?= $(HOME)/.local
 
 PKG_CONFIG_PATH_32 ?= /usr/lib32/pkgconfig
 
-MESON_FILES := meson.build
+MESON_FILES := meson.build src/meson.build shader/meson.build config/meson.build meson_options.txt
 MESON_FLAGS += --buildtype release --prefix $(PREFIX)
 MESON_CROSS_FILE_32 ?= meson-32-cross.txt
 MESON_FLAGS_32 += --libdir=lib32
