@@ -15,7 +15,7 @@
 
 namespace vkBasalt
 {
-    //for each swapchain, we have the Images and the other stuff we need to execute the compute shader
+    // for each swapchain, we have the Images and the other stuff we need to execute the compute shader
     struct LogicalSwapchain
     {
         std::shared_ptr<LogicalDevice>       pLogicalDevice;
@@ -29,10 +29,9 @@ namespace vkBasalt
         std::vector<VkSemaphore>             semaphores;
         std::vector<std::shared_ptr<Effect>> effects;
         VkDeviceMemory                       fakeImageMemory;
-        
+
         void destroy();
     };
-}
-
+} // namespace vkBasalt
 
 #endif // LOGICAL_SWAPCHAIN_HPP_INCLUDED

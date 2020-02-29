@@ -7,89 +7,112 @@ namespace vkBasalt
     std::vector<VkCommandBuffer> allocateCommandBuffer(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count)
     {
         std::vector<VkCommandBuffer> commandBuffers(count);
-        
+
         VkCommandBufferAllocateInfo allocInfo;
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.pNext = nullptr;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = pLogicalDevice->commandPool;
+        allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.pNext              = nullptr;
+        allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool        = pLogicalDevice->commandPool;
         allocInfo.commandBufferCount = count;
-        
+
         VkResult result = pLogicalDevice->vkd.AllocateCommandBuffers(pLogicalDevice->device, &allocInfo, commandBuffers.data());
         ASSERT_VULKAN(result);
-        for(uint32_t i = 0; i < count; i++)
+        for (uint32_t i = 0; i < count; i++)
         {
-            //initialize dispatch tables for commandBuffers since the are dispatchable objects
-            *reinterpret_cast<void**>(commandBuffers[i]) = *reinterpret_cast<void**>(pLogicalDevice->device);
+            // initialize dispatch tables for commandBuffers since the are dispatchable objects
+            initializeDispatchTable(commandBuffers[i], pLogicalDevice->device);
         }
-        
+
         return commandBuffers;
-    
     }
-    void writeCommandBuffers(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<std::shared_ptr<vkBasalt::Effect>> effects, VkImage depthImage, VkImageView depthImageView, VkFormat depthFormat, std::vector<VkCommandBuffer> commandBuffers)
+    void writeCommandBuffers(std::shared_ptr<LogicalDevice>                 pLogicalDevice,
+                             std::vector<std::shared_ptr<vkBasalt::Effect>> effects,
+                             VkImage                                        depthImage,
+                             VkImageView                                    depthImageView,
+                             VkFormat                                       depthFormat,
+                             std::vector<VkCommandBuffer>                   commandBuffers)
     {
         VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.pNext = nullptr;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        beginInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.pNext            = nullptr;
+        beginInfo.flags            = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         beginInfo.pInheritanceInfo = nullptr;
-        
-        for(auto& effect: effects)
+
+        for (auto& effect : effects)
         {
             effect->useDepthImage(depthImageView);
         }
-        
-        for(uint32_t i = 0; i < commandBuffers.size(); i++)
+
+        for (uint32_t i = 0; i < commandBuffers.size(); i++)
         {
-            
-            VkResult result = pLogicalDevice->vkd.BeginCommandBuffer(commandBuffers[i],&beginInfo);
+
+            VkResult result = pLogicalDevice->vkd.BeginCommandBuffer(commandBuffers[i], &beginInfo);
             ASSERT_VULKAN(result);
-            
+
             VkImageMemoryBarrier memoryBarrier;
-            memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            memoryBarrier.pNext = nullptr;
-            memoryBarrier.image = depthImage;
-            memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-            memoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            memoryBarrier.srcAccessMask = 0;
-            memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            memoryBarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            memoryBarrier.pNext               = nullptr;
+            memoryBarrier.image               = depthImage;
+            memoryBarrier.oldLayout           = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            memoryBarrier.newLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            memoryBarrier.srcAccessMask       = 0;
+            memoryBarrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
             memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            memoryBarrier.subresourceRange.aspectMask = isStencilFormat(depthFormat) ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
-            memoryBarrier.subresourceRange.baseMipLevel = 0;
-            memoryBarrier.subresourceRange.levelCount = 1;
+            memoryBarrier.subresourceRange.aspectMask =
+                isStencilFormat(depthFormat) ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
+            memoryBarrier.subresourceRange.baseMipLevel   = 0;
+            memoryBarrier.subresourceRange.levelCount     = 1;
             memoryBarrier.subresourceRange.baseArrayLayer = 0;
-            memoryBarrier.subresourceRange.layerCount = 1;
-            
-            if(depthImageView)
+            memoryBarrier.subresourceRange.layerCount     = 1;
+
+            if (depthImageView)
             {
-                pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffers[i], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+                pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffers[i],
+                                                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                                       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                                       0,
+                                                       0,
+                                                       nullptr,
+                                                       0,
+                                                       nullptr,
+                                                       1,
+                                                       &memoryBarrier);
             }
-            
-            for(uint32_t j=0;j<effects.size();j++)
+
+            for (uint32_t j = 0; j < effects.size(); j++)
             {
-                std::cout << "before applying effect " << effects[j] << std::endl; 
-                effects[j]->applyEffect(i,commandBuffers[i]);
+                std::cout << "before applying effect " << effects[j] << std::endl;
+                effects[j]->applyEffect(i, commandBuffers[i]);
             }
-            
-            memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            memoryBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            memoryBarrier.oldLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            memoryBarrier.newLayout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             memoryBarrier.dstAccessMask = 0;
-            if(depthImageView)
+            if (depthImageView)
             {
-                pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffers[i], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+                pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffers[i],
+                                                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                                       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                                       0,
+                                                       0,
+                                                       nullptr,
+                                                       0,
+                                                       nullptr,
+                                                       1,
+                                                       &memoryBarrier);
             }
-            
+
             result = pLogicalDevice->vkd.EndCommandBuffer(commandBuffers[i]);
             ASSERT_VULKAN(result);
         }
     }
 
-
     std::vector<VkSemaphore> createSemaphores(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count)
     {
         std::vector<VkSemaphore> semaphores(count);
-        VkSemaphoreCreateInfo info;
+        VkSemaphoreCreateInfo    info;
         info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         info.pNext = nullptr;
         info.flags = 0;
@@ -101,4 +124,4 @@ namespace vkBasalt
         return semaphores;
     }
 
-}
+} // namespace vkBasalt
