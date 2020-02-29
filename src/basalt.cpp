@@ -26,6 +26,7 @@
 #include "fake_swapchain.hpp"
 #include "renderpass.hpp"
 #include "format.hpp"
+#include "logger.hpp"
 
 #include "effect.hpp"
 #include "effect_fxaa.hpp"
@@ -39,6 +40,8 @@
 namespace vkBasalt
 {
     std::shared_ptr<Config> pConfig = nullptr;
+
+    Logger Logger::s_instance;
 
     // layer book-keeping information, to store dispatch tables by key
     std::unordered_map<void*, VkLayerInstanceDispatchTable>               instanceDispatchMap;
