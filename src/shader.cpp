@@ -33,7 +33,7 @@ namespace vkBasalt
                 if (!std::filesystem::is_directory(sDir))
                     continue;
 
-                std::cout << sDir << std::endl;
+                Logger::info("shader directory: " + sDir);
                 shaderDir = sDir + "/";
                 break;
             }
@@ -60,7 +60,7 @@ namespace vkBasalt
         }
         else
         {
-            throw std::runtime_error("read file " + filename + " failed");
+            Logger::err("read file " + filename + " failed");
         }
     }
 
