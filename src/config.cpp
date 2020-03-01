@@ -32,12 +32,12 @@ namespace vkBasalt
             if (!configFile.good())
                 continue;
 
-            std::cout << cFile << std::endl;
+            Logger::info("config file: " + cFile);
             readConfigFile(configFile);
             return;
         }
 
-        std::cout << "no good config file" << std::endl;
+        Logger::err("no good config file");
     }
 
     Config::Config(const Config& other)
@@ -79,7 +79,7 @@ namespace vkBasalt
         {
             return;
         }
-        std::cout << "set option " << line.substr(0, equal) << " equal to " << line.substr(equal + 1) << std::endl;
+        Logger::info(line.substr(0, equal) + " = " + line.substr(equal + 1));
         options[line.substr(0, equal)] = line.substr(equal + 1);
     }
 
