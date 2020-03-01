@@ -11,6 +11,7 @@
 #include "shader.hpp"
 #include "sampler.hpp"
 #include "image.hpp"
+#include "util.hpp"
 
 #include "AreaTex.h"
 #include "SearchTex.h"
@@ -31,7 +32,7 @@ namespace vkBasalt
         std::string smaaBlendFragmentFile     = "smaa_blend.frag.spv";
         std::string smaaNeighborVertexFile    = "smaa_neighbor.vert.spv";
         std::string smaaNeighborFragmentFile  = "smaa_neighbor.frag.spv";
-        std::cout << "in creating SmaaEffect " << std::endl;
+        Logger::debug("in creating SmaaEffect");
 
         this->pLogicalDevice = pLogicalDevice;
         this->format         = format;
@@ -53,15 +54,15 @@ namespace vkBasalt
         blendImages = std::vector<VkImage>(edgeAndBlendImages.begin() + edgeAndBlendImages.size() / 2, edgeAndBlendImages.end());
 
         inputImageViews = createImageViews(pLogicalDevice, format, inputImages);
-        std::cout << "after creating input ImageViews" << std::endl;
+        Logger::debug("created input ImageViews");
         edgeImageViews = createImageViews(pLogicalDevice, VK_FORMAT_B8G8R8A8_UNORM, edgeImages);
-        std::cout << "after creating edge  ImageViews" << std::endl;
+        Logger::debug("created edge  ImageViews");
         blendImageViews = createImageViews(pLogicalDevice, VK_FORMAT_B8G8R8A8_UNORM, blendImages);
-        std::cout << "after creating blend ImageViews" << std::endl;
+        Logger::debug("created blend ImageViews");
         outputImageViews = createImageViews(pLogicalDevice, format, outputImages);
-        std::cout << "after creating output ImageViews" << std::endl;
+        Logger::debug("created output ImageViews");
         sampler = createSampler(pLogicalDevice);
-        std::cout << "after creating sampler" << std::endl;
+        Logger::debug("created sampler");
 
         VkExtent3D areaImageExtent = {AREATEX_WIDTH, AREATEX_HEIGHT, 1};
 
@@ -88,12 +89,12 @@ namespace vkBasalt
         uploadToImage(pLogicalDevice, searchImage, searchImageExtent, SEARCHTEX_SIZE, searchTexBytes);
 
         areaImageView = createImageViews(pLogicalDevice, VK_FORMAT_R8G8_UNORM, std::vector<VkImage>(1, areaImage))[0];
-        std::cout << "after creating area ImageView" << std::endl;
+        Logger::debug("after creating area ImageView");
         searchImageView = createImageViews(pLogicalDevice, VK_FORMAT_R8_UNORM, std::vector<VkImage>(1, searchImage))[0];
-        std::cout << "after creating search ImageView" << std::endl;
+        Logger::debug("created search ImageView");
 
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(pLogicalDevice, 5);
-        std::cout << "after creating descriptorSetLayouts" << std::endl;
+        Logger::debug("created descriptorSetLayouts");
 
         VkDescriptorPoolSize imagePoolSize;
         imagePoolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -102,7 +103,7 @@ namespace vkBasalt
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
 
         descriptorPool = createDescriptorPool(pLogicalDevice, poolSizes);
-        std::cout << "after creating descriptorPool" << std::endl;
+        Logger::debug("created descriptorPool");
 
         // get config options
         struct SmaaOptions
@@ -211,7 +212,7 @@ namespace vkBasalt
     }
     void SmaaEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
-        std::cout << "applying smaa effect" << commandBuffer << std::endl;
+        Logger::debug("applying smaa effect to cb " + convertToString(commandBuffer));
         // Used to make the Image accessable by the shader
         VkImageMemoryBarrier memoryBarrier;
         memoryBarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -250,7 +251,7 @@ namespace vkBasalt
 
         pLogicalDevice->vkd.CmdPipelineBarrier(
             commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-        std::cout << "after the first pipeline barrier" << std::endl;
+        Logger::debug("after the first pipeline barrier");
 
         VkRenderPassBeginInfo renderPassBeginInfo;
         renderPassBeginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -263,42 +264,42 @@ namespace vkBasalt
         renderPassBeginInfo.clearValueCount   = 1;
         renderPassBeginInfo.pClearValues      = &clearValue;
         // edge renderPass
-        std::cout << "before beginn edge renderpass" << std::endl;
+        Logger::debug("before beginn edge renderpass");
         pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        std::cout << "after beginn renderpass" << std::endl;
+        Logger::debug("after beginn renderpass");
 
         pLogicalDevice->vkd.CmdBindDescriptorSets(
             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &(imageDescriptorSets[imageIndex]), 0, nullptr);
-        std::cout << "after binding image sampler" << std::endl;
+        Logger::debug("after binding image sampler");
 
         pLogicalDevice->vkd.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, edgePipeline);
-        std::cout << "after bind pipeliene" << std::endl;
+        Logger::debug("after bind pipeliene");
 
         pLogicalDevice->vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
-        std::cout << "after draw" << std::endl;
+        Logger::debug("after draw");
 
         pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
-        std::cout << "after end renderpass" << std::endl;
+        Logger::debug("after end renderpass");
 
         memoryBarrier.image             = edgeImages[imageIndex];
         renderPassBeginInfo.framebuffer = blendFramebuffers[imageIndex];
         // blend renderPass
         pLogicalDevice->vkd.CmdPipelineBarrier(
             commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-        std::cout << "after the first pipeline barrier" << std::endl;
+        Logger::debug("after the first pipeline barrier");
 
-        std::cout << "before beginn blend renderpass" << std::endl;
+        Logger::debug("before beginn blend renderpass");
         pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        std::cout << "after beginn renderpass" << std::endl;
+        Logger::debug("after beginn renderpass");
 
         pLogicalDevice->vkd.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, blendPipeline);
-        std::cout << "after bind pipeliene" << std::endl;
+        Logger::debug("after bind pipeliene");
 
         pLogicalDevice->vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
-        std::cout << "after draw" << std::endl;
+        Logger::debug("after draw");
 
         pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
-        std::cout << "after end renderpass" << std::endl;
+        Logger::debug("after end renderpass");
 
         memoryBarrier.image             = blendImages[imageIndex];
         renderPassBeginInfo.framebuffer = neignborFramebuffers[imageIndex];
@@ -306,20 +307,20 @@ namespace vkBasalt
         // neighbor renderPass
         pLogicalDevice->vkd.CmdPipelineBarrier(
             commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-        std::cout << "after the first pipeline barrier" << std::endl;
+        Logger::debug("after the first pipeline barrier");
 
-        std::cout << "before beginn neighbor renderpass" << std::endl;
+        Logger::debug("before beginn neighbor renderpass");
         pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        std::cout << "after beginn renderpass" << std::endl;
+        Logger::debug("after beginn renderpass");
 
         pLogicalDevice->vkd.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, neighborPipeline);
-        std::cout << "after bind pipeliene" << std::endl;
+        Logger::debug("after bind pipeliene");
 
         pLogicalDevice->vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
-        std::cout << "after draw" << std::endl;
+        Logger::debug("after draw");
 
         pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
-        std::cout << "after end renderpass" << std::endl;
+        Logger::debug("after end renderpass");
 
         pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffer,
                                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
@@ -331,11 +332,11 @@ namespace vkBasalt
                                                nullptr,
                                                1,
                                                &secondBarrier);
-        std::cout << "after the second pipeline barrier" << std::endl;
+        Logger::debug("after the second pipeline barrier");
     }
     SmaaEffect::~SmaaEffect()
     {
-        std::cout << "destroying smaa effect " << this << std::endl;
+        Logger::debug("destroying smaa effect " + convertToString(this));
         pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, edgePipeline, nullptr);
         pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, blendPipeline, nullptr);
         pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, neighborPipeline, nullptr);
@@ -368,7 +369,7 @@ namespace vkBasalt
             pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, edgeImages[i], nullptr);
             pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, blendImages[i], nullptr);
         }
-        std::cout << "after DestroyImageView" << std::endl;
+        Logger::debug("after DestroyImageView");
         pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, areaImageView, nullptr);
         pLogicalDevice->vkd.DestroyImage(pLogicalDevice->device, areaImage, nullptr);
         pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, searchImageView, nullptr);
