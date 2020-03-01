@@ -1,5 +1,7 @@
 #include "lut_cube.hpp"
 
+#include "logger.hpp"
+
 namespace vkBasalt
 {
     LutCube::LutCube()
@@ -10,7 +12,7 @@ namespace vkBasalt
         std::ifstream cubeStream(file);
         if (!cubeStream.good())
         {
-            throw std::runtime_error("lut cube file does not exist");
+            Logger::err("lut cube file does not exist");
         }
 
         std::string line;

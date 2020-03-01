@@ -14,6 +14,7 @@ namespace vkBasalt
             }
         }
 
-        throw std::runtime_error("Found no correct memory type");
+        Logger::err("Found no correct memory type");
+        return 0x70AD;
     }
 } // namespace vkBasalt
