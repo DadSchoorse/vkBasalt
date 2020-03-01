@@ -12,12 +12,13 @@
 
 #include <string>
 
+#include "logger.hpp"
+
 #ifndef ASSERT_VULKAN
 #define ASSERT_VULKAN(val)                                                                                                                           \
     if (val != VK_SUCCESS)                                                                                                                           \
     {                                                                                                                                                \
-        throw std::runtime_error("ASSERT_VULKAN failed in " + std::string(__FILE__) + " : " + std::to_string(__LINE__) + "; "                        \
-                                 + std::to_string(val));                                                                                             \
+        Logger::err("ASSERT_VULKAN failed in " + std::string(__FILE__) + " : " + std::to_string(__LINE__) + "; " + std::to_string(val));             \
     }
 #endif
 namespace vkBasalt
