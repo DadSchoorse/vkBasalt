@@ -112,7 +112,8 @@ namespace vkBasalt
                 return format;
             }
         }
-        throw std::runtime_error("No requested format supported");
+        Logger::err("No requested format supported");
+        return VK_FORMAT_UNDEFINED;
     }
 
     VkFormat getStencilFormat(std::shared_ptr<LogicalDevice> pLogicalDevice)
