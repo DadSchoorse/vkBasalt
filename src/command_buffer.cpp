@@ -1,6 +1,7 @@
 #include "command_buffer.hpp"
 
 #include "format.hpp"
+#include "util.hpp"
 
 namespace vkBasalt
 {
@@ -83,7 +84,7 @@ namespace vkBasalt
 
             for (uint32_t j = 0; j < effects.size(); j++)
             {
-                std::cout << "before applying effect " << effects[j] << std::endl;
+                Logger::debug("before applying effect " + convertToString(effects[j]));
                 effects[j]->applyEffect(i, commandBuffers[i]);
             }
 
