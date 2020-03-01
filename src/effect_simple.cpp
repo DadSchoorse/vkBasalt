@@ -10,6 +10,7 @@
 #include "framebuffer.hpp"
 #include "shader.hpp"
 #include "sampler.hpp"
+#include "util.hpp"
 
 namespace vkBasalt
 {
@@ -23,7 +24,7 @@ namespace vkBasalt
                             std::vector<VkImage>              outputImages,
                             std::shared_ptr<vkBasalt::Config> pConfig)
     {
-        std::cout << "in creating SimpleEffect " << std::endl;
+        Logger::debug("in creating SimpleEffect");
 
         this->pLogicalDevice = pLogicalDevice;
         this->format         = format;
@@ -33,14 +34,14 @@ namespace vkBasalt
         this->pConfig        = pConfig;
 
         inputImageViews = createImageViews(pLogicalDevice, format, inputImages);
-        std::cout << "after creating input ImageViews" << std::endl;
+        Logger::debug("created input ImageViews");
         outputImageViews = createImageViews(pLogicalDevice, format, outputImages);
-        std::cout << "after creating ImageViews" << std::endl;
+        Logger::debug("created ImageViews");
         sampler = createSampler(pLogicalDevice);
-        std::cout << "after creating sampler" << std::endl;
+        Logger::debug("created sampler");
 
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(pLogicalDevice, 1);
-        std::cout << "after creating descriptorSetLayouts" << std::endl;
+        Logger::debug("created descriptorSetLayouts");
 
         VkDescriptorPoolSize imagePoolSize;
         imagePoolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -49,7 +50,7 @@ namespace vkBasalt
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize};
 
         descriptorPool = createDescriptorPool(pLogicalDevice, poolSizes);
-        std::cout << "after creating descriptorPool" << std::endl;
+        Logger::debug("created descriptorPool");
 
         createShaderModule(pLogicalDevice, vertexCode, &vertexModule);
         createShaderModule(pLogicalDevice, fragmentCode, &fragmentModule);
@@ -77,7 +78,7 @@ namespace vkBasalt
     }
     void SimpleEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
-        std::cout << "applying SimpleEffect" << commandBuffer << std::endl;
+        Logger::debug("applying SimpleEffect to cb " + convertToString(commandBuffer));
         // Used to make the Image accessable by the shader
         VkImageMemoryBarrier memoryBarrier;
         memoryBarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -116,11 +117,7 @@ namespace vkBasalt
 
         pLogicalDevice->vkd.CmdPipelineBarrier(
             commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-        std::cout << "after the first pipeline barrier" << std::endl;
-
-        std::cout << "framebuffer " << framebuffers.size() << std::endl;
-
-        std::cout << "framebuffer " << framebuffers[imageIndex] << std::endl;
+        Logger::debug("after the first pipeline barrier");
 
         VkRenderPassBeginInfo renderPassBeginInfo;
         renderPassBeginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -133,22 +130,22 @@ namespace vkBasalt
         renderPassBeginInfo.clearValueCount   = 1;
         renderPassBeginInfo.pClearValues      = &clearValue;
 
-        std::cout << "before beginn renderpass" << std::endl;
+        Logger::debug("before beginn renderpass");
         pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        std::cout << "after beginn renderpass" << std::endl;
+        Logger::debug("after beginn renderpass");
 
         pLogicalDevice->vkd.CmdBindDescriptorSets(
             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &(imageDescriptorSets[imageIndex]), 0, nullptr);
-        std::cout << "after binding image sampler" << std::endl;
+        Logger::debug("after binding image sampler");
 
         pLogicalDevice->vkd.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-        std::cout << "after bind pipeliene" << std::endl;
+        Logger::debug("after bind pipeliene");
 
         pLogicalDevice->vkd.CmdDraw(commandBuffer, 3, 1, 0, 0);
-        std::cout << "after draw" << std::endl;
+        Logger::debug("after draw");
 
         pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
-        std::cout << "after end renderpass" << std::endl;
+        Logger::debug("after end renderpass");
 
         pLogicalDevice->vkd.CmdPipelineBarrier(commandBuffer,
                                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
@@ -160,11 +157,11 @@ namespace vkBasalt
                                                nullptr,
                                                1,
                                                &secondBarrier);
-        std::cout << "after the second pipeline barrier" << std::endl;
+        Logger::debug("after the second pipeline barrier");
     }
     SimpleEffect::~SimpleEffect()
     {
-        std::cout << "destroying SimpleEffect" << this << std::endl;
+        Logger::debug("destroying SimpleEffect " + convertToString(this));
         pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, graphicsPipeline, nullptr);
         pLogicalDevice->vkd.DestroyPipelineLayout(pLogicalDevice->device, pipelineLayout, nullptr);
         pLogicalDevice->vkd.DestroyRenderPass(pLogicalDevice->device, renderPass, nullptr);
@@ -179,7 +176,7 @@ namespace vkBasalt
             pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, inputImageViews[i], nullptr);
             pLogicalDevice->vkd.DestroyImageView(pLogicalDevice->device, outputImageViews[i], nullptr);
         }
-        std::cout << "after DestroyImageView" << std::endl;
+        Logger::debug("after DestroyImageView");
         pLogicalDevice->vkd.DestroySampler(pLogicalDevice->device, sampler, nullptr);
     }
 } // namespace vkBasalt
