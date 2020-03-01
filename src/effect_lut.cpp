@@ -49,7 +49,7 @@ namespace vkBasalt
             pixels = stbi_load(pConfig->getOption("lutFile").c_str(), &width, &height, &channels, STBI_rgb_alpha);
             if (width != height * height)
             {
-                throw std::runtime_error("bad lut");
+                Logger::err("bad lut");
             }
         }
 
