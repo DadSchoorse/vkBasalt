@@ -22,7 +22,9 @@ make install
 ```
 **Note: do not run this with `sudo`. vkBasalt gets installed for the current user only.**
 
-## Prerequisites
+## Build Dependencies
+
+### Prerequisites
 Before building, you will need:
 - Vulkan SDK
 - glslangValidator - To compile the shader
@@ -30,17 +32,17 @@ Before building, you will need:
 
 See below on how to install them.
 
-### Arch-based distributions
+#### Arch-based distributions
 For Arch-based distributions, execute:
 ```
 pacman -Syu glslang vulkan-headers vulkan-tools vulkan-validation-layers
 ```
-### Fedora
+#### Fedora
 For Fedora, execute:
 ```
 sudo dnf install vulkan-headers vulkan-tools vulkan-validation-layers vulkan-validation-layers-devel glslang glibc-devel.i686 libstdc++-devel.i686 spirv-tools
 ```
-### Gentoo-based distributions
+#### Gentoo-based distributions
 For Gentoo-based distributions, execute:
 ```
 sudo emerge -v dev-util/glslang dev-util/vulkan-headers dev-util/vulkan-tools media-libs/vulkan-layers media-libs/vulkan-loader dev-util/spirv-tools
@@ -100,6 +102,13 @@ denoise = /home/user/reshade-shaders/Shaders/Denoise.fx
 reshadeTexturePath = /home/user/reshade-shaders/Textures
 reshadeIncludePath = /home/user/reshade-shaders/Shaders
 ```
+
+#### Debug Output
+
+The amount of debug output can be set with the `VKBASALT_LOG_LEVEL` env var, e.g. `VKBASALT_LOG_LEVEL=debug`. Possible values are: `trace, debug, info, warn, error, none`.
+
+By default the logger outputs to stderr, a file as output location can be set with the `VKBASALT_LOG_FILE` env var, e.g. `VKBASALT_LOG_FILE="vkBasalt.log"`.
+
 
 ## FAQ
 
