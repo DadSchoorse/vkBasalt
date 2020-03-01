@@ -7,6 +7,8 @@
 
 #include <algorithm>
 
+#include "logger"
+
 namespace vkBasalt
 {
     void enumerateReshadeUniforms(reshadefx::module module)
@@ -84,7 +86,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "frametime")
         {
-            std::runtime_error("Tried to create a FrameTimeUniform from a non frametime uniform_info");
+            Logger::err("Tried to create a FrameTimeUniform from a non frametime uniform_info");
         }
         lastFrame = std::chrono::high_resolution_clock::now();
         offset    = uniformInfo.offset;
@@ -108,7 +110,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "framecount")
         {
-            std::runtime_error("Tried to create a FrameCountUniform from a non framecount uniform_info");
+            Logger::err("Tried to create a FrameCountUniform from a non framecount uniform_info");
         }
         offset = uniformInfo.offset;
         size   = uniformInfo.size;
@@ -128,7 +130,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "date")
         {
-            std::runtime_error("Tried to create a DateUniform from a non date uniform_info");
+            Logger::err("Tried to create a DateUniform from a non date uniform_info");
         }
         offset = uniformInfo.offset;
         size   = uniformInfo.size;
@@ -155,7 +157,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "timer")
         {
-            std::runtime_error("Tried to create a TimerUniform from a non timer uniform_info");
+            Logger::err("Tried to create a TimerUniform from a non timer uniform_info");
         }
         start  = std::chrono::high_resolution_clock::now();
         offset = uniformInfo.offset;
@@ -178,7 +180,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "pingpong")
         {
-            std::runtime_error("Tried to create a PingPongUniform from a non pingpong uniform_info");
+            Logger::err("Tried to create a PingPongUniform from a non pingpong uniform_info");
         }
         if (auto minAnnotation =
                 std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "min"; });
@@ -233,7 +235,7 @@ namespace vkBasalt
         }
         else
         {
-            float increment = std::max(increment - std::max(0.0f, smoothing - (currentValue[0] - min)), 0.05f);
+            increment = std::max(increment - std::max(0.0f, smoothing - (currentValue[0] - min)), 0.05f);
             increment *= frameTime.count();
 
             if ((currentValue[0] -= increment) <= min)
@@ -253,7 +255,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "random")
         {
-            std::runtime_error("Tried to create a RandomUniform from a non random uniform_info");
+            Logger::err("Tried to create a RandomUniform from a non random uniform_info");
         }
         if (auto minAnnotation =
                 std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "min"; });
@@ -285,7 +287,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "key")
         {
-            std::runtime_error("Tried to create a KeyUniform from a non key uniform_info");
+            Logger::err("Tried to create a KeyUniform from a non key uniform_info");
         }
         offset = uniformInfo.offset;
         size   = uniformInfo.size;
@@ -305,7 +307,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "mousebutton")
         {
-            std::runtime_error("Tried to create a MouseButtonUniform from a non mousebutton uniform_info");
+            Logger::err("Tried to create a MouseButtonUniform from a non mousebutton uniform_info");
         }
         offset = uniformInfo.offset;
         size   = uniformInfo.size;
@@ -325,7 +327,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "mousepoint")
         {
-            std::runtime_error("Tried to create a MousePointUniform from a non mousepoint uniform_info");
+            Logger::err("Tried to create a MousePointUniform from a non mousepoint uniform_info");
         }
         offset = uniformInfo.offset;
         size   = uniformInfo.size;
@@ -345,7 +347,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "mousedelta")
         {
-            std::runtime_error("Tried to create a MouseDeltaUniform from a non mousedelta uniform_info");
+            Logger::err("Tried to create a MouseDeltaUniform from a non mousedelta uniform_info");
         }
         offset = uniformInfo.offset;
         size   = uniformInfo.size;
@@ -365,7 +367,7 @@ namespace vkBasalt
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
         if (source->value.string_data != "bufready_depth")
         {
-            std::runtime_error("Tried to create a DepthUniform from a non bufready_depth uniform_info");
+            Logger::err("Tried to create a DepthUniform from a non bufready_depth uniform_info");
         }
         offset = uniformInfo.offset;
         size   = uniformInfo.size;
