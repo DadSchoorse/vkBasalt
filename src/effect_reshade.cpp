@@ -36,7 +36,7 @@ namespace vkBasalt
                                  std::shared_ptr<vkBasalt::Config> pConfig,
                                  std::string                       effectName)
     {
-        std::cout << "in creating ReshadeEffect " << std::endl;
+        Logger::debug("in creating ReshadeEffect");
 
         this->pLogicalDevice   = pLogicalDevice;
         this->imageExtent      = imageExtent;
@@ -49,10 +49,10 @@ namespace vkBasalt
 
         inputImageViewsSRGB  = createImageViews(pLogicalDevice, inputOutputFormatSRGB, inputImages);
         inputImageViewsUNORM = createImageViews(pLogicalDevice, inputOutputFormatUNORM, inputImages);
-        std::cout << "after creating input ImageViews" << std::endl;
+        Logger::debug("created input ImageViews");
         outputImageViewsSRGB  = createImageViews(pLogicalDevice, inputOutputFormatSRGB, outputImages);
         outputImageViewsUNORM = createImageViews(pLogicalDevice, inputOutputFormatUNORM, outputImages);
-        std::cout << "after creating ImageViews" << std::endl;
+        Logger::debug("created ImageViews");
 
         createReshadeModule();
 
@@ -72,7 +72,7 @@ namespace vkBasalt
         }
 
         stencilFormat = getStencilFormat(pLogicalDevice);
-        std::cout << "Stencil Format: " << stencilFormat << std::endl;
+        Logger::debug("Stencil Format: " + std::to_string(stencilFormat));
         textureMemory.push_back(VK_NULL_HANDLE);
         stencilImage = createImages(pLogicalDevice,
                                     1,
@@ -201,12 +201,13 @@ namespace vkBasalt
 
                 std::vector<VkImageView> imageViewsUNORM = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
 
-                imageViews                              = createImageViews(pLogicalDevice,
+                imageViews = createImageViews(pLogicalDevice,
                                               convertToSRGB(convertReshadeFormat(module.textures[i].format)),
                                               images,
                                               VK_IMAGE_VIEW_TYPE_2D,
                                               VK_IMAGE_ASPECT_COLOR_BIT,
                                               module.textures[i].levels);
+
                 std::vector<VkImageView> imageViewsSRGB = std::vector<VkImageView>(inputImages.size(), imageViews[0]);
 
                 textureImageViewsUNORM[module.textures[i].unique_name] = imageViewsUNORM;
@@ -227,9 +228,7 @@ namespace vkBasalt
                         break;
                     case VK_FORMAT_R8G8B8A8_UNORM: desiredChannels = STBI_rgb_alpha; break;
                     case VK_FORMAT_R8G8B8A8_SRGB: desiredChannels = STBI_rgb_alpha; break;
-                    default:
-                        throw std::runtime_error(std::string("unsupported texture upload format")
-                                                 + std::to_string(textureFormatsUNORM[module.textures[i].unique_name]));
+                    default: Logger::err("unsupported texture upload format" + std::to_string(textureFormatsUNORM[module.textures[i].unique_name]));
                 }
 
                 std::string          filePath = pConfig->getOption("reshadeTexturePath") + "/" + source->value.string_data;
@@ -245,7 +244,7 @@ namespace vkBasalt
 
                 if (file == nullptr)
                 {
-                    throw std::runtime_error("couldn't open texture: " + filePath);
+                    Logger::err("couldn't open texture: " + filePath);
                 }
                 if (stbi_dds_test_file(file))
                 {
@@ -298,7 +297,7 @@ namespace vkBasalt
 
         imageSamplerDescriptorSetLayout = createImageSamplerDescriptorSetLayout(pLogicalDevice, module.samplers.size());
         uniformDescriptorSetLayout      = createUniformBufferDescriptorSetLayout(pLogicalDevice);
-        std::cout << "after creating descriptorSetLayouts" << std::endl;
+        Logger::debug("created descriptorSetLayouts");
 
         VkDescriptorPoolSize imagePoolSize;
         imagePoolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -311,15 +310,15 @@ namespace vkBasalt
         std::vector<VkDescriptorPoolSize> poolSizes = {imagePoolSize, bufferPoolSize};
 
         descriptorPool = createDescriptorPool(pLogicalDevice, poolSizes);
-        std::cout << "after creating descriptorPool" << std::endl;
+        Logger::debug("created descriptorPool");
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {uniformDescriptorSetLayout, imageSamplerDescriptorSetLayout};
 
         pipelineLayout = createGraphicsPipelineLayout(pLogicalDevice, descriptorSetLayouts);
 
-        std::cout << "after creating Pipeline layout" << std::endl;
+        Logger::debug("created Pipeline layout");
 
-        std::cout << outputWrites << std::endl;
+        Logger::debug("output writes: " + std::to_string(outputWrites));
         if (bufferSize)
         {
             bufferDescriptorSet = writeBufferDescriptorSet(pLogicalDevice, descriptorPool, uniformDescriptorSetLayout, stagingBuffer);
@@ -366,7 +365,7 @@ namespace vkBasalt
                 pLogicalDevice, descriptorPool, imageSamplerDescriptorSetLayout, samplers, imageViewVector);
         }
 
-        std::cout << "after writing ImageSamplerDescriptorSets" << std::endl;
+        Logger::debug("after writing ImageSamplerDescriptorSets");
 
         bool firstTimeStencilAccess = true; // Used to clear the sttencil attachment on the first time
 
@@ -381,7 +380,7 @@ namespace vkBasalt
             for (int i = 0; i < 8; i++)
             {
                 std::string target = pass.render_target_names[i];
-                std::cout << target << std::endl;
+                Logger::debug("render target:" + target);
 
                 VkAttachmentDescription attachmentDescription;
                 attachmentDescription.flags   = 0;
@@ -443,7 +442,7 @@ namespace vkBasalt
             scissor.extent.width  = pass.viewport_width ? pass.viewport_width : imageExtent.width;
             scissor.extent.height = pass.viewport_height ? pass.viewport_height : imageExtent.height;
 
-            std::cout << scissor.extent.width << " x " << scissor.extent.height << std::endl;
+            Logger::debug(std::to_string(scissor.extent.width) + " x " + std::to_string(scissor.extent.height));
 
             VkViewport viewport;
             viewport.x        = 0.0f;
@@ -751,10 +750,10 @@ namespace vkBasalt
 
             graphicsPipelines.push_back(pipeline);
 
-            std::cout << pass.vs_entry_point << std::endl;
-            std::cout << pass.ps_entry_point << std::endl;
+            Logger::debug("vertex   entry: " + pass.vs_entry_point);
+            Logger::debug("fragment entry: " + pass.ps_entry_point);
         }
-        std::cout << "finished creating Reshade effect" << std::endl;
+        Logger::debug("finished creating Reshade effect");
     }
 
     void ReshadeEffect::updateEffect()
@@ -832,7 +831,7 @@ namespace vkBasalt
     }
     void ReshadeEffect::applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer)
     {
-        std::cout << "applying ReshadeEffect" << commandBuffer << std::endl;
+        Logger::debug("applying ReshadeEffect to command buffer" + convertToString(commandBuffer));
         // Used to make the Image accessable by the shader
         VkImageMemoryBarrier memoryBarrier;
         memoryBarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -910,17 +909,17 @@ namespace vkBasalt
                                                1,
                                                &memoryBarrier);
 
-        std::cout << "after the first pipeline barrier" << std::endl;
+        Logger::debug("after the first pipeline barrier");
 
         pLogicalDevice->vkd.CmdBindDescriptorSets(
             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1, &(inputDescriptorSets[imageIndex]), 0, nullptr);
-        std::cout << "after binding image sampler" << std::endl;
+        Logger::debug("after binding image sampler");
 
         if (bufferSize)
         {
             pLogicalDevice->vkd.CmdBindDescriptorSets(
                 commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &bufferDescriptorSet, 0, nullptr);
-            std::cout << "after binding uniform buffer" << std::endl;
+            Logger::debug("after binding uniform buffer");
         }
 
         bool backBufferNext = outputWrites % 2 == 0;
@@ -928,18 +927,18 @@ namespace vkBasalt
         {
             renderPassBeginInfos[i].framebuffer = framebuffers[i][imageIndex];
 
-            std::cout << "before beginn renderpass" << std::endl;
+            Logger::debug("before beginn renderpass");
             pLogicalDevice->vkd.CmdBeginRenderPass(commandBuffer, &renderPassBeginInfos[i], VK_SUBPASS_CONTENTS_INLINE);
-            std::cout << "after beginn renderpass" << std::endl;
+            Logger::debug("after beginn renderpass");
 
             pLogicalDevice->vkd.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[i]);
-            std::cout << "after bind pipeliene" << std::endl;
+            Logger::debug("after bind pipeliene");
 
             pLogicalDevice->vkd.CmdDraw(commandBuffer, module.techniques[0].passes[i].num_vertices, 1, 0, 0);
-            std::cout << "after draw" << std::endl;
+            Logger::debug("after draw");
 
             pLogicalDevice->vkd.CmdEndRenderPass(commandBuffer);
-            std::cout << "after end renderpass" << std::endl;
+            Logger::debug("after end renderpass");
 
             if (switchSamplers[i] && outputWrites > 1)
             {
@@ -983,12 +982,12 @@ namespace vkBasalt
                                                nullptr,
                                                1,
                                                &secondBarrier);
-        std::cout << "after the second pipeline barrier" << std::endl;
+        Logger::debug("after the second pipeline barrier");
     }
 
     ReshadeEffect::~ReshadeEffect()
     {
-        std::cout << "destroying ReshadeEffect" << this << std::endl;
+        Logger::debug("destroying ReshadeEffect" + convertToString(this));
         for (auto& pipeline : graphicsPipelines)
         {
             pLogicalDevice->vkd.DestroyPipeline(pLogicalDevice->device, pipeline, nullptr);
@@ -1120,8 +1119,8 @@ namespace vkBasalt
         preprocessor.add_include_path(pConfig->getOption("reshadeIncludePath"));
         if (!preprocessor.append_file(pConfig->getOption(effectName)))
         {
-            outputInColor("failed to load shader file: " + pConfig->getOption(effectName), Color::red);
-            outputInColor("Does the filepath exist and does it not include spaces?", Color::red);
+            Logger::err("failed to load shader file: " + pConfig->getOption(effectName));
+            Logger::err("Does the filepath exist and does it not include spaces?");
         }
 
         reshadefx::parser parser;
@@ -1129,7 +1128,7 @@ namespace vkBasalt
         std::string errors = preprocessor.errors();
         if (errors != "")
         {
-            std::cout << errors << std::endl;
+            Logger::err(errors);
         }
 
         std::unique_ptr<reshadefx::codegen> codegen(reshadefx::create_codegen_spirv(
@@ -1139,7 +1138,7 @@ namespace vkBasalt
         errors = parser.errors();
         if (errors != "")
         {
-            std::cout << errors << std::endl;
+            Logger::err(errors);
         }
         codegen->write_result(module);
 
@@ -1153,7 +1152,7 @@ namespace vkBasalt
         VkResult result = pLogicalDevice->vkd.CreateShaderModule(pLogicalDevice->device, &shaderCreateInfo, nullptr, &shaderModule);
         ASSERT_VULKAN(result);
 
-        std::cout << "after creating shaderModule" << std::endl;
+        Logger::debug("created reshade shaderModule");
     }
 
     VkFormat ReshadeEffect::convertReshadeFormat(reshadefx::texture_format texFormat)
