@@ -85,7 +85,7 @@ namespace vkBasalt
         writeDescriptorSet.pBufferInfo      = &bufferInfo;
         writeDescriptorSet.pTexelBufferView = nullptr;
 
-        std::cout << "before writing buffer descriptor Sets " << std::endl;
+        Logger::debug("before writing buffer descriptor Sets");
         pLogicalDevice->vkd.UpdateDescriptorSets(pLogicalDevice->device, 1, &writeDescriptorSet, 0, nullptr);
 
         return descriptorSet;
@@ -136,7 +136,7 @@ namespace vkBasalt
         descriptorSetAllocateInfo.descriptorSetCount = descriptorSets.size();
         descriptorSetAllocateInfo.pSetLayouts        = layouts.data();
 
-        std::cout << "before allocating descriptor Sets" << std::endl;
+        Logger::debug("before allocating descriptor Sets");
         VkResult result = pLogicalDevice->vkd.AllocateDescriptorSets(pLogicalDevice->device, &descriptorSetAllocateInfo, descriptorSets.data());
         ASSERT_VULKAN(result);
 
@@ -172,7 +172,7 @@ namespace vkBasalt
                 writeDescriptorSets[j].pImageInfo = &imageInfos[j];
                 writeDescriptorSets[j].dstSet     = descriptorSets[i];
             }
-            std::cout << "before writing descriptor Sets " << std::endl;
+            Logger::debug("before writing descriptor Sets");
             pLogicalDevice->vkd.UpdateDescriptorSets(pLogicalDevice->device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
         }
         return descriptorSets;
