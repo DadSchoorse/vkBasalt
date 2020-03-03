@@ -47,6 +47,11 @@ For Gentoo-based distributions, execute:
 ```
 sudo emerge -v dev-util/glslang dev-util/vulkan-headers dev-util/vulkan-tools media-libs/vulkan-layers media-libs/vulkan-loader dev-util/spirv-tools
 ```
+#### Ubuntu-based distributions
+For Ubuntu-based distributions, execute:
+```
+sudo apt install build-essential glslang-tools libvulkan-dev vulkan-validationlayers-dev vulkan-tools spirv-tools
+```
 ## Build
 To build and install the program, execute:
 ```
