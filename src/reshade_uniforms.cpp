@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-#include "logger"
+#include "logger.hpp"
 
 namespace vkBasalt
 {
