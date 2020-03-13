@@ -267,16 +267,8 @@ namespace vkBasalt
         deviceMap.erase(GetKey(device));
     }
 
-    VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue)
+    static void saveDeviceQueue(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t queueFamilyIndex, VkQueue* pQueue)
     {
-        scoped_lock l(globalLock);
-
-        Logger::trace("vkGetDeviceQueue");
-
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
-
-        pLogicalDevice->vkd.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
-
         if (pLogicalDevice->queue != VK_NULL_HANDLE)
         {
             return; // we allready have a queue
@@ -313,10 +305,36 @@ namespace vkBasalt
             commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
 
             Logger::debug("found graphic capable queue");
-            pLogicalDevice->vkd.CreateCommandPool(device, &commandPoolCreateInfo, nullptr, &pLogicalDevice->commandPool);
+            pLogicalDevice->vkd.CreateCommandPool(pLogicalDevice->device, &commandPoolCreateInfo, nullptr, &pLogicalDevice->commandPool);
             pLogicalDevice->queue            = *pQueue;
             pLogicalDevice->queueFamilyIndex = queueFamilyIndex;
         }
+    }
+
+    VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue2(VkDevice device, const VkDeviceQueueInfo2* pQueueInfo, VkQueue* pQueue)
+    {
+        scoped_lock l(globalLock);
+
+        Logger::trace("vkGetDeviceQueue2");
+
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+
+        pLogicalDevice->vkd.GetDeviceQueue2(device, pQueueInfo, pQueue);
+
+        saveDeviceQueue(pLogicalDevice, pQueueInfo->queueFamilyIndex, pQueue);
+    }
+
+    VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue)
+    {
+        scoped_lock l(globalLock);
+
+        Logger::trace("vkGetDeviceQueue");
+
+        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+
+        pLogicalDevice->vkd.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+
+        saveDeviceQueue(pLogicalDevice, queueFamilyIndex, pQueue);
     }
 
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice                        device,
@@ -843,6 +861,7 @@ extern "C"
         GETPROCADDR(CreateDevice);
         GETPROCADDR(DestroyDevice);
         GETPROCADDR(GetDeviceQueue);
+        GETPROCADDR(GetDeviceQueue2);
         GETPROCADDR(CreateSwapchainKHR);
         GETPROCADDR(GetSwapchainImagesKHR);
         GETPROCADDR(QueuePresentKHR);
@@ -883,6 +902,7 @@ extern "C"
         GETPROCADDR(CreateDevice);
         GETPROCADDR(DestroyDevice);
         GETPROCADDR(GetDeviceQueue);
+        GETPROCADDR(GetDeviceQueue2);
         GETPROCADDR(CreateSwapchainKHR);
         GETPROCADDR(GetSwapchainImagesKHR);
         GETPROCADDR(QueuePresentKHR);
