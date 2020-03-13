@@ -228,7 +228,10 @@ namespace vkBasalt
                         break;
                     case VK_FORMAT_R8G8B8A8_UNORM: desiredChannels = STBI_rgb_alpha; break;
                     case VK_FORMAT_R8G8B8A8_SRGB: desiredChannels = STBI_rgb_alpha; break;
-                    default: Logger::err("unsupported texture upload format" + std::to_string(textureFormatsUNORM[module.textures[i].unique_name]));
+                    default:
+                        Logger::err("unsupported texture upload format" + std::to_string(textureFormatsUNORM[module.textures[i].unique_name]));
+                        desiredChannels = 4;
+                        break;
                 }
 
                 std::string          filePath = pConfig->getOption("reshadeTexturePath") + "/" + source->value.string_data;

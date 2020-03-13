@@ -55,7 +55,7 @@ namespace vkBasalt
         VkMemoryRequirements memoryRequirements;
         pLogicalDevice->vkd.GetImageMemoryRequirements(pLogicalDevice->device, fakeImages[0], &memoryRequirements);
 
-        Logger::debug("fake image size: " +  std::to_string(memoryRequirements.size));
+        Logger::debug("fake image size: " + std::to_string(memoryRequirements.size));
         Logger::debug("fake image alignment: " + std::to_string(memoryRequirements.alignment));
 
         if (memoryRequirements.size % memoryRequirements.alignment != 0)

@@ -61,6 +61,7 @@ namespace vkBasalt
         else
         {
             Logger::err("read file " + filename + " failed");
+            return std::vector<char>(0);
         }
     }
 
