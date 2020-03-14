@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "util.hpp"
+#include "keyboard_input.hpp"
 
 #include "logical_device.hpp"
 #include "logical_swapchain.hpp"
@@ -558,6 +559,31 @@ namespace vkBasalt
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     {
         scoped_lock l(globalLock);
+        
+        static bool pressed = false;
+        int toggle = 0;
+
+        if (isKeyPressed(XK_Home))
+        {
+            if (!pressed)
+            {
+                toggle = 1;
+                pressed = true;
+            }
+        }
+        else
+        {
+            if (pressed)
+            {
+                toggle = -1;
+                pressed = false;
+            }
+        }
+        
+        if(toggle)
+        {
+            Logger::trace("toggled " + std::to_string(toggle));
+        }
 
         std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(queue)];
 
