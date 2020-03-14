@@ -3,10 +3,12 @@
 #include <memory>
 #include <functional>
 
+#include <unistd.h>
+
 namespace vkBasalt
 {
 
-    std::unique_ptr<Display, std::function<void(Display*)>> display(XOpenDisplay(":0"), [](Display* d) { XCloseDisplay(d); });
+    std::unique_ptr<Display, std::function<void(Display*)>> display(XOpenDisplay(getenv("DISPLAY")), [](Display* d) { XCloseDisplay(d); });
 
     bool isKeyPressed(KeySym ks)
     {
