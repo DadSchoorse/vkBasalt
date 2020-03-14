@@ -25,9 +25,11 @@ namespace vkBasalt
         uint32_t                             imageCount;
         std::vector<VkImage>                 images;
         std::vector<VkImage>                 fakeImages;
-        std::vector<VkCommandBuffer>         commandBuffers;
+        std::vector<VkCommandBuffer>         commandBuffersEffect;
+        std::vector<VkCommandBuffer>         commandBuffersNoEffect;
         std::vector<VkSemaphore>             semaphores;
         std::vector<std::shared_ptr<Effect>> effects;
+        std::shared_ptr<Effect>              defaultTransfer;
         VkDeviceMemory                       fakeImageMemory;
 
         void destroy();

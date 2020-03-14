@@ -420,7 +420,7 @@ namespace vkBasalt
 
         pLogicalSwapchain->imageCount = *pCount;
         pLogicalSwapchain->images.reserve(*pCount);
-        pLogicalSwapchain->commandBuffers.reserve(*pCount);
+        pLogicalSwapchain->commandBuffersEffect.reserve(*pCount);
 
         std::string effectOption = pConfig->getOption("effects", "cas");
 
@@ -538,18 +538,18 @@ namespace vkBasalt
         Logger::debug("effect string count: " + std::to_string(effectStrings.size()));
         Logger::debug("effect count: " + std::to_string(pLogicalSwapchain->effects.size()));
 
-        pLogicalSwapchain->commandBuffers = allocateCommandBuffer(pLogicalDevice, pLogicalSwapchain->imageCount);
-        Logger::debug("allocated ComandBuffers " + std::to_string(pLogicalSwapchain->commandBuffers.size()) + " for swapchain "
+        pLogicalSwapchain->commandBuffersEffect = allocateCommandBuffer(pLogicalDevice, pLogicalSwapchain->imageCount);
+        Logger::debug("allocated ComandBuffers " + std::to_string(pLogicalSwapchain->commandBuffersEffect.size()) + " for swapchain "
                       + convertToString(swapchain));
 
-        writeCommandBuffers(pLogicalDevice, pLogicalSwapchain->effects, depthImage, depthImageView, depthFormat, pLogicalSwapchain->commandBuffers);
+        writeCommandBuffers(pLogicalDevice, pLogicalSwapchain->effects, depthImage, depthImageView, depthFormat, pLogicalSwapchain->commandBuffersEffect);
         Logger::debug("wrote CommandBuffers");
 
         pLogicalSwapchain->semaphores = createSemaphores(pLogicalDevice, pLogicalSwapchain->imageCount);
         Logger::debug("created semaphores");
         for (unsigned int i = 0; i < pLogicalSwapchain->imageCount; i++)
         {
-            Logger::debug(std::to_string(i) + " writen commandbuffer " + convertToString(pLogicalSwapchain->commandBuffers[i]));
+            Logger::debug(std::to_string(i) + " writen commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersEffect[i]));
         }
         Logger::trace("vkGetSwapchainImagesKHR");
 
@@ -612,7 +612,7 @@ namespace vkBasalt
             submitInfo.pWaitSemaphores      = nullptr;
             submitInfo.pWaitDstStageMask    = nullptr;
             submitInfo.commandBufferCount   = 1;
-            submitInfo.pCommandBuffers      = &(pLogicalSwapchain->commandBuffers[index]);
+            submitInfo.pCommandBuffers      = &(pLogicalSwapchain->commandBuffersEffect[index]);
             submitInfo.signalSemaphoreCount = 1;
             submitInfo.pSignalSemaphores    = &(pLogicalSwapchain->semaphores[index]);
 
@@ -714,18 +714,18 @@ namespace vkBasalt
                 std::shared_ptr<LogicalSwapchain> pLogicalSwapchain = it.second;
                 if (pLogicalSwapchain->pLogicalDevice == pLogicalDevice)
                 {
-                    if (pLogicalSwapchain->commandBuffers.size())
+                    if (pLogicalSwapchain->commandBuffersEffect.size())
                     {
                         pLogicalDevice->vkd.FreeCommandBuffers(pLogicalDevice->device,
                                                                pLogicalDevice->commandPool,
-                                                               pLogicalSwapchain->commandBuffers.size(),
-                                                               pLogicalSwapchain->commandBuffers.data());
-                        pLogicalSwapchain->commandBuffers.clear();
-                        pLogicalSwapchain->commandBuffers = allocateCommandBuffer(pLogicalDevice, pLogicalSwapchain->imageCount);
+                                                               pLogicalSwapchain->commandBuffersEffect.size(),
+                                                               pLogicalSwapchain->commandBuffersEffect.data());
+                        pLogicalSwapchain->commandBuffersEffect.clear();
+                        pLogicalSwapchain->commandBuffersEffect = allocateCommandBuffer(pLogicalDevice, pLogicalSwapchain->imageCount);
                         Logger::debug("allocated CommandBuffers for swapchain " + convertToString(it.first));
 
                         writeCommandBuffers(
-                            pLogicalDevice, pLogicalSwapchain->effects, image, depthImageView, depthFormat, pLogicalSwapchain->commandBuffers);
+                            pLogicalDevice, pLogicalSwapchain->effects, image, depthImageView, depthFormat, pLogicalSwapchain->commandBuffersEffect);
                         Logger::debug("wrote CommandBuffers");
                     }
                 }
@@ -761,14 +761,14 @@ namespace vkBasalt
                     std::shared_ptr<LogicalSwapchain> pLogicalSwapchain = it.second;
                     if (pLogicalSwapchain->pLogicalDevice == pLogicalDevice)
                     {
-                        if (pLogicalSwapchain->commandBuffers.size())
+                        if (pLogicalSwapchain->commandBuffersEffect.size())
                         {
                             pLogicalDevice->vkd.FreeCommandBuffers(pLogicalDevice->device,
                                                                    pLogicalDevice->commandPool,
-                                                                   pLogicalSwapchain->commandBuffers.size(),
-                                                                   pLogicalSwapchain->commandBuffers.data());
-                            pLogicalSwapchain->commandBuffers.clear();
-                            pLogicalSwapchain->commandBuffers = allocateCommandBuffer(pLogicalDevice, pLogicalSwapchain->imageCount);
+                                                                   pLogicalSwapchain->commandBuffersEffect.size(),
+                                                                   pLogicalSwapchain->commandBuffersEffect.data());
+                            pLogicalSwapchain->commandBuffersEffect.clear();
+                            pLogicalSwapchain->commandBuffersEffect = allocateCommandBuffer(pLogicalDevice, pLogicalSwapchain->imageCount);
                             Logger::debug("allocated CommandBuffers for swapchain " + convertToString(it.first));
 
                             writeCommandBuffers(pLogicalDevice,
@@ -776,7 +776,7 @@ namespace vkBasalt
                                                 depthImage,
                                                 depthImageView,
                                                 depthFormat,
-                                                pLogicalSwapchain->commandBuffers);
+                                                pLogicalSwapchain->commandBuffersEffect);
                             Logger::debug("wrote CommandBuffers");
                         }
                     }
