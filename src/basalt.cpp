@@ -374,10 +374,8 @@ namespace vkBasalt
 
             modifiedCreateInfo.pNext = &imageFormatListCreateInfo;
         }
-        else
-        {
-            modifiedCreateInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-        }
+
+        modifiedCreateInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
         Logger::debug("format " + std::to_string(modifiedCreateInfo.imageFormat));
         std::shared_ptr<LogicalSwapchain> pLogicalSwapchain(new LogicalSwapchain());
@@ -420,7 +418,6 @@ namespace vkBasalt
 
         pLogicalSwapchain->imageCount = *pCount;
         pLogicalSwapchain->images.reserve(*pCount);
-        pLogicalSwapchain->commandBuffersEffect.reserve(*pCount);
 
         std::string effectOption = pConfig->getOption("effects", "cas");
 
@@ -542,7 +539,8 @@ namespace vkBasalt
         Logger::debug("allocated ComandBuffers " + std::to_string(pLogicalSwapchain->commandBuffersEffect.size()) + " for swapchain "
                       + convertToString(swapchain));
 
-        writeCommandBuffers(pLogicalDevice, pLogicalSwapchain->effects, depthImage, depthImageView, depthFormat, pLogicalSwapchain->commandBuffersEffect);
+        writeCommandBuffers(
+            pLogicalDevice, pLogicalSwapchain->effects, depthImage, depthImageView, depthFormat, pLogicalSwapchain->commandBuffersEffect);
         Logger::debug("wrote CommandBuffers");
 
         pLogicalSwapchain->semaphores = createSemaphores(pLogicalDevice, pLogicalSwapchain->imageCount);
@@ -553,34 +551,58 @@ namespace vkBasalt
         }
         Logger::trace("vkGetSwapchainImagesKHR");
 
+        pLogicalSwapchain->defaultTransfer = std::shared_ptr<Effect>(new TransferEffect(
+            pLogicalDevice,
+            pLogicalSwapchain->format,
+            pLogicalSwapchain->imageExtent,
+            std::vector<VkImage>(pLogicalSwapchain->fakeImages.begin(), pLogicalSwapchain->fakeImages.begin() + pLogicalSwapchain->imageCount),
+            pLogicalSwapchain->images,
+            pConfig));
+
+        pLogicalSwapchain->commandBuffersNoEffect = allocateCommandBuffer(pLogicalDevice, pLogicalSwapchain->imageCount);
+
+        writeCommandBuffers(pLogicalDevice,
+                            {pLogicalSwapchain->defaultTransfer},
+                            VK_NULL_HANDLE,
+                            VK_NULL_HANDLE,
+                            VK_FORMAT_UNDEFINED,
+                            pLogicalSwapchain->commandBuffersNoEffect);
+
+        for (unsigned int i = 0; i < pLogicalSwapchain->imageCount; i++)
+        {
+            Logger::debug(std::to_string(i) + " writen commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersNoEffect[i]));
+        }
+
         return result;
     }
 
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     {
         scoped_lock l(globalLock);
-        
-        static bool pressed = false;
-        int toggle = 0;
+
+        static bool pressed       = false;
+        static bool presentEffect = true;
+        int         toggle        = 0;
 
         if (isKeyPressed(XK_Home))
         {
             if (!pressed)
             {
-                toggle = 1;
-                pressed = true;
+                toggle        = 1;
+                presentEffect = !presentEffect;
+                pressed       = true;
             }
         }
         else
         {
             if (pressed)
             {
-                toggle = -1;
+                toggle  = -1;
                 pressed = false;
             }
         }
-        
-        if(toggle)
+
+        if (toggle)
         {
             Logger::trace("toggled " + std::to_string(toggle));
         }
@@ -606,13 +628,14 @@ namespace vkBasalt
             waitStages.resize(pPresentInfo->waitSemaphoreCount, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
             VkSubmitInfo submitInfo;
-            submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-            submitInfo.pNext                = nullptr;
-            submitInfo.waitSemaphoreCount   = 0;
-            submitInfo.pWaitSemaphores      = nullptr;
-            submitInfo.pWaitDstStageMask    = nullptr;
-            submitInfo.commandBufferCount   = 1;
-            submitInfo.pCommandBuffers      = &(pLogicalSwapchain->commandBuffersEffect[index]);
+            submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.pNext              = nullptr;
+            submitInfo.waitSemaphoreCount = 0;
+            submitInfo.pWaitSemaphores    = nullptr;
+            submitInfo.pWaitDstStageMask  = nullptr;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers =
+                presentEffect ? &(pLogicalSwapchain->commandBuffersEffect[index]) : &(pLogicalSwapchain->commandBuffersNoEffect[index]);
             submitInfo.signalSemaphoreCount = 1;
             submitInfo.pSignalSemaphores    = &(pLogicalSwapchain->semaphores[index]);
 
