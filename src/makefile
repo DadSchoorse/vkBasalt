@@ -1,7 +1,7 @@
 CXX ?= g++
 CXXFLAGS ?= -O3 -fPIC -Wall -Wextra -Wno-unused-parameter
 CXXFLAGS += -std=c++2a -I../reshade/deps/spirv/include/spirv/unified1
-LDFLAGS +=  -shared -lstdc++fs -fvisibility=hidden
+LDFLAGS +=  -shared -lstdc++fs -lX11 -fvisibility=hidden
 
 BUILD_DIR := ../build
 INSTALL_DIR := $(DESTDIR)$(PREFIX)/share/vkBasalt
