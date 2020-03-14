@@ -1,17 +1,42 @@
+#include "logger.hpp"
+
 #include "keyboard_input.hpp"
 
 #include <memory>
 #include <functional>
 
 #include <unistd.h>
+#include <cstring>
 
 namespace vkBasalt
 {
-
-    std::unique_ptr<Display, std::function<void(Display*)>> display(XOpenDisplay(getenv("DISPLAY")), [](Display* d) { XCloseDisplay(d); });
-
     bool isKeyPressed(KeySym ks)
     {
+        static int usesX11 = -1;
+
+        static std::unique_ptr<Display, std::function<void(Display*)>> display;
+
+        if (usesX11 < 0)
+        {
+            const char* disVar = getenv("DISPLAY");
+            if (!disVar || !std::strcmp(disVar, ""))
+            {
+                usesX11 = 0;
+                Logger::debug("no X11 support");
+            }
+            else
+            {
+                display = std::unique_ptr<Display, std::function<void(Display*)>>(XOpenDisplay(disVar), [](Display* d) { XCloseDisplay(d); });
+                usesX11 = 1;
+                Logger::debug("X11 support");
+            }
+        }
+
+        if (!usesX11)
+        {
+            return false;
+        }
+
         char keys_return[32];
 
         XQueryKeymap(display.get(), keys_return);
