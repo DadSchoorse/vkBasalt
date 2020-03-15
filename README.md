@@ -29,18 +29,19 @@ Before building, you will need:
 - Vulkan SDK
 - glslangValidator - To compile the shader
 - GCC >=9
+- X11 development files
 
 See below on how to install them.
 
 #### Arch-based distributions
 For Arch-based distributions, execute:
 ```
-pacman -Syu glslang vulkan-headers vulkan-tools vulkan-validation-layers
+pacman -Syu glslang vulkan-headers vulkan-tools vulkan-validation-layers lib32-libx11 libx11
 ```
 #### Fedora
 For Fedora, execute:
 ```
-sudo dnf install vulkan-headers vulkan-tools vulkan-validation-layers vulkan-validation-layers-devel glslang glibc-devel.i686 libstdc++-devel.i686 spirv-tools
+sudo dnf install vulkan-headers vulkan-tools vulkan-validation-layers vulkan-validation-layers-devel glslang libX11-devel glibc-devel.i686 libstdc++-devel.i686 spirv-tools libX11-devel.i686
 ```
 #### Gentoo-based distributions
 For Gentoo-based distributions, execute:
@@ -89,6 +90,10 @@ The config file will be searched for in the following locations:
 * `/usr/local/share/vkBasalt/vkBasalt.conf`
 
 If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the values there.
+
+## Ingame Input
+
+The [HOME key](https://en.wikipedia.org/wiki/Home_key) can be used to disable and re enable the applied effects. This is based on X11 so it won't work on pure wayland. It **should** however at least not crash without X11.
 
 #### Reshade Fx shaders
 
