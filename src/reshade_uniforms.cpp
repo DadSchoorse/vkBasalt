@@ -18,9 +18,9 @@ namespace vkBasalt
             auto source = std::find_if(uniform.annotations.begin(), uniform.annotations.end(), [](const auto& a) {
                               return a.name == "source";
                           })->value.string_data;
-            std::cout << source << std::endl;
-            std::cout << "size: " << uniform.size << std::endl;
-            std::cout << "offset: " << uniform.offset << std::endl;
+            Logger::debug(source);
+            Logger::debug("size: " + std::to_string(uniform.size));
+            Logger::debug("offset: " + std::to_string(uniform.offset));
         }
     }
 
