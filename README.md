@@ -91,7 +91,7 @@ The config file will be searched for in the following locations:
 
 If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the values there.
 
-## Ingame Input
+#### Ingame Input
 
 The [HOME key](https://en.wikipedia.org/wiki/Home_key) can be used to disable and re enable the applied effects. This is based on X11 so it won't work on pure wayland. It **should** however at least not crash without X11.
 
