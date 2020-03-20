@@ -1119,6 +1119,7 @@ namespace vkBasalt
         preprocessor.add_macro_definition("BUFFER_HEIGHT", std::to_string(imageExtent.height));
         preprocessor.add_macro_definition("BUFFER_RCP_WIDTH", "(1.0 / BUFFER_WIDTH)");
         preprocessor.add_macro_definition("BUFFER_RCP_HEIGHT", "(1.0 / BUFFER_HEIGHT)");
+        preprocessor.add_macro_definition("BUFFER_COLOR_DEPTH", (inputOutputFormatUNORM == VK_FORMAT_A2R10G10B10_UNORM_PACK32) ? "10" : "8");
         preprocessor.add_include_path(pConfig->getOption("reshadeIncludePath"));
         if (!preprocessor.append_file(pConfig->getOption(effectName)))
         {
