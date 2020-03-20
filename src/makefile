@@ -31,10 +31,10 @@ $(BUILD_DIR)/%.32.o: %.cpp $(BUILD_DIR)
 	$(CXX) $< -o $@ -c  $(CXXFLAGS) -m32
 
 $(BUILD_DIR)/reshade/%.32.o: ../reshade/source/%.cpp $(BUILD_DIR)/reshade
-	$(CXX) $< -o $@ -c  $(CXXFLAGS) -Wno-missing-field-initializers -Wno-switch -Wno-unknown-pragmas -Wno-char-subscripts -m32
+	$(CXX) $< -o $@ -c  $(CXXFLAGS) -Wno-unknown-pragmas -m32
 
 $(BUILD_DIR)/reshade/%.64.o: ../reshade/source/%.cpp $(BUILD_DIR)/reshade
-	$(CXX) $< -o $@ -c  $(CXXFLAGS) -Wno-missing-field-initializers -Wno-switch -Wno-unknown-pragmas -Wno-char-subscripts -m64
+	$(CXX) $< -o $@ -c  $(CXXFLAGS) -Wno-unknown-pragmas -m64
 
 $(BUILD_DIR)/reshade:
 	mkdir -p $(BUILD_DIR)/reshade
