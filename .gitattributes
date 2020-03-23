@@ -6,3 +6,5 @@ src/SearchTex.h linguist-generated
 
 shader/smaa.h linguist-vendored
 shader/fxaa3_11.h linguist-vendored
+
+include/vulkan/* linguist-vendored

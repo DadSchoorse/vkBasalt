@@ -26,7 +26,6 @@ make install
 
 ### Prerequisites
 Before building, you will need:
-- Vulkan SDK
 - glslangValidator - To compile the shader
 - GCC >=9
 - X11 development files
@@ -36,17 +35,17 @@ See below on how to install them.
 #### Arch-based distributions
 For Arch-based distributions, execute:
 ```
-pacman -Syu glslang vulkan-headers vulkan-tools vulkan-validation-layers lib32-libx11 libx11
+pacman -Syu glslang vulkan-tools lib32-libx11 libx11
 ```
 #### Fedora
 For Fedora, execute:
 ```
-sudo dnf install vulkan-headers vulkan-tools vulkan-validation-layers vulkan-validation-layers-devel glslang libX11-devel glibc-devel.i686 libstdc++-devel.i686 spirv-tools libX11-devel.i686
+sudo dnf install vulkan-tools glslang libX11-devel glibc-devel.i686 libstdc++-devel.i686 spirv-tools libX11-devel.i686
 ```
 #### Gentoo-based distributions
 For Gentoo-based distributions, execute:
 ```
-sudo emerge -v dev-util/glslang dev-util/vulkan-headers dev-util/vulkan-tools media-libs/vulkan-layers media-libs/vulkan-loader dev-util/spirv-tools
+sudo emerge -v dev-util/glslang dev-util/vulkan-tools dev-util/spirv-tools
 ```
 ## Build
 To build and install the program, execute:
