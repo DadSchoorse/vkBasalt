@@ -827,7 +827,7 @@ namespace vkBasalt
 #endif
             std::strcpy(pProperties->description, "a post processing layer");
             pProperties->implementationVersion = 1;
-            pProperties->specVersion           = VK_API_VERSION_1_0;
+            pProperties->specVersion           = VK_MAKE_VERSION(1, 2, 0);
         }
 
         return VK_SUCCESS;
