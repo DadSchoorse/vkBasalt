@@ -644,11 +644,20 @@ namespace vkBasalt
             vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
             vertexInputCreateInfo.pVertexAttributeDescriptions    = nullptr;
 
+            VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+            switch (pass.topology)
+            {
+                case reshadefx::primitive_topology::point_list: topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST; break;
+                case reshadefx::primitive_topology::triangle_list: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
+                default: Logger::err("unsupported primitiv type" + convertToString((uint8_t) pass.topology)); break;
+            }
+
             VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo;
             inputAssemblyCreateInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
             inputAssemblyCreateInfo.pNext                  = nullptr;
             inputAssemblyCreateInfo.flags                  = 0;
-            inputAssemblyCreateInfo.topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            inputAssemblyCreateInfo.topology               = topology;
             inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
 
             VkPipelineViewportStateCreateInfo viewportStateCreateInfo;
