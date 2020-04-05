@@ -49,7 +49,7 @@ sudo emerge -v dev-util/glslang dev-util/vulkan-tools dev-util/spirv-tools
 ```
 ## Build
 To build and install the program, execute:
-```
+```bash
 git clone --recurse-submodules https://github.com/DadSchoorse/vkBasalt.git ~/vkBasalt
 cd ~/vkBasalt
 make
@@ -61,7 +61,7 @@ Enable the layer with the environment variable (see below). Since vkBasalt 0.2.0
 
 ### Standard
 When using the terminal or an application (.desktop) file, execute:
-```
+```ini
 ENABLE_VKBASALT=1 yourgame
 ```
 
@@ -73,7 +73,7 @@ With Lutris, follow these steps below:
 
 ### Steam
 With Steam, edit your launch options and add:
-```
+```ini
 ENABLE_VKBASALT=1 %command% 
 ```
 
@@ -132,7 +132,7 @@ Not really, most of the code was written from scratch. vkBasalt directly uses re
 No. Shaders that need multiple techniques do not work, there might still be problems with stencil and blending and depth buffer access isn't ready yet.
 #### You said that "depth buffer access isn't ready yet", what does this mean?
 There is a wip version that you can enable with `depthCapture = on`. It will lead to many problems especially on non nvidia hardware. Also the selected depth buffer isn't always the one you would want.
-#### Is there a way to change settings for reshade shaders
+#### Is there a way to change settings for reshade shaders?
 There is some support for it [#46](https://github.com/DadSchoorse/vkBasalt/pull/46). One easy way so to simply edit the shader file.
 
 ## Previews
