@@ -689,9 +689,9 @@ namespace vkBasalt
         scoped_lock l(globalLock);
 
         std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
-        if (isDepthFormat(pCreateInfo->format)
+        if (isDepthFormat(pCreateInfo->format) && pCreateInfo->samples == VK_SAMPLE_COUNT_1_BIT
             && ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-                == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)) //&& pCreateInfo->extent.width == 2560 && pCreateInfo->extent.height == 1440)
+                == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT))
         {
             Logger::debug("detected depth image with format: " + convertToString(pCreateInfo->format));
             Logger::debug(std::to_string(pCreateInfo->extent.width) + "x" + std::to_string(pCreateInfo->extent.height));
