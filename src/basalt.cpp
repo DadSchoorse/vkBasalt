@@ -588,13 +588,11 @@ namespace vkBasalt
 
         static bool pressed       = false;
         static bool presentEffect = true;
-        int         toggle        = 0;
 
         if (isKeyPressed(XK_Home))
         {
             if (!pressed)
             {
-                toggle        = 1;
                 presentEffect = !presentEffect;
                 pressed       = true;
             }
@@ -603,14 +601,8 @@ namespace vkBasalt
         {
             if (pressed)
             {
-                toggle  = -1;
                 pressed = false;
             }
-        }
-
-        if (toggle)
-        {
-            Logger::trace("toggled " + std::to_string(toggle));
         }
 
         std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(queue)];
@@ -618,7 +610,7 @@ namespace vkBasalt
         std::vector<VkSemaphore> presentSemaphores;
         presentSemaphores.reserve(pPresentInfo->swapchainCount);
 
-        std::vector<VkPipelineStageFlags> waitStages;
+        std::vector<VkPipelineStageFlags> waitStages(pPresentInfo->waitSemaphoreCount, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
         for (unsigned int i = 0; i < (*pPresentInfo).swapchainCount; i++)
         {
@@ -631,14 +623,12 @@ namespace vkBasalt
                 effect->updateEffect();
             }
 
-            waitStages.resize(pPresentInfo->waitSemaphoreCount, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-
             VkSubmitInfo submitInfo;
             submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             submitInfo.pNext              = nullptr;
-            submitInfo.waitSemaphoreCount = 0;
-            submitInfo.pWaitSemaphores    = nullptr;
-            submitInfo.pWaitDstStageMask  = nullptr;
+            submitInfo.waitSemaphoreCount = i == 0 ? pPresentInfo->waitSemaphoreCount : 0;
+            submitInfo.pWaitSemaphores    = i == 0 ? pPresentInfo->pWaitSemaphores : nullptr;
+            submitInfo.pWaitDstStageMask  = i == 0 ? waitStages.data() : nullptr;
             submitInfo.commandBufferCount = 1;
             submitInfo.pCommandBuffers =
                 presentEffect ? &(pLogicalSwapchain->commandBuffersEffect[index]) : &(pLogicalSwapchain->commandBuffersNoEffect[index]);
@@ -647,13 +637,6 @@ namespace vkBasalt
 
             presentSemaphores.push_back(pLogicalSwapchain->semaphores[index]);
 
-            if (i == 0)
-            {
-                submitInfo.waitSemaphoreCount = pPresentInfo->waitSemaphoreCount;
-                submitInfo.pWaitSemaphores    = pPresentInfo->pWaitSemaphores;
-                submitInfo.pWaitDstStageMask  = waitStages.data();
-            }
-
             VkResult vr = pLogicalDevice->vkd.QueueSubmit(pLogicalDevice->queue, 1, &submitInfo, VK_NULL_HANDLE);
 
             if (vr != VK_SUCCESS)
@@ -661,6 +644,7 @@ namespace vkBasalt
                 return vr;
             }
         }
+
         VkPresentInfoKHR presentInfo   = *pPresentInfo;
         presentInfo.waitSemaphoreCount = presentSemaphores.size();
         presentInfo.pWaitSemaphores    = presentSemaphores.data();
@@ -690,8 +674,7 @@ namespace vkBasalt
 
         std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
         if (isDepthFormat(pCreateInfo->format) && pCreateInfo->samples == VK_SAMPLE_COUNT_1_BIT
-            && ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-                == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT))
+            && ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT))
         {
             Logger::debug("detected depth image with format: " + convertToString(pCreateInfo->format));
             Logger::debug(std::to_string(pCreateInfo->extent.width) + "x" + std::to_string(pCreateInfo->extent.height));
