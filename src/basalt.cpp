@@ -38,6 +38,12 @@
 #include "effect_reshade.hpp"
 #include "effect_transfer.hpp"
 
+#ifdef __x86_64__
+#define VKBASALT_NAME "VK_LAYER_VKBASALT_PostProcess64"
+#else
+#define VKBASALT_NAME "VK_LAYER_VKBASALT_PostProcess32"
+#endif
+
 namespace vkBasalt
 {
     std::shared_ptr<Config> pConfig = nullptr;
@@ -820,11 +826,7 @@ namespace vkBasalt
 
         if (pProperties)
         {
-#ifdef __x86_64__
-            std::strcpy(pProperties->layerName, "VK_LAYER_VKBASALT_PostProcess64");
-#else
-            std::strcpy(pProperties->layerName, "VK_LAYER_VKBASALT_PostProcess32");
-#endif
+            std::strcpy(pProperties->layerName, VKBASALT_NAME);
             std::strcpy(pProperties->description, "a post processing layer");
             pProperties->implementationVersion = 1;
             pProperties->specVersion           = VK_MAKE_VERSION(1, 2, 0);
@@ -844,8 +846,7 @@ namespace vkBasalt
                                                                                       uint32_t*              pPropertyCount,
                                                                                       VkExtensionProperties* pProperties)
     {
-        if (pLayerName == NULL
-            || (std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess32") && std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess64")))
+        if (pLayerName == NULL || std::strcmp(pLayerName, VKBASALT_NAME))
         {
             return VK_ERROR_LAYER_NOT_PRESENT;
         }
@@ -864,8 +865,7 @@ namespace vkBasalt
                                                                                     VkExtensionProperties* pProperties)
     {
         // pass through any queries that aren't to us
-        if (pLayerName == NULL
-            || (std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess32") && std::strcmp(pLayerName, "VK_LAYER_VKBASALT_PostProcess64")))
+        if (pLayerName == NULL || std::strcmp(pLayerName, VKBASALT_NAME))
         {
             if (physicalDevice == VK_NULL_HANDLE)
             {
