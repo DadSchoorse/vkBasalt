@@ -35,7 +35,12 @@ See below on how to install them.
 #### Arch-based distributions
 For Arch-based distributions, execute:
 ```
-pacman -Syu glslang vulkan-tools lib32-libx11 libx11
+sudo pacman -Syu glslang vulkan-tools lib32-libx11 libx11
+```
+#### Debian/Ubuntu-based distributions
+For newer Debian/Ubuntu-based distributions, execute:
+```
+sudo apt install build-essential gcc-multilib libx11-dev libx11-dev:i386 glslang-tools spirv-tools
 ```
 #### Fedora
 For Fedora, execute:
