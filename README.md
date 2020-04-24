@@ -26,9 +26,10 @@ make install
 
 ### Prerequisites
 Before building, you will need:
-- glslangValidator - To compile the shader
-- GCC >=9
+- GCC >= 9
 - X11 development files
+- glslang
+- spirv-opt
 
 See below on how to install them.
 
@@ -95,10 +96,6 @@ The config file will be searched for in the following locations:
 
 If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the values there.
 
-#### Ingame Input
-
-The [HOME key](https://en.wikipedia.org/wiki/Home_key) can be used to disable and re enable the applied effects. This is based on X11 so it won't work on pure wayland. It **should** however at least not crash without X11.
-
 #### Reshade Fx shaders
 
 To run reshade fx shaders e.g. shaders from the [reshade repo](https://github.com/crosire/reshade-shaders), you have to set `reshadeTexturePath` and `reshadeIncludePath` to the matching dirctories from the repo. To then use a specific shader you need to set a custom effect name to the shader path and then add that effect name to `effects` like every other effect.
@@ -111,6 +108,11 @@ denoise = /home/user/reshade-shaders/Shaders/Denoise.fx
 reshadeTexturePath = /home/user/reshade-shaders/Textures
 reshadeIncludePath = /home/user/reshade-shaders/Shaders
 ```
+
+#### Ingame Input
+
+The [HOME key](https://en.wikipedia.org/wiki/Home_key) can be used to disable and re enable the applied effects. This is based on X11 so it won't work on pure wayland. It **should** however at least not crash without X11.
+
 
 #### Debug Output
 
