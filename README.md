@@ -53,6 +53,13 @@ For Gentoo-based distributions, execute:
 ```
 sudo emerge -v dev-util/glslang dev-util/vulkan-tools dev-util/spirv-tools
 ```
+
+#### Void Linux
+For Void Linux execute:
+```
+sudo xbps-install -S Vulkan-Tools glslang libX11-devel libX11-devel-32bit SPIRV-Headers SPIRV-Tools glibc-devel glibc-devel-32bit
+```
+
 ## Build
 To build and install the program, execute:
 ```bash
