@@ -17,6 +17,7 @@ namespace vkBasalt
     std::vector<char> readFile(const std::string& filename);
 
     void createShaderModule(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<char>& code, VkShaderModule* shaderModule);
+    void createShaderModule(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<uint32_t>& code, VkShaderModule* shaderModule);
 } // namespace vkBasalt
 
 #endif // SHADER_HPP_INCLUDED

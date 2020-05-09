@@ -43,8 +43,8 @@ namespace vkBasalt
         VkFormat                          format;
         VkSampler                         sampler;
         std::shared_ptr<vkBasalt::Config> pConfig;
-        std::vector<char>                 vertexCode;
-        std::vector<char>                 fragmentCode;
+        std::vector<uint32_t>             vertexCode;
+        std::vector<uint32_t>             fragmentCode;
         VkSpecializationInfo*             pVertexSpecInfo;
         VkSpecializationInfo*             pFragmentSpecInfo;
 

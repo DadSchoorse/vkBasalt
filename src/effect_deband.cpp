@@ -11,6 +11,8 @@
 #include "shader.hpp"
 #include "sampler.hpp"
 
+#include "shader_sources.hpp"
+
 namespace vkBasalt
 {
     DebandEffect::DebandEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
@@ -20,11 +22,8 @@ namespace vkBasalt
                                std::vector<VkImage>              outputImages,
                                std::shared_ptr<vkBasalt::Config> pConfig)
     {
-        std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
-        std::string debandFragmentFile = "deband.frag.spv";
-
-        vertexCode   = readFile(fullScreenRectFile);
-        fragmentCode = readFile(debandFragmentFile);
+        vertexCode   = full_screen_triangle_vert;
+        fragmentCode = deband_frag;
 
         struct
         {

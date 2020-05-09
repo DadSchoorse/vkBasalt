@@ -15,6 +15,8 @@
 
 #include "stb_image.h"
 
+#include "shader_sources.hpp"
+
 namespace vkBasalt
 {
     LutEffect::LutEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
@@ -24,11 +26,8 @@ namespace vkBasalt
                          std::vector<VkImage>              outputImages,
                          std::shared_ptr<vkBasalt::Config> pConfig)
     {
-        std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
-        std::string lutFragmentFile    = "lut.frag.spv";
-
-        vertexCode   = readFile(fullScreenRectFile);
-        fragmentCode = readFile(lutFragmentFile);
+        vertexCode   = full_screen_triangle_vert;
+        fragmentCode = lut_frag;
 
         int      height;
         LutCube  lutCube;
