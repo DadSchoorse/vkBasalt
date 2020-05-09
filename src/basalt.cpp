@@ -38,11 +38,7 @@
 #include "effect_reshade.hpp"
 #include "effect_transfer.hpp"
 
-#ifdef __x86_64__
-#define VKBASALT_NAME "VK_LAYER_VKBASALT_PostProcess64"
-#else
-#define VKBASALT_NAME "VK_LAYER_VKBASALT_PostProcess32"
-#endif
+#define VKBASALT_NAME "VK_LAYER_VKBASALT_post_processing"
 
 namespace vkBasalt
 {
