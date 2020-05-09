@@ -11,6 +11,8 @@
 #include "shader.hpp"
 #include "sampler.hpp"
 
+#include "shader_sources.hpp"
+
 namespace vkBasalt
 {
     CasEffect::CasEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
@@ -20,13 +22,11 @@ namespace vkBasalt
                          std::vector<VkImage>              outputImages,
                          std::shared_ptr<vkBasalt::Config> pConfig)
     {
-        std::string fullScreenRectFile = "full_screen_triangle.vert.spv";
-        std::string casFragmentFile    = "cas.frag.spv";
 
         float sharpness = std::stod(pConfig->getOption("casSharpness", "0.4"));
 
-        vertexCode   = readFile(fullScreenRectFile);
-        fragmentCode = readFile(casFragmentFile);
+        vertexCode   = full_screen_triangle_vert;
+        fragmentCode = cas_frag;
 
         VkSpecializationMapEntry sharpnessMapEntry;
         sharpnessMapEntry.constantID = 0;

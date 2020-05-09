@@ -15,6 +15,7 @@
 
 #include "AreaTex.h"
 #include "SearchTex.h"
+#include "shader_sources.hpp"
 
 namespace vkBasalt
 {
@@ -25,13 +26,6 @@ namespace vkBasalt
                            std::vector<VkImage>              outputImages,
                            std::shared_ptr<vkBasalt::Config> pConfig)
     {
-        std::string smaaEdgeVertexFile        = "smaa_edge.vert.spv";
-        std::string smaaEdgeLumaFragmentFile  = "smaa_edge_luma.frag.spv";
-        std::string smaaEdgeColorFragmentFile = "smaa_edge_color.frag.spv";
-        std::string smaaBlendVertexFile       = "smaa_blend.vert.spv";
-        std::string smaaBlendFragmentFile     = "smaa_blend.frag.spv";
-        std::string smaaNeighborVertexFile    = "smaa_neighbor.vert.spv";
-        std::string smaaNeighborFragmentFile  = "smaa_neighbor.frag.spv";
         Logger::debug("in creating SmaaEffect");
 
         this->pLogicalDevice = pLogicalDevice;
@@ -124,19 +118,18 @@ namespace vkBasalt
         smaaOptions.maxSearchStepsDiag = std::stoi(pConfig->getOption("smaaMaxSearchStepsDiag", "16"));
         smaaOptions.cornerRounding     = std::stoi(pConfig->getOption("smaaCornerRounding", "25"));
 
-        auto shaderCode = readFile(smaaEdgeVertexFile);
-        createShaderModule(pLogicalDevice, shaderCode, &edgeVertexModule);
-        shaderCode =
-            pConfig->getOption("smaaEdgeDetection", "luma") == "color" ? readFile(smaaEdgeColorFragmentFile) : readFile(smaaEdgeLumaFragmentFile);
+        createShaderModule(pLogicalDevice, smaa_edge_vert, &edgeVertexModule);
+
+        auto shaderCode = pConfig->getOption("smaaEdgeDetection", "luma") == "color" ? smaa_edge_color_frag : smaa_edge_luma_frag;
         createShaderModule(pLogicalDevice, shaderCode, &edgeFragmentModule);
-        shaderCode = readFile(smaaBlendVertexFile);
-        createShaderModule(pLogicalDevice, shaderCode, &blendVertexModule);
-        shaderCode = readFile(smaaBlendFragmentFile);
-        createShaderModule(pLogicalDevice, shaderCode, &blendFragmentModule);
-        shaderCode = readFile(smaaNeighborVertexFile);
-        createShaderModule(pLogicalDevice, shaderCode, &neighborVertexModule);
-        shaderCode = readFile(smaaNeighborFragmentFile);
-        createShaderModule(pLogicalDevice, shaderCode, &neignborFragmentModule);
+
+        createShaderModule(pLogicalDevice, smaa_blend_vert, &blendVertexModule);
+
+        createShaderModule(pLogicalDevice, smaa_blend_frag, &blendFragmentModule);
+
+        createShaderModule(pLogicalDevice, smaa_neighbor_vert, &neighborVertexModule);
+
+        createShaderModule(pLogicalDevice, smaa_neighbor_frag, &neignborFragmentModule);
 
         renderPass      = createRenderPass(pLogicalDevice, format);
         unormRenderPass = createRenderPass(pLogicalDevice, VK_FORMAT_B8G8R8A8_UNORM);
