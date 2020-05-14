@@ -1,6 +1,6 @@
-/* Copyright (c) 2015-2019 The Khronos Group Inc.
- * Copyright (c) 2015-2019 Valve Corporation
- * Copyright (c) 2015-2019 LunarG, Inc.
+/* Copyright (c) 2015-2020 The Khronos Group Inc.
+ * Copyright (c) 2015-2020 Valve Corporation
+ * Copyright (c) 2015-2020 LunarG, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,15 @@
 extern "C" {
 #endif
 
+typedef enum {
+    kInformationBit = 0x00000001,
+    kWarningBit = 0x00000002,
+    kPerformanceWarningBit = 0x00000004,
+    kErrorBit = 0x00000008,
+    kDebugBit = 0x00000010,
+} LogMessageTypeBits;
+typedef VkFlags LogMessageTypeFlags;
+
 // Definitions for Debug Actions
 typedef enum VkLayerDbgActionBits {
     VK_DBG_LAYER_ACTION_IGNORE = 0x00000000,
@@ -57,6 +66,12 @@ const std::unordered_map<std::string, VkFlags> report_flags_option_definitions =
     {std::string("perf"), VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT},
     {std::string("error"), VK_DEBUG_REPORT_ERROR_BIT_EXT},
     {std::string("debug"), VK_DEBUG_REPORT_DEBUG_BIT_EXT}};
+
+const std::unordered_map<std::string, VkFlags> log_msg_type_option_definitions = {{std::string("warn"), kWarningBit},
+                                                                                  {std::string("info"), kInformationBit},
+                                                                                  {std::string("perf"), kPerformanceWarningBit},
+                                                                                  {std::string("error"), kErrorBit},
+                                                                                  {std::string("debug"), kDebugBit}};
 
 VK_LAYER_EXPORT const char *getLayerOption(const char *option);
 VK_LAYER_EXPORT const char *GetLayerEnvVar(const char *option);

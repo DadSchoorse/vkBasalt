@@ -44,13 +44,20 @@
 
 #define VK_VERSION_1_1_NAME "VK_VERSION_1_1"
 
+// Suppress unused warning on Linux
+#if defined(__GNUC__)
+#define DECORATE_UNUSED __attribute__((unused))
+#else
+#define DECORATE_UNUSED
+#endif
+
 enum ExtEnabled : unsigned char {
     kNotEnabled,
     kEnabledByCreateinfo,
     kEnabledByApiLevel,
 };
 
-static bool IsExtEnabled(ExtEnabled feature) {
+static bool DECORATE_UNUSED IsExtEnabled(ExtEnabled feature) {
     if (feature == kNotEnabled) return false;
     return true;
 };
@@ -97,9 +104,9 @@ struct InstanceExtensions {
     };
     typedef std::vector<InstanceReq> InstanceReqVec;
     struct InstanceInfo {
-       InstanceInfo(ExtEnabled InstanceExtensions::* state_, const InstanceReqVec requires_): state(state_), requires(requires_) {}
+       InstanceInfo(ExtEnabled InstanceExtensions::* state_, const InstanceReqVec requirements_): state(state_), requirements(requirements_) {}
        ExtEnabled InstanceExtensions::* state;
-       InstanceReqVec requires;
+       InstanceReqVec requirements;
     };
 
     typedef std::unordered_map<std::string,InstanceInfo> InstanceInfoMap;
@@ -360,6 +367,7 @@ struct DeviceExtensions : public InstanceExtensions {
     ExtEnabled vk_ext_memory_budget{kNotEnabled};
     ExtEnabled vk_ext_memory_priority{kNotEnabled};
     ExtEnabled vk_ext_pci_bus_info{kNotEnabled};
+    ExtEnabled vk_ext_pipeline_creation_cache_control{kNotEnabled};
     ExtEnabled vk_ext_pipeline_creation_feedback{kNotEnabled};
     ExtEnabled vk_ext_post_depth_coverage{kNotEnabled};
     ExtEnabled vk_ext_queue_family_foreign{kNotEnabled};
@@ -395,6 +403,7 @@ struct DeviceExtensions : public InstanceExtensions {
     ExtEnabled vk_khr_buffer_device_address{kNotEnabled};
     ExtEnabled vk_khr_create_renderpass_2{kNotEnabled};
     ExtEnabled vk_khr_dedicated_allocation{kNotEnabled};
+    ExtEnabled vk_khr_deferred_host_operations{kNotEnabled};
     ExtEnabled vk_khr_depth_stencil_resolve{kNotEnabled};
     ExtEnabled vk_khr_descriptor_update_template{kNotEnabled};
     ExtEnabled vk_khr_device_group{kNotEnabled};
@@ -420,7 +429,9 @@ struct DeviceExtensions : public InstanceExtensions {
     ExtEnabled vk_khr_multiview{kNotEnabled};
     ExtEnabled vk_khr_performance_query{kNotEnabled};
     ExtEnabled vk_khr_pipeline_executable_properties{kNotEnabled};
+    ExtEnabled vk_khr_pipeline_library{kNotEnabled};
     ExtEnabled vk_khr_push_descriptor{kNotEnabled};
+    ExtEnabled vk_khr_ray_tracing{kNotEnabled};
     ExtEnabled vk_khr_relaxed_block_layout{kNotEnabled};
     ExtEnabled vk_khr_sampler_mirror_clamp_to_edge{kNotEnabled};
     ExtEnabled vk_khr_sampler_ycbcr_conversion{kNotEnabled};
@@ -442,7 +453,6 @@ struct DeviceExtensions : public InstanceExtensions {
     ExtEnabled vk_khr_variable_pointers{kNotEnabled};
     ExtEnabled vk_khr_vulkan_memory_model{kNotEnabled};
     ExtEnabled vk_khr_win32_keyed_mutex{kNotEnabled};
-    ExtEnabled vk_nvx_device_generated_commands{kNotEnabled};
     ExtEnabled vk_nvx_image_view_handle{kNotEnabled};
     ExtEnabled vk_nvx_multiview_per_view_attributes{kNotEnabled};
     ExtEnabled vk_nv_clip_space_w_scaling{kNotEnabled};
@@ -453,6 +463,8 @@ struct DeviceExtensions : public InstanceExtensions {
     ExtEnabled vk_nv_dedicated_allocation{kNotEnabled};
     ExtEnabled vk_nv_dedicated_allocation_image_aliasing{kNotEnabled};
     ExtEnabled vk_nv_device_diagnostic_checkpoints{kNotEnabled};
+    ExtEnabled vk_nv_device_diagnostics_config{kNotEnabled};
+    ExtEnabled vk_nv_device_generated_commands{kNotEnabled};
     ExtEnabled vk_nv_external_memory{kNotEnabled};
     ExtEnabled vk_nv_external_memory_win32{kNotEnabled};
     ExtEnabled vk_nv_fill_rectangle{kNotEnabled};
@@ -473,6 +485,8 @@ struct DeviceExtensions : public InstanceExtensions {
     ExtEnabled vk_nv_viewport_array2{kNotEnabled};
     ExtEnabled vk_nv_viewport_swizzle{kNotEnabled};
     ExtEnabled vk_nv_win32_keyed_mutex{kNotEnabled};
+    ExtEnabled vk_qcom_render_pass_store_ops{kNotEnabled};
+    ExtEnabled vk_qcom_render_pass_transform{kNotEnabled};
 
     struct DeviceReq {
         const ExtEnabled DeviceExtensions::* enabled;
@@ -480,9 +494,9 @@ struct DeviceExtensions : public InstanceExtensions {
     };
     typedef std::vector<DeviceReq> DeviceReqVec;
     struct DeviceInfo {
-       DeviceInfo(ExtEnabled DeviceExtensions::* state_, const DeviceReqVec requires_): state(state_), requires(requires_) {}
+       DeviceInfo(ExtEnabled DeviceExtensions::* state_, const DeviceReqVec requirements_): state(state_), requirements(requirements_) {}
        ExtEnabled DeviceExtensions::* state;
-       DeviceReqVec requires;
+       DeviceReqVec requirements;
     };
 
     typedef std::unordered_map<std::string,DeviceInfo> DeviceInfoMap;
@@ -583,6 +597,7 @@ struct DeviceExtensions : public InstanceExtensions {
                            {&DeviceExtensions::vk_khr_get_physical_device_properties_2, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME}}})),
             std::make_pair(VK_EXT_PCI_BUS_INFO_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_ext_pci_bus_info, {{
                            {&DeviceExtensions::vk_khr_get_physical_device_properties_2, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME}}})),
+            std::make_pair(VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_ext_pipeline_creation_cache_control, {})),
             std::make_pair(VK_EXT_PIPELINE_CREATION_FEEDBACK_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_ext_pipeline_creation_feedback, {})),
             std::make_pair(VK_EXT_POST_DEPTH_COVERAGE_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_ext_post_depth_coverage, {})),
             std::make_pair(VK_EXT_QUEUE_FAMILY_FOREIGN_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_ext_queue_family_foreign, {{
@@ -643,6 +658,9 @@ struct DeviceExtensions : public InstanceExtensions {
                            {&DeviceExtensions::vk_khr_maintenance2, VK_KHR_MAINTENANCE2_EXTENSION_NAME}}})),
             std::make_pair(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_dedicated_allocation, {{
                            {&DeviceExtensions::vk_khr_get_memory_requirements_2, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME}}})),
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+            std::make_pair(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_deferred_host_operations, {})),
+#endif
             std::make_pair(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_depth_stencil_resolve, {{
                            {&DeviceExtensions::vk_khr_create_renderpass_2, VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME}}})),
             std::make_pair(VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_descriptor_update_template, {})),
@@ -694,8 +712,20 @@ struct DeviceExtensions : public InstanceExtensions {
             std::make_pair(VK_KHR_PERFORMANCE_QUERY_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_performance_query, {{
                            {&DeviceExtensions::vk_khr_get_physical_device_properties_2, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME}}})),
             std::make_pair(VK_KHR_PIPELINE_EXECUTABLE_PROPERTIES_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_pipeline_executable_properties, {})),
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+            std::make_pair(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_pipeline_library, {})),
+#endif
             std::make_pair(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_push_descriptor, {{
                            {&DeviceExtensions::vk_khr_get_physical_device_properties_2, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME}}})),
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+            std::make_pair(VK_KHR_RAY_TRACING_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_ray_tracing, {{
+                           {&DeviceExtensions::vk_khr_get_physical_device_properties_2, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME},
+                           {&DeviceExtensions::vk_khr_get_memory_requirements_2, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME},
+                           {&DeviceExtensions::vk_ext_descriptor_indexing, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME},
+                           {&DeviceExtensions::vk_khr_buffer_device_address, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME},
+                           {&DeviceExtensions::vk_khr_deferred_host_operations, VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME},
+                           {&DeviceExtensions::vk_khr_pipeline_library, VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME}}})),
+#endif
             std::make_pair(VK_KHR_RELAXED_BLOCK_LAYOUT_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_relaxed_block_layout, {})),
             std::make_pair(VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_sampler_mirror_clamp_to_edge, {})),
             std::make_pair(VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_sampler_ycbcr_conversion, {{
@@ -744,7 +774,6 @@ struct DeviceExtensions : public InstanceExtensions {
             std::make_pair(VK_KHR_WIN32_KEYED_MUTEX_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_khr_win32_keyed_mutex, {{
                            {&DeviceExtensions::vk_khr_external_memory_win32, VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME}}})),
 #endif
-            std::make_pair(VK_NVX_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nvx_device_generated_commands, {})),
             std::make_pair(VK_NVX_IMAGE_VIEW_HANDLE_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nvx_image_view_handle, {})),
             std::make_pair(VK_NVX_MULTIVIEW_PER_VIEW_ATTRIBUTES_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nvx_multiview_per_view_attributes, {{
                            {&DeviceExtensions::vk_khr_multiview, VK_KHR_MULTIVIEW_EXTENSION_NAME}}})),
@@ -762,6 +791,10 @@ struct DeviceExtensions : public InstanceExtensions {
                            {&DeviceExtensions::vk_khr_dedicated_allocation, VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME}}})),
             std::make_pair(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nv_device_diagnostic_checkpoints, {{
                            {&DeviceExtensions::vk_khr_get_physical_device_properties_2, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME}}})),
+            std::make_pair(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nv_device_diagnostics_config, {{
+                           {&DeviceExtensions::vk_khr_get_physical_device_properties_2, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME}}})),
+            std::make_pair(VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nv_device_generated_commands, {{
+                           {&DeviceExtensions::vk_feature_version_1_1, VK_VERSION_1_1_NAME}}})),
             std::make_pair(VK_NV_EXTERNAL_MEMORY_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nv_external_memory, {{
                            {&DeviceExtensions::vk_nv_external_memory_capabilities, VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME}}})),
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -798,6 +831,10 @@ struct DeviceExtensions : public InstanceExtensions {
             std::make_pair(VK_NV_WIN32_KEYED_MUTEX_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_nv_win32_keyed_mutex, {{
                            {&DeviceExtensions::vk_nv_external_memory_win32, VK_NV_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME}}})),
 #endif
+            std::make_pair(VK_QCOM_render_pass_store_ops_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_qcom_render_pass_store_ops, {})),
+            std::make_pair(VK_QCOM_RENDER_PASS_TRANSFORM_EXTENSION_NAME, DeviceInfo(&DeviceExtensions::vk_qcom_render_pass_transform, {{
+                           {&DeviceExtensions::vk_khr_swapchain, VK_KHR_SWAPCHAIN_EXTENSION_NAME},
+                           {&DeviceExtensions::vk_khr_surface, VK_KHR_SURFACE_EXTENSION_NAME}}})),
         };
 
         static const DeviceInfo empty_info {nullptr, DeviceReqVec()};
@@ -952,6 +989,7 @@ static const std::set<std::string> kDeviceExtensionNames = {
     VK_EXT_MEMORY_BUDGET_EXTENSION_NAME,
     VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME,
     VK_EXT_PCI_BUS_INFO_EXTENSION_NAME,
+    VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
     VK_EXT_PIPELINE_CREATION_FEEDBACK_EXTENSION_NAME,
     VK_EXT_POST_DEPTH_COVERAGE_EXTENSION_NAME,
     VK_EXT_QUEUE_FAMILY_FOREIGN_EXTENSION_NAME,
@@ -989,6 +1027,9 @@ static const std::set<std::string> kDeviceExtensionNames = {
     VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
     VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
     VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+#endif
     VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
     VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
     VK_KHR_DEVICE_GROUP_EXTENSION_NAME,
@@ -1020,7 +1061,13 @@ static const std::set<std::string> kDeviceExtensionNames = {
     VK_KHR_MULTIVIEW_EXTENSION_NAME,
     VK_KHR_PERFORMANCE_QUERY_EXTENSION_NAME,
     VK_KHR_PIPELINE_EXECUTABLE_PROPERTIES_EXTENSION_NAME,
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
+#endif
     VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    VK_KHR_RAY_TRACING_EXTENSION_NAME,
+#endif
     VK_KHR_RELAXED_BLOCK_LAYOUT_EXTENSION_NAME,
     VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME,
     VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME,
@@ -1044,7 +1091,6 @@ static const std::set<std::string> kDeviceExtensionNames = {
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     VK_KHR_WIN32_KEYED_MUTEX_EXTENSION_NAME,
 #endif
-    VK_NVX_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME,
     VK_NVX_IMAGE_VIEW_HANDLE_EXTENSION_NAME,
     VK_NVX_MULTIVIEW_PER_VIEW_ATTRIBUTES_EXTENSION_NAME,
     VK_NV_CLIP_SPACE_W_SCALING_EXTENSION_NAME,
@@ -1055,6 +1101,8 @@ static const std::set<std::string> kDeviceExtensionNames = {
     VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME,
     VK_NV_DEDICATED_ALLOCATION_IMAGE_ALIASING_EXTENSION_NAME,
     VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME,
+    VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME,
+    VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME,
     VK_NV_EXTERNAL_MEMORY_EXTENSION_NAME,
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     VK_NV_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
@@ -1079,6 +1127,8 @@ static const std::set<std::string> kDeviceExtensionNames = {
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     VK_NV_WIN32_KEYED_MUTEX_EXTENSION_NAME,
 #endif
+    VK_QCOM_render_pass_store_ops_EXTENSION_NAME,
+    VK_QCOM_RENDER_PASS_TRANSFORM_EXTENSION_NAME,
 };
 
 
