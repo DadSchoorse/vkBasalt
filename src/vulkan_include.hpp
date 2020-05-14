@@ -5,13 +5,11 @@
 
 #define VK_NO_PROTOTYPES
 
-#define requires _requires
 #pragma GCC system_header
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"
 #include "vulkan/vk_layer_dispatch_table.h"
 #include "vulkan/vk_dispatch_table_helper.h"
-#undef requires
 
 #include <string>
 
