@@ -2,4 +2,4 @@
 *.old
 *.so
 *.o
-build/
+build*/

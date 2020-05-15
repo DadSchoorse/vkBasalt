@@ -13,57 +13,39 @@ It is also possible to use Reshade Fx shaders.
 ## Disclaimer
 This is one of my first projects ever, so expect it to have bugs. Use it at your own risk.
 
-## Install
-**There are binaries attached to each release, so manually building from source is not required**
+## Building from Source
 
-Once you have the binaries, either by downloading and unpacking them or by following the build instructions below, execute:
-```
-make install
-```
-**Note: do not run this with `sudo`. vkBasalt gets installed for the current user only.**
-
-## Build Dependencies
-
-### Prerequisites
+### Dependencies
 Before building, you will need:
 - GCC >= 9
 - X11 development files
 - glslang
-- spirv-opt
 
-See below on how to install them.
+### Building
 
-#### Arch-based distributions
-For Arch-based distributions, execute:
+**Make sure that the resulting install directory for the .so is found by the linker, otherwise the loader will not find it.** In general, prefer using distro provided packages.
+
 ```
-sudo pacman -Syu glslang vulkan-tools lib32-libx11 libx11
+git clone https://github.com/DadSchoorse/vkBasalt.git
+cd vkBasalt
 ```
-#### Debian/Ubuntu-based distributions
-For newer Debian/Ubuntu-based distributions, execute:
+
+#### 64bit
+
 ```
-sudo apt install build-essential gcc-multilib libx11-dev libx11-dev:i386 glslang-tools spirv-tools
+meson --buildtype=release builddir
+ninja -C builddir install
 ```
-#### Fedora
-For Fedora, execute:
+#### 32bit
+
+Make sure that `PKG_CONFIG_PATH=/usr/lib32/pkgconfig` and `--libdir=lib32` are correct for your distro and change them if needed. 
 ```
-sudo dnf install vulkan-tools glslang libX11-devel glibc-devel.i686 libstdc++-devel.i686 spirv-tools libX11-devel.i686
+ASFLAGS=--32 CFLAGS=-m32 CXXFLAGS=-m32 PKG_CONFIG_PATH=/usr/lib32/pkgconfig meson --buildtype=release --libdir=lib32 -Dwith_json=false builddir.32
+ninja -C builddir.32 install
 ```
-#### Gentoo-based distributions
-For Gentoo-based distributions, execute:
-```
-sudo emerge -v dev-util/glslang dev-util/vulkan-tools dev-util/spirv-tools
-```
-## Build
-To build and install the program, execute:
-```bash
-git clone --recurse-submodules https://github.com/DadSchoorse/vkBasalt.git ~/vkBasalt
-cd ~/vkBasalt
-make
-```
-##### TIP: Use the `-jX` (where X=number of cpu threads) option to accelerate the building process.
 
 ## Usage
-Enable the layer with the environment variable (see below). Since vkBasalt 0.2.0 there is one unified variable for 64-bit and 32-bit games.
+Enable the layer with the environment variable.
 
 ### Standard
 When using the terminal or an application (.desktop) file, execute:
@@ -141,6 +123,3 @@ No. Shaders that need multiple techniques do not work, there might still be prob
 There is a wip version that you can enable with `depthCapture = on`. It will lead to many problems especially on non nvidia hardware. Also the selected depth buffer isn't always the one you would want.
 #### Is there a way to change settings for reshade shaders?
 There is some support for it [#46](https://github.com/DadSchoorse/vkBasalt/pull/46). One easy way so to simply edit the shader file.
-
-## Previews
-[YouTube](https://www.youtube.com/watch?v=hSlaGkbTRi8)
