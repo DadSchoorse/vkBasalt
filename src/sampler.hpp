@@ -11,7 +11,7 @@
 
 #include "logical_device.hpp"
 
-#include "../reshade/source/effect_module.hpp"
+#include "reshade/effect_module.hpp"
 namespace vkBasalt
 {
     VkSampler createSampler(std::shared_ptr<LogicalDevice> pLogicalDevice);

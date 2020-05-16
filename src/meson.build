@@ -1,3 +1,6 @@
+subdir('shader')
+subdir('reshade')
+
 vkBasalt_src = [
     'basalt.cpp',
     'buffer.cpp',
