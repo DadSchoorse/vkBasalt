@@ -44,11 +44,11 @@ namespace vkBasalt
         debandOptions.reverseScreenHeight = 1.0f / imageExtent.height;
 
         // get Options
-        debandOptions.debandAvgdiff = std::stod(pConfig->getOption("debandAvgdiff", "3.4"));
-        debandOptions.debandMaxdiff = std::stod(pConfig->getOption("debandMaxdiff", "6.8"));
-        debandOptions.debandMiddiff = std::stod(pConfig->getOption("debandMiddiff", "3.3"));
-        debandOptions.range         = std::stod(pConfig->getOption("debandRange", "16.0"));
-        debandOptions.iterations    = std::stoi(pConfig->getOption("debandIterations", "4"));
+        debandOptions.debandAvgdiff = pConfig->getOption<float>("debandAvgdiff", 3.4f);
+        debandOptions.debandMaxdiff = pConfig->getOption<float>("debandMaxdiff", 6.8f);
+        debandOptions.debandMiddiff = pConfig->getOption<float>("debandMiddiff", 3.3f);
+        debandOptions.range         = pConfig->getOption<float>("debandRange", 16.0f);
+        debandOptions.iterations    = pConfig->getOption<int32_t>("debandIterations", 4);
 
         std::vector<VkSpecializationMapEntry> specMapEntrys(9);
         for (uint32_t i = 0; i < specMapEntrys.size(); i++)

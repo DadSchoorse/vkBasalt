@@ -23,7 +23,7 @@ namespace vkBasalt
                          std::shared_ptr<vkBasalt::Config> pConfig)
     {
 
-        float sharpness = std::stod(pConfig->getOption("casSharpness", "0.4"));
+        float sharpness = pConfig->getOption<float>("casSharpness", 0.4f);
 
         vertexCode   = full_screen_triangle_vert;
         fragmentCode = cas_frag;

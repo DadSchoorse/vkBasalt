@@ -113,14 +113,16 @@ namespace vkBasalt
         };
 
         SmaaOptions smaaOptions;
-        smaaOptions.threshold          = std::stod(pConfig->getOption("smaaThreshold", "0.05"));
-        smaaOptions.maxSearchSteps     = std::stoi(pConfig->getOption("smaaMaxSearchSteps", "32"));
-        smaaOptions.maxSearchStepsDiag = std::stoi(pConfig->getOption("smaaMaxSearchStepsDiag", "16"));
-        smaaOptions.cornerRounding     = std::stoi(pConfig->getOption("smaaCornerRounding", "25"));
+        smaaOptions.threshold          = pConfig->getOption<float>("smaaThreshold", 0.05f);
+        smaaOptions.maxSearchSteps     = pConfig->getOption<int32_t>("smaaMaxSearchSteps", 32);
+        smaaOptions.maxSearchStepsDiag = pConfig->getOption<int32_t>("smaaMaxSearchStepsDiag", 16);
+        smaaOptions.cornerRounding     = pConfig->getOption<int32_t>("smaaCornerRounding", 25);
 
         createShaderModule(pLogicalDevice, smaa_edge_vert, &edgeVertexModule);
 
-        auto shaderCode = pConfig->getOption("smaaEdgeDetection", "luma") == "color" ? smaa_edge_color_frag : smaa_edge_luma_frag;
+        bool useColor = pConfig->getOption<std::string>("smaaEdgeDetection", "luma") == "color";
+
+        auto shaderCode = useColor ? smaa_edge_color_frag : smaa_edge_luma_frag;
         createShaderModule(pLogicalDevice, shaderCode, &edgeFragmentModule);
 
         createShaderModule(pLogicalDevice, smaa_blend_vert, &blendVertexModule);

@@ -83,9 +83,64 @@ namespace vkBasalt
         options[line.substr(0, equal)] = line.substr(equal + 1);
     }
 
-    std::string Config::getOption(const std::string& option, const std::string& defaultValue)
+    void Config::parseOption(const std::string& option, int32_t& result)
     {
         auto found = options.find(option);
-        return found != options.end() ? found->second : defaultValue;
+        if (found != options.end())
+        {
+            try
+            {
+                result = std::stoi(found->second);
+            }
+            catch (...)
+            {
+                Logger::warn("invalid int32_t value for: " + option);
+            }
+        }
+    }
+
+    void Config::parseOption(const std::string& option, float& result)
+    {
+        auto found = options.find(option);
+        if (found != options.end())
+        {
+            try
+            {
+                result = std::stof(found->second);
+            }
+            catch (...)
+            {
+                Logger::warn("invalid float value for: " + option);
+            }
+        }
+    }
+
+    void Config::parseOption(const std::string& option, bool& result)
+    {
+        auto found = options.find(option);
+        if (found != options.end())
+        {
+            if (found->second == "True")
+            {
+                result = true;
+            }
+            else if (found->second == "False")
+            {
+                result = false;
+            }
+            else
+            {
+                Logger::warn("invalid bool value for: " + option);
+            }
+        }
+    }
+
+    void Config::parseOption(const std::string& option, std::string& result)
+    {
+        auto found = options.find(option);
+        if (found != options.end())
+        {
+            result = found->second;
+        }
     }
 } // namespace vkBasalt

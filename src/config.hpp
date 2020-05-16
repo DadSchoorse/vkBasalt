@@ -17,13 +17,25 @@ namespace vkBasalt
     public:
         Config();
         Config(const Config& other);
-        std::string getOption(const std::string& option, const std::string& defaultValue = "");
+
+        template<typename T>
+        T getOption(const std::string& option, const T& defaultValue = {})
+        {
+            T result = defaultValue;
+            parseOption(option, result);
+            return result;
+        }
 
     private:
         std::unordered_map<std::string, std::string> options;
 
         void readConfigLine(std::string line);
         void readConfigFile(std::ifstream& stream);
+
+        void parseOption(const std::string& option, int32_t& result);
+        void parseOption(const std::string& option, float& result);
+        void parseOption(const std::string& option, bool& result);
+        void parseOption(const std::string& option, std::string& result);
     };
 } // namespace vkBasalt
 

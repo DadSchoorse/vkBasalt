@@ -29,23 +29,22 @@ namespace vkBasalt
         vertexCode   = full_screen_triangle_vert;
         fragmentCode = lut_frag;
 
+        std::string lutFile = pConfig->getOption<std::string>("lutFile");
+
         int      height;
         LutCube  lutCube;
         stbi_uc* pixels;
-        int32_t  usingPNG =
-            (pConfig->getOption("lutFile").find(".cube") != std::string::npos || pConfig->getOption("lutFile").find(".CUBE") != std::string::npos)
-                ? 0
-                : 1;
+        int32_t  usingPNG = (int32_t)(lutFile.find(".cube") != std::string::npos || lutFile.find(".CUBE") != std::string::npos);
         if (!usingPNG)
         {
-            lutCube = LutCube(pConfig->getOption("lutFile"));
+            lutCube = LutCube(lutFile);
             pixels  = lutCube.colorCube.data();
             height  = lutCube.size;
         }
         else
         {
             int channels, width;
-            pixels = stbi_load(pConfig->getOption("lutFile").c_str(), &width, &height, &channels, STBI_rgb_alpha);
+            pixels = stbi_load(lutFile.c_str(), &width, &height, &channels, STBI_rgb_alpha);
             if (width != height * height)
             {
                 Logger::err("bad lut");

@@ -191,15 +191,6 @@ namespace vkBasalt
             }
         }
 
-        if (pConfig->getOption("mutableFormat") == "on")
-        {
-            supportsMutableFormat = true;
-        }
-        if (pConfig->getOption("mutableFormat") == "off")
-        {
-            supportsMutableFormat = false;
-        }
-
         VkDeviceCreateInfo       modifiedCreateInfo = *pCreateInfo;
         std::vector<const char*> enabledExtensionNames;
         if (modifiedCreateInfo.enabledExtensionCount)
@@ -421,7 +412,7 @@ namespace vkBasalt
         pLogicalSwapchain->imageCount = *pCount;
         pLogicalSwapchain->images.reserve(*pCount);
 
-        std::string effectOption = pConfig->getOption("effects", "cas");
+        std::string effectOption = pConfig->getOption<std::string>("effects", "cas");
 
         std::vector<std::string> effectStrings;
         while (effectOption != std::string(""))
@@ -903,7 +894,7 @@ extern "C"
     GETPROCADDR(QueuePresentKHR);                                                                                                                    \
     GETPROCADDR(DestroySwapchainKHR);                                                                                                                \
                                                                                                                                                      \
-    if (vkBasalt::pConfig->getOption("depthCapture", "off") == "on")                                                                                 \
+    if (vkBasalt::pConfig->getOption<std::string>("depthCapture", "off") == "on")                                                                    \
     {                                                                                                                                                \
         GETPROCADDR(CreateImage);                                                                                                                    \
         GETPROCADDR(DestroyImage);                                                                                                                   \

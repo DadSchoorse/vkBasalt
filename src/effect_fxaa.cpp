@@ -22,9 +22,9 @@ namespace vkBasalt
                            std::vector<VkImage>              outputImages,
                            std::shared_ptr<vkBasalt::Config> pConfig)
     {
-        float fxaaQualitySubpix           = std::stod(pConfig->getOption("fxaaQualitySubpix", "0.75"));
-        float fxaaQualityEdgeThreshold    = std::stod(pConfig->getOption("fxaaQualityEdgeThreshold", "0.125"));
-        float fxaaQualityEdgeThresholdMin = std::stod(pConfig->getOption("fxaaQualityEdgeThresholdMin", "0.0312"));
+        float fxaaQualitySubpix           = pConfig->getOption<float>("fxaaQualitySubpix", 0.75f);
+        float fxaaQualityEdgeThreshold    = pConfig->getOption<float>("fxaaQualityEdgeThreshold", 0.125f);
+        float fxaaQualityEdgeThresholdMin = pConfig->getOption<float>("fxaaQualityEdgeThresholdMin", 0.0312f);
 
         vertexCode   = full_screen_triangle_vert;
         fragmentCode = fxaa_frag;

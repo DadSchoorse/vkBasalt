@@ -234,7 +234,7 @@ namespace vkBasalt
                         break;
                 }
 
-                std::string          filePath = pConfig->getOption("reshadeTexturePath") + "/" + source->value.string_data;
+                std::string          filePath = pConfig->getOption<std::string>("reshadeTexturePath") + "/" + source->value.string_data;
                 stbi_uc*             pixels;
                 std::vector<stbi_uc> resizedPixels;
                 uint32_t             size;
@@ -566,7 +566,7 @@ namespace vkBasalt
             {
                 if (!opt.name.empty())
                 {
-                    auto val = pConfig->getOption(opt.name);
+                    std::string val = pConfig->getOption<std::string>(opt.name);
                     if (!val.empty())
                     {
                         std::variant<int32_t, uint32_t, float> convertedValue;
@@ -574,25 +574,25 @@ namespace vkBasalt
                         switch (opt.type.base)
                         {
                             case reshadefx::type::t_bool:
-                                convertedValue = (val == "true" || val == "1") ? 1 : 0;
+                                convertedValue = (int32_t) pConfig->getOption<bool>(opt.name);
                                 specData.resize(offset + sizeof(VkBool32));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(VkBool32));
                                 specMapEntrys.push_back({specId, offset, sizeof(VkBool32)});
                                 break;
                             case reshadefx::type::t_int:
-                                convertedValue = std::stoi(val);
+                                convertedValue = pConfig->getOption<int32_t>(opt.name);
                                 specData.resize(offset + sizeof(int32_t));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(int32_t));
                                 specMapEntrys.push_back({specId, offset, sizeof(int32_t)});
                                 break;
                             case reshadefx::type::t_uint:
-                                convertedValue = static_cast<uint32_t>(std::stoul(val));
+                                convertedValue = (uint32_t) pConfig->getOption<int32_t>(opt.name);
                                 specData.resize(offset + sizeof(uint32_t));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(uint32_t));
                                 specMapEntrys.push_back({specId, offset, sizeof(uint32_t)});
                                 break;
                             case reshadefx::type::t_float:
-                                convertedValue = std::stof(val);
+                                convertedValue = pConfig->getOption<float>(opt.name);
                                 specData.resize(offset + sizeof(float));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(float));
                                 specMapEntrys.push_back({specId, offset, sizeof(float)});
@@ -1132,10 +1132,10 @@ namespace vkBasalt
         preprocessor.add_macro_definition("BUFFER_RCP_WIDTH", "(1.0 / BUFFER_WIDTH)");
         preprocessor.add_macro_definition("BUFFER_RCP_HEIGHT", "(1.0 / BUFFER_HEIGHT)");
         preprocessor.add_macro_definition("BUFFER_COLOR_DEPTH", (inputOutputFormatUNORM == VK_FORMAT_A2R10G10B10_UNORM_PACK32) ? "10" : "8");
-        preprocessor.add_include_path(pConfig->getOption("reshadeIncludePath"));
-        if (!preprocessor.append_file(pConfig->getOption(effectName)))
+        preprocessor.add_include_path(pConfig->getOption<std::string>("reshadeIncludePath"));
+        if (!preprocessor.append_file(pConfig->getOption<std::string>(effectName)))
         {
-            Logger::err("failed to load shader file: " + pConfig->getOption(effectName));
+            Logger::err("failed to load shader file: " + pConfig->getOption<std::string>(effectName));
             Logger::err("Does the filepath exist and does it not include spaces?");
         }
 
