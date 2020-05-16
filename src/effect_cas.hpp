@@ -18,12 +18,12 @@ namespace vkBasalt
     class CasEffect : public SimpleEffect
     {
     public:
-        CasEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
-                  VkFormat                          format,
-                  VkExtent2D                        imageExtent,
-                  std::vector<VkImage>              inputImages,
-                  std::vector<VkImage>              outputImages,
-                  std::shared_ptr<vkBasalt::Config> pConfig);
+        CasEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
+                  VkFormat                       format,
+                  VkExtent2D                     imageExtent,
+                  std::vector<VkImage>           inputImages,
+                  std::vector<VkImage>           outputImages,
+                  Config*                        pConfig);
         ~CasEffect();
     };
 } // namespace vkBasalt

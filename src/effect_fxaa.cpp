@@ -15,12 +15,12 @@
 
 namespace vkBasalt
 {
-    FxaaEffect::FxaaEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
-                           VkFormat                          format,
-                           VkExtent2D                        imageExtent,
-                           std::vector<VkImage>              inputImages,
-                           std::vector<VkImage>              outputImages,
-                           std::shared_ptr<vkBasalt::Config> pConfig)
+    FxaaEffect::FxaaEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
+                           VkFormat                       format,
+                           VkExtent2D                     imageExtent,
+                           std::vector<VkImage>           inputImages,
+                           std::vector<VkImage>           outputImages,
+                           Config*                        pConfig)
     {
         float fxaaQualitySubpix           = pConfig->getOption<float>("fxaaQualitySubpix", 0.75f);
         float fxaaQualityEdgeThreshold    = pConfig->getOption<float>("fxaaQualityEdgeThreshold", 0.125f);

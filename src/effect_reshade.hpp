@@ -25,13 +25,13 @@ namespace vkBasalt
     class ReshadeEffect : public Effect
     {
     public:
-        ReshadeEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
-                      VkFormat                          format,
-                      VkExtent2D                        imageExtent,
-                      std::vector<VkImage>              inputImages,
-                      std::vector<VkImage>              outputImages,
-                      std::shared_ptr<vkBasalt::Config> pConfig,
-                      std::string                       effectName);
+        ReshadeEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
+                      VkFormat                       format,
+                      VkExtent2D                     imageExtent,
+                      std::vector<VkImage>           inputImages,
+                      std::vector<VkImage>           outputImages,
+                      Config*                        pConfig,
+                      std::string                    effectName);
         void virtual applyEffect(uint32_t imageIndex, VkCommandBuffer commandBuffer) override;
         void virtual updateEffect() override;
         void virtual useDepthImage(VkImageView depthImageView) override;
@@ -75,7 +75,7 @@ namespace vkBasalt
         std::vector<bool>                     switchSamplers;
         VkExtent2D                            imageExtent;
         std::vector<VkSampler>                samplers;
-        std::shared_ptr<vkBasalt::Config>     pConfig;
+        Config*                               pConfig;
         std::string                           effectName;
         reshadefx::module                     module;
         std::vector<VkDeviceMemory>           textureMemory;

@@ -19,12 +19,12 @@
 
 namespace vkBasalt
 {
-    LutEffect::LutEffect(std::shared_ptr<LogicalDevice>    pLogicalDevice,
-                         VkFormat                          format,
-                         VkExtent2D                        imageExtent,
-                         std::vector<VkImage>              inputImages,
-                         std::vector<VkImage>              outputImages,
-                         std::shared_ptr<vkBasalt::Config> pConfig)
+    LutEffect::LutEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
+                         VkFormat                       format,
+                         VkExtent2D                     imageExtent,
+                         std::vector<VkImage>           inputImages,
+                         std::vector<VkImage>           outputImages,
+                         Config*                        pConfig)
     {
         vertexCode   = full_screen_triangle_vert;
         fragmentCode = lut_frag;
