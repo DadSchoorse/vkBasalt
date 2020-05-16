@@ -16,9 +16,9 @@
 
 #include "logical_device.hpp"
 
-#include "../reshade/source/effect_parser.hpp"
-#include "../reshade/source/effect_codegen.hpp"
-#include "../reshade/source/effect_preprocessor.hpp"
+#include "reshade/effect_parser.hpp"
+#include "reshade/effect_codegen.hpp"
+#include "reshade/effect_preprocessor.hpp"
 
 namespace vkBasalt
 {
