@@ -569,10 +569,7 @@ namespace vkBasalt
         }
         else
         {
-            if (pressed)
-            {
-                pressed = false;
-            }
+            pressed = false;
         }
 
         std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(queue)];
