@@ -36,6 +36,7 @@ namespace vkBasalt
         void parseOption(const std::string& option, float& result);
         void parseOption(const std::string& option, bool& result);
         void parseOption(const std::string& option, std::string& result);
+        void parseOption(const std::string& option, std::vector<std::string>& result);
     };
 } // namespace vkBasalt
 

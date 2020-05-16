@@ -412,30 +412,13 @@ namespace vkBasalt
         pLogicalSwapchain->imageCount = *pCount;
         pLogicalSwapchain->images.reserve(*pCount);
 
-        std::string effectOption = pConfig->getOption<std::string>("effects", "cas");
+        std::vector<std::string> effectStrings = pConfig->getOption<std::vector<std::string>>("effects", {"cas"});
 
-        std::vector<std::string> effectStrings;
-        while (effectOption != std::string(""))
-        {
-            size_t colon = effectOption.find(":");
-            effectStrings.push_back(effectOption.substr(0, colon));
-            if (colon == std::string::npos)
-            {
-                effectOption = std::string("");
-            }
-            else
-            {
-                effectOption = effectOption.substr(colon + 1);
-            }
-        }
+        // create 1 more set of images when we can't use the swapchain it self
+        uint32_t fakeImageCount = *pCount * (effectStrings.size() + !pLogicalDevice->supportsMutableFormat);
 
-        pLogicalSwapchain->fakeImages = createFakeSwapchainImages(
-            pLogicalDevice,
-            pLogicalSwapchain->swapchainCreateInfo,
-            *pCount
-                * (effectStrings.size()
-                   + !pLogicalDevice->supportsMutableFormat), // create 1 more set of images when we can't use the swapchain it self
-            pLogicalSwapchain->fakeImageMemory);
+        pLogicalSwapchain->fakeImages =
+            createFakeSwapchainImages(pLogicalDevice, pLogicalSwapchain->swapchainCreateInfo, fakeImageCount, pLogicalSwapchain->fakeImageMemory);
         Logger::debug("created fake swapchain images");
 
         VkResult result = pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);

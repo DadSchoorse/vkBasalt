@@ -1,5 +1,7 @@
 #include "config.hpp"
 
+#include <sstream>
+
 namespace vkBasalt
 {
     Config::Config()
@@ -141,6 +143,21 @@ namespace vkBasalt
         if (found != options.end())
         {
             result = found->second;
+        }
+    }
+
+    void Config::parseOption(const std::string& option, std::vector<std::string>& result)
+    {
+        auto found = options.find(option);
+        if (found != options.end())
+        {
+            result = {};
+            std::stringstream stringStream(found->second);
+            std::string       newString;
+            while (getline(stringStream, newString, ':'))
+            {
+                result.push_back(newString);
+            }
         }
     }
 } // namespace vkBasalt
