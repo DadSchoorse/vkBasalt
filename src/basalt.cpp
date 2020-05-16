@@ -400,7 +400,7 @@ namespace vkBasalt
             return pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
         }
 
-        std::shared_ptr<LogicalSwapchain> pLogicalSwapchain = swapchainMap[swapchain];
+        LogicalSwapchain* pLogicalSwapchain = swapchainMap[swapchain].get();
 
         // If the images got already requested once, return them again instead of creating new images
         if (pLogicalSwapchain->fakeImages.size())
@@ -581,9 +581,9 @@ namespace vkBasalt
 
         for (unsigned int i = 0; i < (*pPresentInfo).swapchainCount; i++)
         {
-            uint32_t                          index             = (*pPresentInfo).pImageIndices[i];
-            VkSwapchainKHR                    swapchain         = (*pPresentInfo).pSwapchains[i];
-            std::shared_ptr<LogicalSwapchain> pLogicalSwapchain = swapchainMap[swapchain];
+            uint32_t          index             = (*pPresentInfo).pImageIndices[i];
+            VkSwapchainKHR    swapchain         = (*pPresentInfo).pSwapchains[i];
+            LogicalSwapchain* pLogicalSwapchain = swapchainMap[swapchain].get();
 
             for (auto& effect : pLogicalSwapchain->effects)
             {
@@ -690,7 +690,7 @@ namespace vkBasalt
 
             for (auto& it : swapchainMap)
             {
-                std::shared_ptr<LogicalSwapchain> pLogicalSwapchain = it.second;
+                LogicalSwapchain* pLogicalSwapchain = it.second.get();
                 if (pLogicalSwapchain->pLogicalDevice == pLogicalDevice)
                 {
                     if (pLogicalSwapchain->commandBuffersEffect.size())
@@ -737,7 +737,7 @@ namespace vkBasalt
                 VkFormat    depthFormat    = pLogicalDevice->depthImageViews.size() ? pLogicalDevice->depthFormats[0] : VK_FORMAT_UNDEFINED;
                 for (auto& it : swapchainMap)
                 {
-                    std::shared_ptr<LogicalSwapchain> pLogicalSwapchain = it.second;
+                    LogicalSwapchain* pLogicalSwapchain = it.second.get();
                     if (pLogicalSwapchain->pLogicalDevice == pLogicalDevice)
                     {
                         if (pLogicalSwapchain->commandBuffersEffect.size())
