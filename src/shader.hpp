@@ -14,8 +14,6 @@
 
 namespace vkBasalt
 {
-    std::vector<char> readFile(const std::string& filename);
-
     void createShaderModule(LogicalDevice* pLogicalDevice, const std::vector<char>& code, VkShaderModule* shaderModule);
     void createShaderModule(LogicalDevice* pLogicalDevice, const std::vector<uint32_t>& code, VkShaderModule* shaderModule);
 } // namespace vkBasalt
