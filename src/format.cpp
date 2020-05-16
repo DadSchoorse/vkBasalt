@@ -94,10 +94,7 @@ namespace vkBasalt
         return convertToSRGB(format) != format;
     }
 
-    VkFormat getSupportedFormat(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                                std::vector<VkFormat>          formats,
-                                VkFormatFeatureFlags           features,
-                                VkImageTiling                  tiling)
+    VkFormat getSupportedFormat(LogicalDevice* pLogicalDevice, std::vector<VkFormat> formats, VkFormatFeatureFlags features, VkImageTiling tiling)
     {
         for (auto& format : formats)
         {
@@ -116,7 +113,7 @@ namespace vkBasalt
         return VK_FORMAT_UNDEFINED;
     }
 
-    VkFormat getStencilFormat(std::shared_ptr<LogicalDevice> pLogicalDevice)
+    VkFormat getStencilFormat(LogicalDevice* pLogicalDevice)
     {
         std::vector<VkFormat> stencilFormats = {VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT};
         return getSupportedFormat(pLogicalDevice, stencilFormats, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);

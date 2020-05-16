@@ -18,7 +18,7 @@ namespace vkBasalt
     // for each swapchain, we have the Images and the other stuff we need to execute the compute shader
     struct LogicalSwapchain
     {
-        std::shared_ptr<LogicalDevice>       pLogicalDevice;
+        LogicalDevice*                       pLogicalDevice;
         VkSwapchainCreateInfoKHR             swapchainCreateInfo;
         VkExtent2D                           imageExtent;
         VkFormat                             format;

@@ -249,7 +249,7 @@ namespace vkBasalt
 
         Logger::trace("vkDestroyDevice");
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
         if (pLogicalDevice->commandPool != VK_NULL_HANDLE)
         {
             Logger::debug("DestroyCommandPool");
@@ -261,7 +261,7 @@ namespace vkBasalt
         deviceMap.erase(GetKey(device));
     }
 
-    static void saveDeviceQueue(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t queueFamilyIndex, VkQueue* pQueue)
+    static void saveDeviceQueue(LogicalDevice* pLogicalDevice, uint32_t queueFamilyIndex, VkQueue* pQueue)
     {
         if (pLogicalDevice->queue != VK_NULL_HANDLE)
         {
@@ -311,7 +311,7 @@ namespace vkBasalt
 
         Logger::trace("vkGetDeviceQueue2");
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
 
         pLogicalDevice->vkd.GetDeviceQueue2(device, pQueueInfo, pQueue);
 
@@ -324,7 +324,7 @@ namespace vkBasalt
 
         Logger::trace("vkGetDeviceQueue");
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
 
         pLogicalDevice->vkd.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 
@@ -340,7 +340,7 @@ namespace vkBasalt
 
         Logger::trace("vkCreateSwapchainKHR");
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
 
         VkSwapchainCreateInfoKHR modifiedCreateInfo = *pCreateInfo;
 
@@ -393,7 +393,7 @@ namespace vkBasalt
         scoped_lock l(globalLock);
         Logger::trace("vkGetSwapchainImagesKHR " + std::to_string(*pCount));
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
 
         if (pSwapchainImages == nullptr)
         {
@@ -575,7 +575,7 @@ namespace vkBasalt
             pressed = false;
         }
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(queue)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(queue)].get();
 
         std::vector<VkSemaphore> presentSemaphores;
         presentSemaphores.reserve(pPresentInfo->swapchainCount);
@@ -630,7 +630,7 @@ namespace vkBasalt
         Logger::trace("vkDestroySwapchainKHR " + convertToString(swapchain));
         swapchainMap[swapchain]->destroy();
         swapchainMap.erase(swapchain);
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
 
         pLogicalDevice->vkd.DestroySwapchainKHR(device, swapchain, pAllocator);
     }
@@ -642,7 +642,7 @@ namespace vkBasalt
     {
         scoped_lock l(globalLock);
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
         if (isDepthFormat(pCreateInfo->format) && pCreateInfo->samples == VK_SAMPLE_COUNT_1_BIT
             && ((pCreateInfo->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT))
         {
@@ -669,7 +669,7 @@ namespace vkBasalt
     {
         scoped_lock l(globalLock);
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
 
         VkResult result = pLogicalDevice->vkd.BindImageMemory(device, image, memory, memoryOffset);
         // TODO what if the application creates more than one image before binding memory?
@@ -720,7 +720,7 @@ namespace vkBasalt
     {
         scoped_lock l(globalLock);
 
-        std::shared_ptr<LogicalDevice> pLogicalDevice = deviceMap[GetKey(device)];
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
 
         for (uint32_t i = 0; i < pLogicalDevice->depthImages.size(); i++)
         {

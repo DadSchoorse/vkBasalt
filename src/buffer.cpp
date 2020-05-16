@@ -3,12 +3,12 @@
 
 namespace vkBasalt
 {
-    void createBuffer(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                      VkDeviceSize                   size,
-                      VkBufferUsageFlags             usage,
-                      VkMemoryPropertyFlags          properties,
-                      VkBuffer&                      buffer,
-                      VkDeviceMemory&                bufferMemory)
+    void createBuffer(LogicalDevice*        pLogicalDevice,
+                      VkDeviceSize          size,
+                      VkBufferUsageFlags    usage,
+                      VkMemoryPropertyFlags properties,
+                      VkBuffer&             buffer,
+                      VkDeviceMemory&       bufferMemory)
     {
         VkBufferCreateInfo bufferInfo = {};
 

@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    VkSampler createSampler(std::shared_ptr<LogicalDevice> pLogicalDevice)
+    VkSampler createSampler(LogicalDevice* pLogicalDevice)
     {
         VkSampler sampler;
 
@@ -31,7 +31,7 @@ namespace vkBasalt
         return sampler;
     }
 
-    VkSampler createReshadeSampler(std::shared_ptr<LogicalDevice> pLogicalDevice, const reshadefx::sampler_info& samplerInfo)
+    VkSampler createReshadeSampler(LogicalDevice* pLogicalDevice, const reshadefx::sampler_info& samplerInfo)
     {
         VkSampler sampler;
 

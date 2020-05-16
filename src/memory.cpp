@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    uint32_t findMemoryTypeIndex(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    uint32_t findMemoryTypeIndex(LogicalDevice* pLogicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
     {
         VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
         pLogicalDevice->vki.GetPhysicalDeviceMemoryProperties(pLogicalDevice->physicalDevice, &physicalDeviceMemoryProperties);

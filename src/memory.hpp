@@ -13,7 +13,7 @@
 
 namespace vkBasalt
 {
-    uint32_t findMemoryTypeIndex(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    uint32_t findMemoryTypeIndex(LogicalDevice* pLogicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 }
 
 #endif // MEMORY_HPP_INCLUDED

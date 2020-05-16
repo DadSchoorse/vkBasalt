@@ -14,9 +14,9 @@
 #include "reshade/effect_module.hpp"
 namespace vkBasalt
 {
-    VkSampler createSampler(std::shared_ptr<LogicalDevice> pLogicalDevice);
+    VkSampler createSampler(LogicalDevice* pLogicalDevice);
 
-    VkSampler createReshadeSampler(std::shared_ptr<LogicalDevice> pLogicalDevice, const reshadefx::sampler_info& samplerInfo);
+    VkSampler createReshadeSampler(LogicalDevice* pLogicalDevice, const reshadefx::sampler_info& samplerInfo);
 
     VkSamplerAddressMode convertReshadeAddressMode(const reshadefx::texture_address_mode& addressMode);
 

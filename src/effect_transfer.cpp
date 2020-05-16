@@ -2,12 +2,12 @@
 
 namespace vkBasalt
 {
-    TransferEffect::TransferEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                                   VkFormat                       format,
-                                   VkExtent2D                     imageExtent,
-                                   std::vector<VkImage>           inputImages,
-                                   std::vector<VkImage>           outputImages,
-                                   Config*                        pConfig)
+    TransferEffect::TransferEffect(LogicalDevice*       pLogicalDevice,
+                                   VkFormat             format,
+                                   VkExtent2D           imageExtent,
+                                   std::vector<VkImage> inputImages,
+                                   std::vector<VkImage> outputImages,
+                                   Config*              pConfig)
     {
         this->pLogicalDevice = pLogicalDevice;
         this->format         = format;

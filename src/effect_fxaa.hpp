@@ -18,12 +18,12 @@ namespace vkBasalt
     class FxaaEffect : public SimpleEffect
     {
     public:
-        FxaaEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                   VkFormat                       format,
-                   VkExtent2D                     imageExtent,
-                   std::vector<VkImage>           inputImages,
-                   std::vector<VkImage>           outputImages,
-                   Config*                        pConfig);
+        FxaaEffect(LogicalDevice*       pLogicalDevice,
+                   VkFormat             format,
+                   VkExtent2D           imageExtent,
+                   std::vector<VkImage> inputImages,
+                   std::vector<VkImage> outputImages,
+                   Config*              pConfig);
         ~FxaaEffect();
     };
 } // namespace vkBasalt

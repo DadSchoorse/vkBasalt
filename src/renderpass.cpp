@@ -2,7 +2,7 @@
 
 namespace vkBasalt
 {
-    VkRenderPass createRenderPass(std::shared_ptr<LogicalDevice> pLogicalDevice, VkFormat format)
+    VkRenderPass createRenderPass(LogicalDevice* pLogicalDevice, VkFormat format)
     {
         VkRenderPass renderPass;
 

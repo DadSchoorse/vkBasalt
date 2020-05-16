@@ -5,14 +5,14 @@
 
 namespace vkBasalt
 {
-    std::vector<VkImage> createImages(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                                      uint32_t                       count,
-                                      VkExtent3D                     extent,
-                                      VkFormat                       format,
-                                      VkImageUsageFlags              usage,
-                                      VkMemoryPropertyFlags          properties,
-                                      VkDeviceMemory&                imageMemory,
-                                      uint32_t                       mipLevels)
+    std::vector<VkImage> createImages(LogicalDevice*        pLogicalDevice,
+                                      uint32_t              count,
+                                      VkExtent3D            extent,
+                                      VkFormat              format,
+                                      VkImageUsageFlags     usage,
+                                      VkMemoryPropertyFlags properties,
+                                      VkDeviceMemory&       imageMemory,
+                                      uint32_t              mipLevels)
     {
         std::vector<VkImage> images(count);
 
@@ -83,12 +83,8 @@ namespace vkBasalt
         return images;
     }
 
-    void uploadToImage(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                       VkImage                        image,
-                       VkExtent3D                     extent,
-                       uint32_t                       size,
-                       const unsigned char*           writeData,
-                       uint32_t                       mipLevels)
+    void
+    uploadToImage(LogicalDevice* pLogicalDevice, VkImage image, VkExtent3D extent, uint32_t size, const unsigned char* writeData, uint32_t mipLevels)
     {
 
         VkBuffer       stagingBuffer;
@@ -183,7 +179,7 @@ namespace vkBasalt
         pLogicalDevice->vkd.DestroyBuffer(pLogicalDevice->device, stagingBuffer, nullptr);
     }
 
-    void changeImageLayout(std::shared_ptr<LogicalDevice> pLogicalDevice, std::vector<VkImage> images, uint32_t mipLevels)
+    void changeImageLayout(LogicalDevice* pLogicalDevice, std::vector<VkImage> images, uint32_t mipLevels)
     {
         VkCommandBufferAllocateInfo allocInfo = {};
 
@@ -240,8 +236,7 @@ namespace vkBasalt
         pLogicalDevice->vkd.FreeCommandBuffers(pLogicalDevice->device, pLogicalDevice->commandPool, 1, &commandBuffer);
     }
 
-    void generateMipMaps(
-        std::shared_ptr<LogicalDevice> pLogicalDevice, VkCommandBuffer commandBuffer, VkImage image, VkExtent3D extent, uint32_t mipLevels)
+    void generateMipMaps(LogicalDevice* pLogicalDevice, VkCommandBuffer commandBuffer, VkImage image, VkExtent3D extent, uint32_t mipLevels)
     {
         if (mipLevels < 2)
         {

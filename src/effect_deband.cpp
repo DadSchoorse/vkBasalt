@@ -15,12 +15,12 @@
 
 namespace vkBasalt
 {
-    DebandEffect::DebandEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                               VkFormat                       format,
-                               VkExtent2D                     imageExtent,
-                               std::vector<VkImage>           inputImages,
-                               std::vector<VkImage>           outputImages,
-                               Config*                        pConfig)
+    DebandEffect::DebandEffect(LogicalDevice*       pLogicalDevice,
+                               VkFormat             format,
+                               VkExtent2D           imageExtent,
+                               std::vector<VkImage> inputImages,
+                               std::vector<VkImage> outputImages,
+                               Config*              pConfig)
     {
         vertexCode   = full_screen_triangle_vert;
         fragmentCode = deband_frag;

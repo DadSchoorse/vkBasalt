@@ -65,7 +65,7 @@ namespace vkBasalt
         }
     }
 
-    void createShaderModule(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<char>& code, VkShaderModule* shaderModule)
+    void createShaderModule(LogicalDevice* pLogicalDevice, const std::vector<char>& code, VkShaderModule* shaderModule)
     {
         VkShaderModuleCreateInfo shaderCreateInfo;
 
@@ -79,7 +79,7 @@ namespace vkBasalt
         ASSERT_VULKAN(result);
     }
 
-    void createShaderModule(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<uint32_t>& code, VkShaderModule* shaderModule)
+    void createShaderModule(LogicalDevice* pLogicalDevice, const std::vector<uint32_t>& code, VkShaderModule* shaderModule)
     {
         VkShaderModuleCreateInfo shaderCreateInfo;
 

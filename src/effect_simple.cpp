@@ -17,12 +17,12 @@ namespace vkBasalt
     SimpleEffect::SimpleEffect()
     {
     }
-    void SimpleEffect::init(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                            VkFormat                       format,
-                            VkExtent2D                     imageExtent,
-                            std::vector<VkImage>           inputImages,
-                            std::vector<VkImage>           outputImages,
-                            Config*                        pConfig)
+    void SimpleEffect::init(LogicalDevice*       pLogicalDevice,
+                            VkFormat             format,
+                            VkExtent2D           imageExtent,
+                            std::vector<VkImage> inputImages,
+                            std::vector<VkImage> outputImages,
+                            Config*              pConfig)
     {
         Logger::debug("in creating SimpleEffect");
 

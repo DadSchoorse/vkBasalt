@@ -18,12 +18,12 @@ namespace vkBasalt
     class DebandEffect : public SimpleEffect
     {
     public:
-        DebandEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                     VkFormat                       format,
-                     VkExtent2D                     imageExtent,
-                     std::vector<VkImage>           inputImages,
-                     std::vector<VkImage>           outputImages,
-                     Config*                        pConfig);
+        DebandEffect(LogicalDevice*       pLogicalDevice,
+                     VkFormat             format,
+                     VkExtent2D           imageExtent,
+                     std::vector<VkImage> inputImages,
+                     std::vector<VkImage> outputImages,
+                     Config*              pConfig);
         ~DebandEffect();
     };
 } // namespace vkBasalt

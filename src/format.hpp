@@ -23,12 +23,12 @@ namespace vkBasalt
     // TODO currently return false if format is UNORM and no matching sRGB format exist
     bool isUNORM(VkFormat format);
 
-    VkFormat getSupportedFormat(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                                std::vector<VkFormat>          formats,
-                                VkFormatFeatureFlags           features,
-                                VkImageTiling                  tiling = VK_IMAGE_TILING_OPTIMAL);
+    VkFormat getSupportedFormat(LogicalDevice*        pLogicalDevice,
+                                std::vector<VkFormat> formats,
+                                VkFormatFeatureFlags  features,
+                                VkImageTiling         tiling = VK_IMAGE_TILING_OPTIMAL);
 
-    VkFormat getStencilFormat(std::shared_ptr<LogicalDevice> pLogicalDevice);
+    VkFormat getStencilFormat(LogicalDevice* pLogicalDevice);
 
     bool isDepthFormat(VkFormat format);
 

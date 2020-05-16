@@ -28,13 +28,13 @@
 
 namespace vkBasalt
 {
-    ReshadeEffect::ReshadeEffect(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                                 VkFormat                       format,
-                                 VkExtent2D                     imageExtent,
-                                 std::vector<VkImage>           inputImages,
-                                 std::vector<VkImage>           outputImages,
-                                 Config*                        pConfig,
-                                 std::string                    effectName)
+    ReshadeEffect::ReshadeEffect(LogicalDevice*       pLogicalDevice,
+                                 VkFormat             format,
+                                 VkExtent2D           imageExtent,
+                                 std::vector<VkImage> inputImages,
+                                 std::vector<VkImage> outputImages,
+                                 Config*              pConfig,
+                                 std::string          effectName)
     {
         Logger::debug("in creating ReshadeEffect");
 

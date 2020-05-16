@@ -13,10 +13,8 @@
 
 namespace vkBasalt
 {
-    std::vector<VkFramebuffer> createFramebuffers(std::shared_ptr<LogicalDevice>        pLogicalDevice,
-                                                  VkRenderPass                          renderPass,
-                                                  VkExtent2D&                           extent,
-                                                  std::vector<std::vector<VkImageView>> imageViews);
+    std::vector<VkFramebuffer>
+    createFramebuffers(LogicalDevice* pLogicalDevice, VkRenderPass renderPass, VkExtent2D& extent, std::vector<std::vector<VkImageView>> imageViews);
 }
 
 #endif // FRAMEBUFFER_HPP_INCLUDED

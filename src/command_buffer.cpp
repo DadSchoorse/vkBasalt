@@ -5,7 +5,7 @@
 
 namespace vkBasalt
 {
-    std::vector<VkCommandBuffer> allocateCommandBuffer(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count)
+    std::vector<VkCommandBuffer> allocateCommandBuffer(LogicalDevice* pLogicalDevice, uint32_t count)
     {
         std::vector<VkCommandBuffer> commandBuffers(count);
 
@@ -26,7 +26,7 @@ namespace vkBasalt
 
         return commandBuffers;
     }
-    void writeCommandBuffers(std::shared_ptr<LogicalDevice>                 pLogicalDevice,
+    void writeCommandBuffers(LogicalDevice*                                 pLogicalDevice,
                              std::vector<std::shared_ptr<vkBasalt::Effect>> effects,
                              VkImage                                        depthImage,
                              VkImageView                                    depthImageView,
@@ -110,7 +110,7 @@ namespace vkBasalt
         }
     }
 
-    std::vector<VkSemaphore> createSemaphores(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count)
+    std::vector<VkSemaphore> createSemaphores(LogicalDevice* pLogicalDevice, uint32_t count)
     {
         std::vector<VkSemaphore> semaphores(count);
         VkSemaphoreCreateInfo    info;

@@ -13,18 +13,18 @@
 
 namespace vkBasalt
 {
-    VkDescriptorPool createDescriptorPool(std::shared_ptr<LogicalDevice> pLogicalDevice, const std::vector<VkDescriptorPoolSize>& poolSizes);
+    VkDescriptorPool createDescriptorPool(LogicalDevice* pLogicalDevice, const std::vector<VkDescriptorPoolSize>& poolSizes);
 
-    VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(std::shared_ptr<LogicalDevice> pLogicalDevice);
+    VkDescriptorSetLayout createUniformBufferDescriptorSetLayout(LogicalDevice* pLogicalDevice);
 
-    VkDescriptorSet writeBufferDescriptorSet(std::shared_ptr<LogicalDevice> pLogicalDevice,
-                                             VkDescriptorPool               descriptorPool,
-                                             VkDescriptorSetLayout          descriptorSetLayout,
-                                             VkBuffer                       buffer);
+    VkDescriptorSet writeBufferDescriptorSet(LogicalDevice*        pLogicalDevice,
+                                             VkDescriptorPool      descriptorPool,
+                                             VkDescriptorSetLayout descriptorSetLayout,
+                                             VkBuffer              buffer);
 
-    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(std::shared_ptr<LogicalDevice> pLogicalDevice, uint32_t count);
+    VkDescriptorSetLayout createImageSamplerDescriptorSetLayout(LogicalDevice* pLogicalDevice, uint32_t count);
 
-    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(std::shared_ptr<LogicalDevice>        pLogicalDevice,
+    std::vector<VkDescriptorSet> allocateAndWriteImageSamplerDescriptorSets(LogicalDevice*                        pLogicalDevice,
                                                                             VkDescriptorPool                      descriptorPool,
                                                                             VkDescriptorSetLayout                 descriptorSetLayout,
                                                                             std::vector<VkSampler>                samplers,
