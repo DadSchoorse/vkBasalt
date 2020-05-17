@@ -559,10 +559,12 @@ namespace vkBasalt
     {
         scoped_lock l(globalLock);
 
+        static uint32_t keySymbol = convertToKeySym(pConfig->getOption<std::string>("toggleKey", "Home"));
+
         static bool pressed       = false;
         static bool presentEffect = true;
 
-        if (isKeyPressed(XK_Home))
+        if (isKeyPressed(keySymbol))
         {
             if (!pressed)
             {

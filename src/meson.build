@@ -23,6 +23,7 @@ vkBasalt_src = [
     'image.cpp',
     'image_view.cpp',
     'keyboard_input.cpp',
+    'keyboard_input_x11.cpp',
     'logger.cpp',
     'logical_swapchain.cpp',
     'lut_cube.cpp',

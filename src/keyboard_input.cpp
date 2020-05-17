@@ -1,49 +1,31 @@
-#include "logger.hpp"
-
 #include "keyboard_input.hpp"
 
-#include <memory>
-#include <functional>
+#include "logger.hpp"
 
-#include <unistd.h>
-#include <cstring>
+// TODO build without X11
+#ifndef VKBASALT_X11
+#define VKBASALT_X11 1
+#endif
+
+#if VKBASALT_X11
+#include "keyboard_input_x11.hpp"
+#endif
 
 namespace vkBasalt
 {
-    bool isKeyPressed(KeySym ks)
+    uint32_t convertToKeySym(std::string key)
     {
-        static int usesX11 = -1;
-
-        static std::unique_ptr<Display, std::function<void(Display*)>> display;
-
-        if (usesX11 < 0)
-        {
-            const char* disVar = getenv("DISPLAY");
-            if (!disVar || !std::strcmp(disVar, ""))
-            {
-                usesX11 = 0;
-                Logger::debug("no X11 support");
-            }
-            else
-            {
-                display = std::unique_ptr<Display, std::function<void(Display*)>>(XOpenDisplay(disVar), [](Display* d) { XCloseDisplay(d); });
-                usesX11 = 1;
-                Logger::debug("X11 support");
-            }
-        }
-
-        if (!usesX11)
-        {
-            return false;
-        }
-
-        char keys_return[32];
-
-        XQueryKeymap(display.get(), keys_return);
-
-        KeyCode kc2 = XKeysymToKeycode(display.get(), ks);
-
-        return !!(keys_return[kc2 >> 3] & (1 << (kc2 & 7)));
+#if VKBASALT_X11
+        return convertToKeySymX11(key);
+#endif
+        return 0u;
     }
 
+    bool isKeyPressed(uint32_t ks)
+    {
+#if VKBASALT_X11
+        return isKeyPressedX11(ks);
+#endif
+        return false;
+    }
 } // namespace vkBasalt

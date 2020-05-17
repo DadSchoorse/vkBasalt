@@ -5,6 +5,6 @@
 
 namespace vkBasalt
 {
-    uint32_t convertToKeySym(std::string key);
-    bool     isKeyPressed(uint32_t ks);
+    uint32_t convertToKeySymX11(std::string key);
+    bool     isKeyPressedX11(uint32_t ks);
 } // namespace vkBasalt
