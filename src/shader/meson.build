@@ -1,6 +1,7 @@
 shader_src = [
     'cas.frag.glsl',
     'deband.frag.glsl',
+    'dls.frag.glsl',
     'full_screen_triangle.vert.glsl',
     'fxaa.frag.glsl',
     'lut.frag.glsl',

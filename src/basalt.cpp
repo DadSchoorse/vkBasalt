@@ -32,6 +32,7 @@
 #include "effect.hpp"
 #include "effect_fxaa.hpp"
 #include "effect_cas.hpp"
+#include "effect_dls.hpp"
 #include "effect_smaa.hpp"
 #include "effect_deband.hpp"
 #include "effect_lut.hpp"
@@ -482,6 +483,12 @@ namespace vkBasalt
                 pLogicalSwapchain->effects.push_back(std::shared_ptr<Effect>(
                     new LutEffect(pLogicalDevice, unormFormat, pLogicalSwapchain->imageExtent, firstImages, secondImages, pConfig.get())));
                 Logger::debug("created LutEffect");
+            }
+            else if (effectStrings[i] == std::string("dls"))
+            {
+                pLogicalSwapchain->effects.push_back(std::shared_ptr<Effect>(
+                    new DlsEffect(pLogicalDevice, unormFormat, pLogicalSwapchain->imageExtent, firstImages, secondImages, pConfig.get())));
+                Logger::debug("created DlsEffect");
             }
             else
             {

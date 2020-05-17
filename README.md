@@ -2,7 +2,8 @@
 vkBasalt is a Vulkan post processing layer to enhance the visual graphics of games.
 
 Currently, the build in effects are:
-- Contrast Adaptive Sharpening 
+- Contrast Adaptive Sharpening
+- Denoised Luma Sharpening
 - Fast Approximate Anti-Aliasing
 - Enhanced Subpixel Morphological Anti-Aliasing
 - Deband/Dithering

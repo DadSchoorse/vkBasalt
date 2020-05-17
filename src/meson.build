@@ -10,6 +10,7 @@ vkBasalt_src = [
     'effect_cas.cpp',
     'effect.cpp',
     'effect_deband.cpp',
+    'effect_dls.cpp',
     'effect_fxaa.cpp',
     'effect_lut.cpp',
     'effect_reshade.cpp',
