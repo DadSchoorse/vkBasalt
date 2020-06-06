@@ -6,7 +6,6 @@ Currently, the build in effects are:
 - Denoised Luma Sharpening
 - Fast Approximate Anti-Aliasing
 - Enhanced Subpixel Morphological Anti-Aliasing
-- Deband/Dithering
 - 3D color LookUp Table
 
 It is also possible to use Reshade Fx shaders.
@@ -94,7 +93,7 @@ reshadeIncludePath = /home/user/reshade-shaders/Shaders
 
 #### Ingame Input
 
-The [HOME key](https://en.wikipedia.org/wiki/Home_key) can be used to disable and re enable the applied effects. This is based on X11 so it won't work on pure wayland. It **should** however at least not crash without X11.
+The [HOME key](https://en.wikipedia.org/wiki/Home_key) can be used to disable and re-enable the applied effects, the key can also be changed in the config file. This is based on X11 so it won't work on pure wayland. It **should** however at least not crash without X11.
 
 
 #### Debug Output
