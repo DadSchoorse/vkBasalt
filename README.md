@@ -73,6 +73,8 @@ The config file will be searched for in the following locations:
 * `vkBasalt.conf` in the working directory of the game
 * `$XDG_CONFIG_HOME/vkBasalt/vkBasalt.conf` or `~/.config/vkBasalt/vkBasalt.conf` if `XDG_CONFIG_HOME` is not set
 * `$XDG_DATA_HOME/vkBasalt/vkBasalt.conf` or `~/.local/share/vkBasalt/vkBasalt.conf` if `XDG_DATA_HOME` is not set
+* `/etc/vkBasalt.conf`
+* `/etc/vkBasalt/vkBasalt.conf`
 * `/usr/share/vkBasalt/vkBasalt.conf`
 * `/usr/local/share/vkBasalt/vkBasalt.conf`
 
