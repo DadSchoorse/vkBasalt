@@ -59,30 +59,47 @@ namespace vkBasalt
 
     void Config::readConfigLine(std::string line)
     {
-        // TODO this needs to die in flames
-        if (line.find("#") != std::string::npos)
+        std::string key;
+        std::string value;
+
+        bool inQuotes    = false;
+        bool foundEquals = false;
+
+        auto appendChar = [&key, &value, &foundEquals](const char& newChar) {
+            if (foundEquals)
+                value += newChar;
+            else
+                key += newChar;
+        };
+
+        for (const char& nextChar : line)
         {
-            line = line.erase(line.find("#"), std::string::npos);
+            if (inQuotes)
+            {
+                if (nextChar == '"')
+                    inQuotes = false;
+                else
+                    appendChar(nextChar);
+                continue;
+            }
+            switch (nextChar)
+            {
+                case '#': goto BREAK;
+                case '"': inQuotes = true; break;
+                case '\t':
+                case ' ': break;
+                case '=': foundEquals = true; break;
+                default: appendChar(nextChar); break;
+            }
         }
-        size_t space = line.find(" ");
-        while (space != std::string::npos)
+
+    BREAK:
+
+        if (!key.empty() && !value.empty())
         {
-            line  = line.erase(space, 1);
-            space = line.find(" ");
+            Logger::info(key + " = " + value);
+            options[key] = value;
         }
-        space = line.find("\t");
-        while (space != std::string::npos)
-        {
-            line  = line.erase(space, 1);
-            space = line.find("\t");
-        }
-        size_t equal = line.find("=");
-        if (equal == std::string::npos)
-        {
-            return;
-        }
-        Logger::info(line.substr(0, equal) + " = " + line.substr(equal + 1));
-        options[line.substr(0, equal)] = line.substr(equal + 1);
     }
 
     void Config::parseOption(const std::string& option, int32_t& result)
