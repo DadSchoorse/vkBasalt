@@ -122,11 +122,11 @@ namespace vkBasalt
         auto found = options.find(option);
         if (found != options.end())
         {
-            if (found->second == "True")
+            if (found->second == "True" || found->second == "true" || found->second == "1")
             {
                 result = true;
             }
-            else if (found->second == "False")
+            else if (found->second == "False" || found->second == "false" || found->second == "0")
             {
                 result = false;
             }
