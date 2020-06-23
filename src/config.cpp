@@ -1,6 +1,7 @@
 #include "config.hpp"
 
 #include <sstream>
+#include <locale>
 
 namespace vkBasalt
 {
@@ -125,13 +126,20 @@ namespace vkBasalt
         auto found = options.find(option);
         if (found != options.end())
         {
-            try
-            {
-                result = std::stof(found->second);
-            }
-            catch (...)
+            // TODO find a better float parsing way, std::stof has locale issues
+            std::stringstream ss(found->second);
+            ss.imbue(std::locale("C"));
+            float value;
+            ss >> value;
+            std::string rest;
+            ss >> rest;
+            if (ss.fail() || (!rest.empty() && rest != "f"))
             {
                 Logger::warn("invalid float value for: " + option);
+            }
+            else
+            {
+                result = value;
             }
         }
     }
