@@ -38,7 +38,7 @@ vkBasalt_src = [
     'util.cpp',
 ]
 
-x11_dep = dependency('x11')
+x11_dep = dependency('X11')
 
 lib_dir = get_option('libdir')
 
