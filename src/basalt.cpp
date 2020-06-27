@@ -533,7 +533,7 @@ namespace vkBasalt
         Logger::debug("created semaphores");
         for (unsigned int i = 0; i < pLogicalSwapchain->imageCount; i++)
         {
-            Logger::debug(std::to_string(i) + " writen commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersEffect[i]));
+            Logger::debug(std::to_string(i) + " written commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersEffect[i]));
         }
         Logger::trace("vkGetSwapchainImagesKHR");
 
@@ -556,7 +556,7 @@ namespace vkBasalt
 
         for (unsigned int i = 0; i < pLogicalSwapchain->imageCount; i++)
         {
-            Logger::debug(std::to_string(i) + " writen commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersNoEffect[i]));
+            Logger::debug(std::to_string(i) + " written commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersNoEffect[i]));
         }
 
         return result;
