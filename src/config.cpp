@@ -131,9 +131,10 @@ namespace vkBasalt
             ss.imbue(std::locale("C"));
             float value;
             ss >> value;
+            bool failed = ss.fail();
             std::string rest;
             ss >> rest;
-            if (ss.fail() || (!rest.empty() && rest != "f"))
+            if (failed || (!rest.empty() && rest != "f"))
             {
                 Logger::warn("invalid float value for: " + option);
             }
