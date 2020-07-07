@@ -34,7 +34,7 @@ namespace vkBasalt
         int      height;
         LutCube  lutCube;
         stbi_uc* pixels;
-        int32_t  usingPNG = (int32_t)(lutFile.find(".cube") != std::string::npos || lutFile.find(".CUBE") != std::string::npos);
+        int32_t  usingPNG = (int32_t)(lutFile.find(".cube") == std::string::npos && lutFile.find(".CUBE") == std::string::npos);
         if (!usingPNG)
         {
             lutCube = LutCube(lutFile);
