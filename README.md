@@ -87,9 +87,9 @@ If you want to make changes for one game only, you can create a file named `vkBa
 To run reshade fx shaders e.g. shaders from the [reshade repo](https://github.com/crosire/reshade-shaders), you have to set `reshadeTexturePath` and `reshadeIncludePath` to the matching dirctories from the repo. To then use a specific shader you need to set a custom effect name to the shader path and then add that effect name to `effects` like every other effect.
 
 ```ini
-effects = colourfulness:denoise
+effects = colorfulness:denoise
 
-colourfulness = /home/user/reshade-shaders/Shaders/Colourfulness.fx
+colorfulness = /home/user/reshade-shaders/Shaders/Colourfulness.fx
 denoise = /home/user/reshade-shaders/Shaders/Denoise.fx
 reshadeTexturePath = /home/user/reshade-shaders/Textures
 reshadeIncludePath = /home/user/reshade-shaders/Shaders
