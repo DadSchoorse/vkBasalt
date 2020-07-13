@@ -23,7 +23,7 @@ Before building, you will need:
 
 ### Building
 
-**These instructions use `--prefix=/usr`, which is generally not recommened since vkBasalt will be installed in directories that are meant for the package manager. The alternative is not setting the prefix, it will then be installed in `/usr/local`. But you need to make sure that `ld` finds the library since /usr/local is very likely not in the default path.** 
+**These instructions use `--prefix=/usr`, which is generally not recommened since vkBasalt will be installed in directories that are meant for the package manager. The alternative is not setting the prefix, it will then be installed in `/usr/local`. But you need to make sure that `ld` finds the library since /usr/local is very likely not in the default path.**
 
 In general, prefer using distro provided packages.
 
@@ -64,7 +64,7 @@ With Lutris, follow these steps below:
 ### Steam
 With Steam, edit your launch options and add:
 ```ini
-ENABLE_VKBASALT=1 %command% 
+ENABLE_VKBASALT=1 %command%
 ```
 
 ## Configure
