@@ -1,2 +1,3 @@
 option('with_so', type : 'boolean', value : true, description : 'install the library')
 option('with_json', type : 'boolean', value : true, description : 'install the json')
+option('append_libdir_vkbasalt', type : 'boolean', value : false, description: 'Append "vkbasalt" to libdir path or not.')
