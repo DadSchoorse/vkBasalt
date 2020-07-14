@@ -40,8 +40,6 @@ vkBasalt_src = [
 
 x11_dep = dependency('x11')
 
-lib_dir = get_option('libdir')
-
 shared_library(meson.project_name().to_lower(), 
     vkBasalt_src, shader_include,
     include_directories : vkBasalt_include_path,
