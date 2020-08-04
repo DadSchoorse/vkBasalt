@@ -131,7 +131,9 @@ namespace vkBasalt
             ss.imbue(std::locale("C"));
             float value;
             ss >> value;
+
             bool failed = ss.fail();
+
             std::string rest;
             ss >> rest;
             if (failed || (!rest.empty() && rest != "f"))
