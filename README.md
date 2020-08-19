@@ -118,7 +118,7 @@ Maybe. To my knowledge this hasn't happened yet but don't blame me if your frog 
 #### Will there be a openGl version?
 No. I don't know anything about openGl and I don't want to either. Also openGl has no layer system like vulkan.
 #### Will there be a GUI in the future?
-Maybe, but not soon.
+Maybe, but not soon.However you can check out https://github.com/benjamimgois/goverlay GOverlay project.
 #### So is vkBasalt just a reshade port for linux?
 Not really, most of the code was written from scratch. vkBasalt directly uses reshade source code for the shader compiler (thanks [@crosire](https://github.com/crosire)), but that's about it.
 #### Does every reshade shader work?
