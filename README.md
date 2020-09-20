@@ -23,7 +23,7 @@ Before building, you will need:
 
 ### Building
 
-**These instructions use `--prefix=/usr`, which is generally not recommened since vkBasalt will be installed in directories that are meant for the package manager. The alternative is not setting the prefix, it will then be installed in `/usr/local`. But you need to make sure that `ld` finds the library since /usr/local is very likely not in the default path.** 
+**These instructions use `--prefix=/usr`, which is generally not recommened since vkBasalt will be installed in directories that are meant for the package manager. The alternative is not setting the prefix, it will then be installed in `/usr/local`. But you need to make sure that `ld` finds the library since /usr/local is very likely not in the default path.**
 
 In general, prefer using distro provided packages.
 
@@ -64,7 +64,7 @@ With Lutris, follow these steps below:
 ### Steam
 With Steam, edit your launch options and add:
 ```ini
-ENABLE_VKBASALT=1 %command% 
+ENABLE_VKBASALT=1 %command%
 ```
 
 ## Configure
@@ -125,5 +125,7 @@ Not really, most of the code was written from scratch. vkBasalt directly uses re
 No. Shaders that need multiple techniques do not work, there might still be problems with stencil and blending and depth buffer access isn't ready yet.
 #### You said that "depth buffer access isn't ready yet", what does this mean?
 There is a wip version that you can enable with `depthCapture = on`. It will lead to many problems especially on non nvidia hardware. Also the selected depth buffer isn't always the one you would want.
+#### Why does vkBasalt's SMAA/FXAA look worse than a game's built-in option?
+Some games use higher quality variants of SMAA/FXAA since they have access to internal data such as motion vectors. When a game offers a SMAA or FXAA setting, we recommend using it over vkBasalt's SMAA or FXAA.
 #### Is there a way to change settings for reshade shaders?
 There is some support for it [#46](https://github.com/DadSchoorse/vkBasalt/pull/46). One easy way so to simply edit the shader file.
