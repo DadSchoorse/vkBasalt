@@ -44,4 +44,5 @@ shared_library(meson.project_name().to_lower(),
     vkBasalt_src, shader_include,
     include_directories : vkBasalt_include_path,
     dependencies : [x11_dep, reshade_dep],
-    install : lib_dir)
+    install : true,
+    install_dir : lib_dir)
