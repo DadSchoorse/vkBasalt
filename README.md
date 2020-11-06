@@ -46,6 +46,12 @@ ASFLAGS=--32 CFLAGS=-m32 CXXFLAGS=-m32 PKG_CONFIG_PATH=/usr/lib32/pkgconfig meso
 ninja -C builddir.32 install
 ```
 
+## Packaging status
+
+```
+[Fedora](https://src.fedoraproject.org/rpms/vkBasalt) `sudo dnf install vkBasalt`
+```
+
 ## Usage
 Enable the layer with the environment variable.
 
