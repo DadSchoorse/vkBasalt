@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "config_paths.hpp"
 
 #include <sstream>
 #include <locale>
@@ -20,15 +21,14 @@ namespace vkBasalt
                                                      : std::string(std::getenv("HOME")) + "/.config/vkBasalt/vkBasalt.conf";
 
         // Allowed config paths
-        const std::array<std::string, 8> configPath = {
-            customConfigFile,                          // custom config (VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf)
-            "vkBasalt.conf",                           // per game config
-            userXdgConfigFile,                         // user-global config
-            userConfigFile,                            // legacy default config
-            "/etc/vkBasalt.conf",                      // system-wide config
-            "/etc/vkBasalt/vkBasalt.conf",             // system-wide config (alternative)
-            "/usr/share/vkBasalt/vkBasalt.conf",       // legacy system-wide config
-            "/usr/local/share/vkBasalt/vkBasalt.conf", // legacy system-wide config (alternative)
+        const std::array<std::string, 7> configPath = {
+            customConfigFile,                                    // custom config (VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf)
+            "vkBasalt.conf",                                     // per game config
+            userXdgConfigFile,                                   // user-global config
+            userConfigFile,                                      // legacy default config
+            std::string(SYSCONFDIR) + "/vkBasalt.conf",          // system-wide config
+            std::string(SYSCONFDIR) + "/vkBasalt/vkBasalt.conf", // system-wide config (alternative)
+            std::string(DATADIR) + "/vkBasalt/vkBasalt.conf",    // legacy system-wide config
         };
 
         for (const auto& cFile : configPath)
