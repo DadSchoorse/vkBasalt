@@ -40,6 +40,13 @@ vkBasalt_src = [
 
 x11_dep = dependency('x11')
 
+conf_paths = configuration_data()
+conf_paths.set_quoted('SYSCONFDIR', join_paths(get_option('prefix'), get_option('sysconfdir')))
+conf_paths.set_quoted('DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
+
+configure_file(output: 'config_paths.hpp',
+               configuration : conf_paths)
+
 shared_library(meson.project_name().to_lower(), 
     vkBasalt_src, shader_include,
     include_directories : vkBasalt_include_path,
