@@ -1,0 +1,8 @@
+[wrap-file]
+directory = Vulkan-ValidationLayers-1.2.158
+source_url = https://github.com/KhronosGroup/Vulkan-ValidationLayers/archive/v1.2.158.tar.gz
+source_filename = vulkan-validationlayers-1.2.158.tar.gz
+source_hash = 9d7a6eba2db88b8af6457acce0b638324ca03cde2e9589ae96749114091c6e9e
+patch_url = https://wrapdb.mesonbuild.com/v1/projects/vulkan-validationlayers/1.2.158/2/get_zip
+patch_filename = vulkan-validationlayers-1.2.158-2-wrap.zip
+patch_hash = d38dae45ca6a7124ee8df045a8d5288390ab836b4d28c53234f90baee5c649fc

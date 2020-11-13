@@ -20,6 +20,9 @@ Before building, you will need:
 - GCC >= 9
 - X11 development files
 - glslang
+- Vulkan Headers
+- Vulkan Validationslayers
+- SPIR-V Headers
 
 ### Building
 
@@ -38,6 +41,9 @@ cd vkBasalt
 meson --buildtype=release --prefix=/usr builddir
 ninja -C builddir install
 ```
+
+Note: if you have mixed Vulkan Headers and Validationlayers, you can add `-Dvk_force_fallback=true` to the first command.
+
 #### 32bit
 
 Make sure that `PKG_CONFIG_PATH=/usr/lib32/pkgconfig` and `--libdir=lib32` are correct for your distro and change them if needed. On Debian based distros you need to replace `lib32` with `lib/i386-linux-gnu`, for example.

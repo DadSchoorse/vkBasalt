@@ -40,9 +40,15 @@ vkBasalt_src = [
 
 x11_dep = dependency('x11')
 
+vulkan_dep = []
+if get_option('vk_force_fallback')
+    vulkan_dep += subproject('vulkan-headers').get_variable('vulkan_headers_dep')
+    vulkan_dep += subproject('vulkan-validationlayers').get_variable('vulkan_validationlayers_dep')
+endif
+
+
 shared_library(meson.project_name().to_lower(), 
     vkBasalt_src, shader_include,
-    include_directories : vkBasalt_include_path,
-    dependencies : [x11_dep, reshade_dep],
+    dependencies : [vulkan_dep, x11_dep, reshade_dep],
     install : true,
     install_dir : lib_dir)

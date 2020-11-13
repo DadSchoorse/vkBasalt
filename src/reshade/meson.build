@@ -7,8 +7,7 @@ reshade_src = [
     'effect_symbol_table.cpp',
 ]
 
-reshade_lib = static_library('reshade', reshade_src,
-    include_directories : vkBasalt_include_path)
+reshade_lib = static_library('reshade', reshade_src)
 
 reshade_dep = declare_dependency(
     link_with : [ reshade_lib ])

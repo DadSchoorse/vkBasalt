@@ -1,15 +1,15 @@
 #ifndef VULKAN_INCLUDE_HPP_INCLUDED
 #define VULKAN_INCLUDE_HPP_INCLUDED
 
-#include <assert.h> //vulkan/vk_dispatch_table_helper.h needs this
+#include <assert.h> // vk_dispatch_table_helper.h needs this
 
 #define VK_NO_PROTOTYPES
 
 #pragma GCC system_header
 #include "vulkan/vulkan.h"
 #include "vulkan/vk_layer.h"
-#include "vulkan/vk_layer_dispatch_table.h"
-#include "vulkan/vk_dispatch_table_helper.h"
+#include "vk_layer_dispatch_table.h"
+#include "vk_dispatch_table_helper.h"
 
 #include <string>
 
