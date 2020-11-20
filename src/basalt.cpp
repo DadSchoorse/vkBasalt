@@ -48,7 +48,7 @@ namespace vkBasalt
     Logger Logger::s_instance;
 
     // layer book-keeping information, to store dispatch tables by key
-    std::unordered_map<void*, VkLayerInstanceDispatchTable>               instanceDispatchMap;
+    std::unordered_map<void*, InstanceDispatch>                           instanceDispatchMap;
     std::unordered_map<void*, VkInstance>                                 instanceMap;
     std::unordered_map<void*, std::shared_ptr<LogicalDevice>>             deviceMap;
     std::unordered_map<VkSwapchainKHR, std::shared_ptr<LogicalSwapchain>> swapchainMap;
@@ -118,8 +118,8 @@ namespace vkBasalt
         VkResult ret                        = createFunc(&modifiedCreateInfo, pAllocator, pInstance);
 
         // fetch our own dispatch table for the functions we need, into the next layer
-        VkLayerInstanceDispatchTable dispatchTable;
-        layer_init_instance_dispatch_table(*pInstance, &dispatchTable, gpa);
+        InstanceDispatch dispatchTable;
+        fillDispatchTableInstance(*pInstance, gpa, &dispatchTable);
 
         // store the table by key
         {
@@ -137,7 +137,7 @@ namespace vkBasalt
 
         Logger::trace("vkDestroyInstance");
 
-        VkLayerInstanceDispatchTable dispatchTable = instanceDispatchMap[GetKey(instance)];
+        InstanceDispatch dispatchTable = instanceDispatchMap[GetKey(instance)];
 
         dispatchTable.DestroyInstance(instance, pAllocator);
 
@@ -220,12 +220,7 @@ namespace vkBasalt
 
         VkResult ret = createFunc(physicalDevice, &modifiedCreateInfo, pAllocator, pDevice);
 
-        // fetch our own dispatch table for the functions we need, into the next layer
-        VkLayerDispatchTable dispatchTable;
-        layer_init_device_dispatch_table(*pDevice, &dispatchTable, gdpa);
-
         std::shared_ptr<LogicalDevice> pLogicalDevice(new LogicalDevice());
-        pLogicalDevice->vkd                   = dispatchTable;
         pLogicalDevice->vki                   = instanceDispatchMap[GetKey(physicalDevice)];
         pLogicalDevice->device                = *pDevice;
         pLogicalDevice->physicalDevice        = physicalDevice;
@@ -234,6 +229,8 @@ namespace vkBasalt
         pLogicalDevice->queueFamilyIndex      = 0;
         pLogicalDevice->commandPool           = VK_NULL_HANDLE;
         pLogicalDevice->supportsMutableFormat = supportsMutableFormat;
+
+        fillDispatchTableDevice(*pDevice, gdpa, &pLogicalDevice->vkd);
 
         // store the table by key
         {
@@ -854,8 +851,8 @@ extern "C"
     VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevice device, const char* pName);
     VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetInstanceProcAddr(VkInstance instance, const char* pName);
 
-#define GETPROCADDR(func)                                                                                                                            \
-    if (!std::strcmp(pName, "vk" #func))                                                                                                             \
+#define GETPROCADDR(func) \
+    if (!std::strcmp(pName, "vk" #func)) \
         return (PFN_vkVoidFunction) &vkBasalt::vkBasalt_##func;
     /*
     Return our funktions for the funktions we want to intercept
@@ -863,34 +860,34 @@ extern "C"
     */
 
     // vkGetDeviceProcAddr needs to behave like vkGetInstanceProcAddr thanks to some games
-#define INTERCEPT_CALLS                                                                                                                              \
-    /* instance chain functions we intercept */                                                                                                      \
-    if (!std::strcmp(pName, "vkGetInstanceProcAddr"))                                                                                                \
-        return (PFN_vkVoidFunction) &vkBasalt_GetInstanceProcAddr;                                                                                   \
-    GETPROCADDR(EnumerateInstanceLayerProperties);                                                                                                   \
-    GETPROCADDR(EnumerateInstanceExtensionProperties);                                                                                               \
-    GETPROCADDR(CreateInstance);                                                                                                                     \
-    GETPROCADDR(DestroyInstance);                                                                                                                    \
-                                                                                                                                                     \
-    /* device chain functions we intercept*/                                                                                                         \
-    if (!std::strcmp(pName, "vkGetDeviceProcAddr"))                                                                                                  \
-        return (PFN_vkVoidFunction) &vkBasalt_GetDeviceProcAddr;                                                                                     \
-    GETPROCADDR(EnumerateDeviceLayerProperties);                                                                                                     \
-    GETPROCADDR(EnumerateDeviceExtensionProperties);                                                                                                 \
-    GETPROCADDR(CreateDevice);                                                                                                                       \
-    GETPROCADDR(DestroyDevice);                                                                                                                      \
-    GETPROCADDR(GetDeviceQueue);                                                                                                                     \
-    GETPROCADDR(GetDeviceQueue2);                                                                                                                    \
-    GETPROCADDR(CreateSwapchainKHR);                                                                                                                 \
-    GETPROCADDR(GetSwapchainImagesKHR);                                                                                                              \
-    GETPROCADDR(QueuePresentKHR);                                                                                                                    \
-    GETPROCADDR(DestroySwapchainKHR);                                                                                                                \
-                                                                                                                                                     \
-    if (vkBasalt::pConfig->getOption<std::string>("depthCapture", "off") == "on")                                                                    \
-    {                                                                                                                                                \
-        GETPROCADDR(CreateImage);                                                                                                                    \
-        GETPROCADDR(DestroyImage);                                                                                                                   \
-        GETPROCADDR(BindImageMemory);                                                                                                                \
+#define INTERCEPT_CALLS \
+    /* instance chain functions we intercept */ \
+    if (!std::strcmp(pName, "vkGetInstanceProcAddr")) \
+        return (PFN_vkVoidFunction) &vkBasalt_GetInstanceProcAddr; \
+    GETPROCADDR(EnumerateInstanceLayerProperties); \
+    GETPROCADDR(EnumerateInstanceExtensionProperties); \
+    GETPROCADDR(CreateInstance); \
+    GETPROCADDR(DestroyInstance); \
+\
+    /* device chain functions we intercept*/ \
+    if (!std::strcmp(pName, "vkGetDeviceProcAddr")) \
+        return (PFN_vkVoidFunction) &vkBasalt_GetDeviceProcAddr; \
+    GETPROCADDR(EnumerateDeviceLayerProperties); \
+    GETPROCADDR(EnumerateDeviceExtensionProperties); \
+    GETPROCADDR(CreateDevice); \
+    GETPROCADDR(DestroyDevice); \
+    GETPROCADDR(GetDeviceQueue); \
+    GETPROCADDR(GetDeviceQueue2); \
+    GETPROCADDR(CreateSwapchainKHR); \
+    GETPROCADDR(GetSwapchainImagesKHR); \
+    GETPROCADDR(QueuePresentKHR); \
+    GETPROCADDR(DestroySwapchainKHR); \
+\
+    if (vkBasalt::pConfig->getOption<std::string>("depthCapture", "off") == "on") \
+    { \
+        GETPROCADDR(CreateImage); \
+        GETPROCADDR(DestroyImage); \
+        GETPROCADDR(BindImageMemory); \
     }
 
     VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL vkBasalt_GetDeviceProcAddr(VkDevice device, const char* pName)

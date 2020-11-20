@@ -389,9 +389,10 @@ namespace vkBasalt
                 attachmentDescription.flags   = 0;
                 attachmentDescription.format  = pass.srgb_write_enable ? textureFormatsSRGB[target] : textureFormatsUNORM[target];
                 attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-                attachmentDescription.loadOp  = pass.clear_render_targets
-                                                   ? VK_ATTACHMENT_LOAD_OP_CLEAR
-                                                   : pass.blend_enable ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                attachmentDescription.loadOp  = pass.clear_render_targets ? VK_ATTACHMENT_LOAD_OP_CLEAR
+                                                : pass.blend_enable       ? VK_ATTACHMENT_LOAD_OP_LOAD
+                                                                          : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+
                 attachmentDescription.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
                 attachmentDescription.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                 attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -808,10 +809,9 @@ namespace vkBasalt
                     for (uint32_t j = 0; j < inputImages.size(); j++)
                     {
                         VkDescriptorImageInfo imageInfo;
-                        imageInfo.sampler   = samplers[i];
-                        imageInfo.imageView = depthImageView
-                                                  ? depthImageView
-                                                  : inputImageViewsUNORM[j]; // Use a input image if there is no depth image to prevent a crash
+                        imageInfo.sampler = samplers[i];
+                        // Use a input image if there is no depth image to prevent a crash
+                        imageInfo.imageView   = depthImageView ? depthImageView : inputImageViewsUNORM[j];
                         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
                         VkWriteDescriptorSet writeDescriptorSet = {};

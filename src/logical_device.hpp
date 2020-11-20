@@ -7,23 +7,24 @@
 #include <vector>
 
 #include "vulkan_include.hpp"
+#include "vkdispatch.hpp"
 
 namespace vkBasalt
 {
     struct LogicalDevice
     {
-        VkLayerDispatchTable         vkd;
-        VkLayerInstanceDispatchTable vki;
-        VkDevice                     device;
-        VkPhysicalDevice             physicalDevice;
-        VkInstance                   instance;
-        VkQueue                      queue;
-        uint32_t                     queueFamilyIndex;
-        VkCommandPool                commandPool;
-        bool                         supportsMutableFormat;
-        std::vector<VkImage>         depthImages;
-        std::vector<VkFormat>        depthFormats;
-        std::vector<VkImageView>     depthImageViews;
+        DeviceDispatch           vkd;
+        InstanceDispatch         vki;
+        VkDevice                 device;
+        VkPhysicalDevice         physicalDevice;
+        VkInstance               instance;
+        VkQueue                  queue;
+        uint32_t                 queueFamilyIndex;
+        VkCommandPool            commandPool;
+        bool                     supportsMutableFormat;
+        std::vector<VkImage>     depthImages;
+        std::vector<VkFormat>    depthFormats;
+        std::vector<VkImageView> depthImageViews;
     };
 } // namespace vkBasalt
 
