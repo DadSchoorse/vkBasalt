@@ -8,6 +8,3 @@ src/reshade/* linguist-vendored
 
 src/shader/smaa.h linguist-vendored
 src/shader/fxaa3_11.h linguist-vendored
-
-include/vulkan/* linguist-vendored
-include/spirv/* linguist-vendored

@@ -20,6 +20,8 @@ Before building, you will need:
 - GCC >= 9
 - X11 development files
 - glslang
+- SPIR-V Headers
+- Vulkan Headers
 
 ### Building
 

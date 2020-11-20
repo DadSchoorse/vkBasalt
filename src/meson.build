@@ -36,6 +36,7 @@ vkBasalt_src = [
     'stb_image.cpp',
     'stb_image_resize.cpp',
     'util.cpp',
+    'vkdispatch.cpp',
 ]
 
 x11_dep = dependency('x11')

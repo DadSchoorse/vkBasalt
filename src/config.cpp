@@ -16,6 +16,7 @@ namespace vkBasalt
         const char* tmpHomeEnv     = std::getenv("XDG_DATA_HOME");
         std::string userConfigFile = tmpHomeEnv ? std::string(tmpHomeEnv) + "/vkBasalt/vkBasalt.conf"
                                                 : std::string(std::getenv("HOME")) + "/.local/share/vkBasalt/vkBasalt.conf";
+
         const char* tmpConfigEnv      = std::getenv("XDG_CONFIG_HOME");
         std::string userXdgConfigFile = tmpConfigEnv ? std::string(tmpConfigEnv) + "/vkBasalt/vkBasalt.conf"
                                                      : std::string(std::getenv("HOME")) + "/.config/vkBasalt/vkBasalt.conf";
