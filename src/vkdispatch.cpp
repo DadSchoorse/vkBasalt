@@ -7,6 +7,7 @@ namespace vkBasalt
 
     void fillDispatchTableInstance(VkInstance instance, PFN_vkGetInstanceProcAddr gipa, InstanceDispatch* table)
     {
+        table->GetInstanceProcAddr = gipa;
 #define FORVKFUNC(func) \
     do \
     { \
@@ -19,6 +20,7 @@ namespace vkBasalt
 
     void fillDispatchTableDevice(VkDevice device, PFN_vkGetDeviceProcAddr gdpa, DeviceDispatch* table)
     {
+        table->GetDeviceProcAddr = gdpa;
 #define FORVKFUNC(func) \
     do \
     { \
