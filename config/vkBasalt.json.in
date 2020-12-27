@@ -7,10 +7,6 @@
     "api_version": "1.2.136",
     "implementation_version": "1",
     "description": "a post processing layer",
-    "functions": {
-      "vkGetInstanceProcAddr": "vkBasalt_GetInstanceProcAddr",
-      "vkGetDeviceProcAddr":   "vkBasalt_GetDeviceProcAddr"
-    },
     "enable_environment": {
       "ENABLE_VKBASALT": "1"
     },
