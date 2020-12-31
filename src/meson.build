@@ -24,7 +24,6 @@ vkBasalt_src = [
     'image.cpp',
     'image_view.cpp',
     'keyboard_input.cpp',
-    'keyboard_input_x11.cpp',
     'logger.cpp',
     'logical_swapchain.cpp',
     'lut_cube.cpp',
@@ -33,8 +32,6 @@ vkBasalt_src = [
     'reshade_uniforms.cpp',
     'sampler.cpp',
     'shader.cpp',
-    'stb_image.cpp',
-    'stb_image_resize.cpp',
     'util.cpp',
     'vkdispatch.cpp',
 ]
@@ -48,8 +45,19 @@ conf_paths.set_quoted('DATADIR', join_paths(get_option('prefix'), get_option('da
 configure_file(output: 'config_paths.hpp',
                configuration : conf_paths)
 
+# Compile stb_image implementations separatelly.
+# This allows to build project with Meson --unity=on option, for faster compilation
+# and potentially better optimization.
+stb_image_lib        = static_library('stb_image',        'stb_image.cpp')
+stb_image_resize_lib = static_library('stb_image_resize', 'stb_image_resize.cpp')
+
+# X11/X.h library contains many definitions (e.g. None)
+# which conflicts with the rest codebase with with Meson --unity=on option
+keyboard_input_x11_lib = static_library('keyboard_input_x11', 'keyboard_input_x11.cpp')
+
 shared_library(meson.project_name().to_lower(), 
     vkBasalt_src, shader_include,
+    link_with: [ stb_image_lib, stb_image_resize_lib, keyboard_input_x11_lib ],
     include_directories : vkBasalt_include_path,
     dependencies : [x11_dep, reshade_dep],
     install : true,
