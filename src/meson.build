@@ -48,8 +48,8 @@ configure_file(output: 'config_paths.hpp',
 # Compile stb_image implementations separatelly.
 # This allows to build project with Meson --unity=on option, for faster compilation
 # and potentially better optimization.
-stb_image_lib        = static_library('stb_image',        'stb_image.cpp')
-stb_image_resize_lib = static_library('stb_image_resize', 'stb_image_resize.cpp')
+stb_image_lib        = static_library('stb_image',        'stb_image.c')
+stb_image_resize_lib = static_library('stb_image_resize', 'stb_image_resize.c')
 
 # X11/X.h library contains many definitions (e.g. None)
 # which conflicts with the rest codebase with with Meson --unity=on option
