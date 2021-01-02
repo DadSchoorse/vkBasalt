@@ -1,5 +1,7 @@
 project('vkBasalt', ['c', 'cpp'], default_options: ['c_std=c11', 'cpp_std=c++2a'])
 
+cpp = meson.get_compiler('cpp')
+
 vkBasalt_include_path = ''
 
 lib_dir = get_option('libdir')

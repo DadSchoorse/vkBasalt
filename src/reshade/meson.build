@@ -7,8 +7,14 @@ reshade_src = [
     'effect_symbol_table.cpp',
 ]
 
+
+cpp_args_reshade = cpp.get_supported_arguments(['-Wno-unknown-pragmas'])
+
+
 reshade_lib = static_library('reshade', reshade_src,
-    include_directories : vkBasalt_include_path)
+    include_directories : vkBasalt_include_path,
+    cpp_args : cpp_args_reshade,
+    )
 
 reshade_dep = declare_dependency(
     link_with : [ reshade_lib ])
