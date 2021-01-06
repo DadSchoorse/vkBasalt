@@ -52,6 +52,8 @@ ninja -C builddir.32 install
 
 [Fedora](https://src.fedoraproject.org/rpms/vkBasalt) `sudo dnf install vkBasalt`
 
+[Void Linux](https://github.com/void-linux/void-packages/blob/master/srcpkgs/vkBasalt/template) `sudo xbps-install vkBasalt`
+
 ## Usage
 Enable the layer with the environment variable.
 
