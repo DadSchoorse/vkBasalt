@@ -86,7 +86,6 @@ The config file will be searched for in the following locations:
 * `/etc/vkBasalt.conf`
 * `/etc/vkBasalt/vkBasalt.conf`
 * `/usr/share/vkBasalt/vkBasalt.conf`
-* `/usr/local/share/vkBasalt/vkBasalt.conf`
 
 If you want to make changes for one game only, you can create a file named `vkBasalt.conf` in the working directory of the game and change the values there.
 
