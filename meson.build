@@ -9,7 +9,7 @@ ld_lib_dir_vkbasalt = ''
 
 if get_option('append_libdir_vkbasalt')
     lib_dir = join_paths(lib_dir, 'vkbasalt')
-    ld_lib_dir_vkbasalt = get_option('prefix') + '/\$LIB/vkbasalt/'
+    ld_lib_dir_vkbasalt = get_option('prefix') + '/$LIB/vkbasalt/'
 endif
 
 if get_option('with_so')
