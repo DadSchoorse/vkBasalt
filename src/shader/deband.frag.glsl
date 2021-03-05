@@ -39,6 +39,8 @@ layout(constant_id = 8) const int   iterations = 4;
 layout(location = 0) in vec2 texcoord;
 layout(location = 0) out vec4 fragColor;
 
+#define textureLod0Offset(img, coord, offset) textureLodOffset(img, coord, 0.0f, offset)
+#define textureLod0(img, coord) textureLod(img, coord, 0.0f)
 
 float rand(float x)
 {
@@ -55,28 +57,28 @@ void analyze_pixels(vec3 ori, sampler2D tex, vec2 texcoord, vec2 _range, vec2 di
     // Sample at quarter-turn intervals around the source pixel
 
     // South-east
-    vec3 ref = texture(tex, texcoord + _range * dir).rgb;
+    vec3 ref = textureLod0(tex, texcoord + _range * dir).rgb;
     vec3 diff = abs(ori - ref);
     ref_max_diff = diff;
     ref_avg = ref;
     ref_mid_diff1 = ref;
 
     // North-west
-    ref = texture(tex, texcoord + _range * -dir).rgb;
+    ref = textureLod0(tex, texcoord + _range * -dir).rgb;
     diff = abs(ori - ref);
     ref_max_diff = max(ref_max_diff, diff);
     ref_avg += ref;
     ref_mid_diff1 = abs(((ref_mid_diff1 + ref) * 0.5) - ori);
 
     // North-east
-    ref = texture(tex, texcoord + _range * vec2(-dir.y, dir.x)).rgb;
+    ref = textureLod0(tex, texcoord + _range * vec2(-dir.y, dir.x)).rgb;
     diff = abs(ori - ref);
     ref_max_diff = max(ref_max_diff, diff);
     ref_avg += ref;
     ref_mid_diff2 = ref;
 
     // South-west
-    ref = texture(tex, texcoord + _range * vec2( dir.y, -dir.x)).rgb;
+    ref = textureLod0(tex, texcoord + _range * vec2( dir.y, -dir.x)).rgb;
     diff = abs(ori - ref);
     ref_max_diff = max(ref_max_diff, diff);
     ref_avg += ref;
@@ -104,7 +106,7 @@ void main()
     vec3 ref_mid_diff1; // The difference between the average of SE and NW reference pixels and the original pixel
     vec3 ref_mid_diff2; // The difference between the average of NE and SW reference pixels and the original pixel
 
-    vec4 ori_alpha = texture(img, texcoord); // Original pixel
+    vec4 ori_alpha = textureLod0(img, texcoord); // Original pixel
     vec3 ori = ori_alpha.rgb;
     vec3 res; // Final pixel
 

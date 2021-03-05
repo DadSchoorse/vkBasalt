@@ -30,6 +30,9 @@ layout (constant_id = 1) const float denoise = 0.17;
 layout(location = 0) in vec2 textureCoord;
 layout(location = 0) out vec4 fragColor;
 
+#define textureLod0Offset(img, coord, offset) textureLodOffset(img, coord, 0.0f, offset)
+#define textureLod0(img, coord) textureLod(img, coord, 0.0f)
+
 float GetLumaComponents(float r, float g, float b)
 {
     // Y from JPEG spec
@@ -61,17 +64,17 @@ void main()
     //  a (x) b
     //  g  c  f
 
-    vec4 x = texture(img, textureCoord);
-    
-    vec4 a = textureOffset(img, textureCoord, ivec2(-1,  0));
-    vec4 b = textureOffset(img, textureCoord, ivec2( 1,  0));
-    vec4 c = textureOffset(img, textureCoord, ivec2( 0,  1));
-    vec4 d = textureOffset(img, textureCoord, ivec2( 0, -1));
+    vec4 x = textureLod0(img, textureCoord);
 
-    vec4 e = textureOffset(img, textureCoord, ivec2(-1, -1));
-    vec4 f = textureOffset(img, textureCoord, ivec2( 1,  1));
-    vec4 g = textureOffset(img, textureCoord, ivec2(-1,  1));
-    vec4 h = textureOffset(img, textureCoord, ivec2( 1, -1));
+    vec4 a = textureLod0Offset(img, textureCoord, ivec2(-1,  0));
+    vec4 b = textureLod0Offset(img, textureCoord, ivec2( 1,  0));
+    vec4 c = textureLod0Offset(img, textureCoord, ivec2( 0,  1));
+    vec4 d = textureLod0Offset(img, textureCoord, ivec2( 0, -1));
+
+    vec4 e = textureLod0Offset(img, textureCoord, ivec2(-1, -1));
+    vec4 f = textureLod0Offset(img, textureCoord, ivec2( 1,  1));
+    vec4 g = textureLod0Offset(img, textureCoord, ivec2(-1,  1));
+    vec4 h = textureLod0Offset(img, textureCoord, ivec2( 1, -1));
 
     float lx = GetLuma(x);
 
