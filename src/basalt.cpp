@@ -566,7 +566,7 @@ namespace vkBasalt
         static uint32_t keySymbol = convertToKeySym(pConfig->getOption<std::string>("toggleKey", "Home"));
 
         static bool pressed       = false;
-        static bool presentEffect = true;
+        static bool presentEffect = pConfig->getOption<bool>("enableOnLaunch", true);
 
         if (isKeyPressed(keySymbol))
         {
