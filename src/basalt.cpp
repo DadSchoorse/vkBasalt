@@ -221,6 +221,9 @@ namespace vkBasalt
 
         VkResult ret = createFunc(physicalDevice, &modifiedCreateInfo, pAllocator, pDevice);
 
+        if (ret != VK_SUCCESS)
+            return ret;
+
         std::shared_ptr<LogicalDevice> pLogicalDevice(new LogicalDevice());
         pLogicalDevice->vki                   = instanceDispatchMap[GetKey(physicalDevice)];
         pLogicalDevice->device                = *pDevice;
@@ -268,7 +271,7 @@ namespace vkBasalt
 
         deviceMap[GetKey(*pDevice)] = pLogicalDevice;
 
-        return ret;
+        return VK_SUCCESS;
     }
 
     VK_LAYER_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
