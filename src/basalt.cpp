@@ -150,6 +150,7 @@ namespace vkBasalt
                                                               const VkAllocationCallbacks* pAllocator,
                                                               VkDevice*                    pDevice)
     {
+        scoped_lock l(globalLock);
         Logger::trace("vkCreateDevice");
         VkLayerDeviceCreateInfo* layerCreateInfo = (VkLayerDeviceCreateInfo*) pCreateInfo->pNext;
 
@@ -232,11 +233,40 @@ namespace vkBasalt
 
         fillDispatchTableDevice(*pDevice, gdpa, &pLogicalDevice->vkd);
 
-        // store the table by key
+        uint32_t count;
+
+        pLogicalDevice->vki.GetPhysicalDeviceQueueFamilyProperties(pLogicalDevice->physicalDevice, &count, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queueProperties(count);
+
+        pLogicalDevice->vki.GetPhysicalDeviceQueueFamilyProperties(pLogicalDevice->physicalDevice, &count, queueProperties.data());
+        for (uint32_t i = 0; i < pCreateInfo->queueCreateInfoCount; i++)
         {
-            scoped_lock l(globalLock);
-            deviceMap[GetKey(*pDevice)] = pLogicalDevice;
+            auto& queueInfo = pCreateInfo->pQueueCreateInfos[i];
+            if ((queueProperties[queueInfo.queueFamilyIndex].queueFlags & VK_QUEUE_GRAPHICS_BIT))
+            {
+                pLogicalDevice->vkd.GetDeviceQueue(pLogicalDevice->device, queueInfo.queueFamilyIndex, 0, &pLogicalDevice->queue);
+
+                VkCommandPoolCreateInfo commandPoolCreateInfo;
+                commandPoolCreateInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+                commandPoolCreateInfo.pNext            = nullptr;
+                commandPoolCreateInfo.flags            = 0;
+                commandPoolCreateInfo.queueFamilyIndex = queueInfo.queueFamilyIndex;
+
+                Logger::debug("Found graphics capable queue");
+                pLogicalDevice->vkd.CreateCommandPool(pLogicalDevice->device, &commandPoolCreateInfo, nullptr, &pLogicalDevice->commandPool);
+                pLogicalDevice->queueFamilyIndex = queueInfo.queueFamilyIndex;
+
+                initializeDispatchTable(pLogicalDevice->queue, pLogicalDevice->device);
+
+                break;
+            }
         }
+
+        if (!pLogicalDevice->queue)
+            Logger::err("Did not find a graphics queue!");
+
+        deviceMap[GetKey(*pDevice)] = pLogicalDevice;
 
         return ret;
     }
@@ -257,76 +287,6 @@ namespace vkBasalt
         pLogicalDevice->vkd.DestroyDevice(device, pAllocator);
 
         deviceMap.erase(GetKey(device));
-    }
-
-    static void saveDeviceQueue(LogicalDevice* pLogicalDevice, uint32_t queueFamilyIndex, VkQueue* pQueue)
-    {
-        if (pLogicalDevice->queue != VK_NULL_HANDLE)
-        {
-            return; // we allready have a queue
-        }
-
-        // Save the first graphic capable queue in our deviceMap
-        uint32_t count;
-        VkBool32 graphicsCapable = VK_FALSE;
-        // TODO also check if the queue is present capable
-        pLogicalDevice->vki.GetPhysicalDeviceQueueFamilyProperties(pLogicalDevice->physicalDevice, &count, nullptr);
-
-        std::vector<VkQueueFamilyProperties> queueProperties(count);
-
-        if (count > 0)
-        {
-            pLogicalDevice->vki.GetPhysicalDeviceQueueFamilyProperties(pLogicalDevice->physicalDevice, &count, queueProperties.data());
-            if ((queueProperties[queueFamilyIndex].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
-            {
-                graphicsCapable = VK_TRUE;
-            }
-        }
-        else
-        {
-            // TODO
-            graphicsCapable = VK_TRUE;
-        }
-
-        if (graphicsCapable)
-        {
-            VkCommandPoolCreateInfo commandPoolCreateInfo;
-            commandPoolCreateInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-            commandPoolCreateInfo.pNext            = nullptr;
-            commandPoolCreateInfo.flags            = 0;
-            commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
-
-            Logger::debug("found graphic capable queue");
-            pLogicalDevice->vkd.CreateCommandPool(pLogicalDevice->device, &commandPoolCreateInfo, nullptr, &pLogicalDevice->commandPool);
-            pLogicalDevice->queue            = *pQueue;
-            pLogicalDevice->queueFamilyIndex = queueFamilyIndex;
-        }
-    }
-
-    VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue2(VkDevice device, const VkDeviceQueueInfo2* pQueueInfo, VkQueue* pQueue)
-    {
-        scoped_lock l(globalLock);
-
-        Logger::trace("vkGetDeviceQueue2");
-
-        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
-
-        pLogicalDevice->vkd.GetDeviceQueue2(device, pQueueInfo, pQueue);
-
-        saveDeviceQueue(pLogicalDevice, pQueueInfo->queueFamilyIndex, pQueue);
-    }
-
-    VKAPI_ATTR void VKAPI_CALL vkBasalt_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue)
-    {
-        scoped_lock l(globalLock);
-
-        Logger::trace("vkGetDeviceQueue");
-
-        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
-
-        pLogicalDevice->vkd.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
-
-        saveDeviceQueue(pLogicalDevice, queueFamilyIndex, pQueue);
     }
 
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_CreateSwapchainKHR(VkDevice                        device,
@@ -876,8 +836,6 @@ extern "C"
     GETPROCADDR(EnumerateDeviceExtensionProperties); \
     GETPROCADDR(CreateDevice); \
     GETPROCADDR(DestroyDevice); \
-    GETPROCADDR(GetDeviceQueue); \
-    GETPROCADDR(GetDeviceQueue2); \
     GETPROCADDR(CreateSwapchainKHR); \
     GETPROCADDR(GetSwapchainImagesKHR); \
     GETPROCADDR(QueuePresentKHR); \
