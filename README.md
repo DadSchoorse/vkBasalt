@@ -50,6 +50,8 @@ ninja -C builddir.32 install
 
 ## Packaging status
 
+[Debian](https://tracker.debian.org/pkg/vkbasalt) `sudo apt install vkbasalt`
+
 [Fedora](https://src.fedoraproject.org/rpms/vkBasalt) `sudo dnf install vkBasalt`
 
 [Void Linux](https://github.com/void-linux/void-packages/blob/master/srcpkgs/vkBasalt/template) `sudo xbps-install vkBasalt`
