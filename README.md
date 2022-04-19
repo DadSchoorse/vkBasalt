@@ -50,7 +50,7 @@ ninja -C builddir.32 install
 
 ## Packaging status
 
-[ArchLinux](https://aur.archlinux.org/packages/vkbasalt) `paru -Syu vkbasalt lib32-vkbasalt`
+[ArchLinux](https://aur.archlinux.org/packages/vkbasalt) `paru -Syu vkbasalt lib32-vkbasalt reshade-shaders-git`
 
 [Debian](https://tracker.debian.org/pkg/vkbasalt) `sudo apt install vkbasalt`
 
