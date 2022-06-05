@@ -48,17 +48,6 @@ ASFLAGS=--32 CFLAGS=-m32 CXXFLAGS=-m32 PKG_CONFIG_PATH=/usr/lib32/pkgconfig meso
 ninja -C builddir.32 install
 ```
 
-#### Local install
-
-When using the steam deck or any other os with a read-only filesystem it may be wanted to install vkBasalt locally. To do that you will have to set `--prefix=~/.local` and also modify the `LD_LIBRARY_PATH` envvar.
-```
-meson --buildtype=release --prefix=~/.local builddir
-ninja -C builddir install
-```
-To properly use this you will then have to also set `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.local/lib` additionally to the `ENABLE_VKBASALT=1` to be able to use it. In steam that'd result in `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.local/lib ENABLE_VKBASALT=1 %command`.
-
-Please note that this will only work in the steam deck desktop mode, not in deck mode.
-
 ## Packaging status
 
 [Debian](https://tracker.debian.org/pkg/vkbasalt) `sudo apt install vkbasalt`
@@ -66,6 +55,25 @@ Please note that this will only work in the steam deck desktop mode, not in deck
 [Fedora](https://src.fedoraproject.org/rpms/vkBasalt) `sudo dnf install vkBasalt`
 
 [Void Linux](https://github.com/void-linux/void-packages/blob/master/srcpkgs/vkBasalt/template) `sudo xbps-install vkBasalt`
+
+### Steam deck
+to install on the steam deck you can use the `steamos-install.sh` script:
+```
+git clone https://github.com/DadSchoorse/vkBasalt.git
+cd vkBasalt
+chmod +x steamos-install.sh
+./steamos-install.sh
+```
+
+to install it for deck mode:
+```
+su deck
+git clone https://github.com/DadSchoorse/vkBasalt.git
+cd vkBasalt
+chmod +x steamos-install.sh
+./steamos-install.sh
+exit
+```
 
 ## Usage
 Enable the layer with the environment variable.
