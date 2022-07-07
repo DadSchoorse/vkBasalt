@@ -9,8 +9,8 @@ The built-in effects currently are:
 - Fast approximate anti-aliasing
 
 It is also possible to use ReShade FX shaders.
-## Disclaimer
-This is one of my first projects ever, so expect it to have bugs. Use it at your own risk.
+
+**Disclaimer: It is one of my first projects ever, so expect it to have bugs. Use it at your own risk.**
 ## Building from source
 ### Dependencies
 Before building, you will need:
