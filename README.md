@@ -14,7 +14,7 @@ This is one of my first projects ever, so expect it to have bugs. Use it at your
 ## Building from source
 ### Dependencies
 Before building, you will need:
-- GCC 9>
+- GCC 9≥
 - X11 development files
 - glslang
 - SPIR-V headers
