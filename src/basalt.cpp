@@ -50,6 +50,7 @@ namespace vkBasalt
     // layer book-keeping information, to store dispatch tables by key
     std::unordered_map<void*, InstanceDispatch>                           instanceDispatchMap;
     std::unordered_map<void*, VkInstance>                                 instanceMap;
+    std::unordered_map<void*, uint32_t>                                   instanceVersionMap;
     std::unordered_map<void*, std::shared_ptr<LogicalDevice>>             deviceMap;
     std::unordered_map<VkSwapchainKHR, std::shared_ptr<LogicalSwapchain>> swapchainMap;
 
@@ -126,6 +127,7 @@ namespace vkBasalt
             scoped_lock l(globalLock);
             instanceDispatchMap[GetKey(*pInstance)] = dispatchTable;
             instanceMap[GetKey(*pInstance)]         = *pInstance;
+            instanceVersionMap[GetKey(*pInstance)]  = modifiedCreateInfo.pApplicationInfo->apiVersion;
         }
 
         return ret;
@@ -143,6 +145,7 @@ namespace vkBasalt
 
         instanceDispatchMap.erase(GetKey(instance));
         instanceMap.erase(GetKey(instance));
+        instanceVersionMap.erase(GetKey(instance));
     }
 
     VK_LAYER_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(VkPhysicalDevice             physicalDevice,
@@ -193,6 +196,9 @@ namespace vkBasalt
             }
         }
 
+        VkPhysicalDeviceProperties deviceProps;
+        instanceDispatchMap[GetKey(physicalDevice)].GetPhysicalDeviceProperties(physicalDevice, &deviceProps);
+
         VkDeviceCreateInfo       modifiedCreateInfo = *pCreateInfo;
         std::vector<const char*> enabledExtensionNames;
         if (modifiedCreateInfo.enabledExtensionCount)
@@ -206,7 +212,10 @@ namespace vkBasalt
             Logger::debug("activating mutable_format");
             addUniqueCString(enabledExtensionNames, "VK_KHR_swapchain_mutable_format");
         }
-        addUniqueCString(enabledExtensionNames, "VK_KHR_image_format_list");
+        if (deviceProps.apiVersion < VK_API_VERSION_1_2 || instanceVersionMap[GetKey(physicalDevice)] < VK_API_VERSION_1_2)
+        {
+            addUniqueCString(enabledExtensionNames, "VK_KHR_image_format_list");
+        }
         modifiedCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
         modifiedCreateInfo.enabledExtensionCount   = enabledExtensionNames.size();
 

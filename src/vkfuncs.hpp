@@ -5,7 +5,8 @@
     FORVKFUNC(GetInstanceProcAddr) \
     FORVKFUNC(GetPhysicalDeviceFormatProperties) \
     FORVKFUNC(GetPhysicalDeviceMemoryProperties) \
-    FORVKFUNC(GetPhysicalDeviceQueueFamilyProperties)
+    FORVKFUNC(GetPhysicalDeviceQueueFamilyProperties) \
+    FORVKFUNC(GetPhysicalDeviceProperties)
 
 #define VK_DEVICE_FUNCS \
     FORVKFUNC(AllocateCommandBuffers) \
