@@ -1,5 +1,5 @@
 # vkBasalt
-vkBasalt is a Vulkan post-processing layer for improving game visuals. Expect bugs from it as it is one of my first projects ever. Use it at your own risk.
+vkBasalt is a Vulkan post-processing layer for improving game visuals. Expect bugs from it; it is one of my first projects ever. Use it at your own risk.
 
 The current built-in effects are:
 - 3D color lookup table
