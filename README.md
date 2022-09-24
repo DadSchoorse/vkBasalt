@@ -56,10 +56,10 @@ The config file will be searched for in the locations:
 * `/etc/vkBasalt.conf`
 * `/etc/vkBasalt/vkBasalt.conf`
 * `/usr/share/vkBasalt/vkBasalt.conf`
-* A file set with the environment variable`VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf`
+* A file set with the environment variable `VKBASALT_CONFIG_FILE=/path/to/vkBasalt.conf`
 * `vkBasalt.conf` in the game's working directory
 
-You can create a file named `vkBasalt.conf` in the game's working directory and change the values there if you want to make changes for one game only.
+You can create a file named `vkBasalt.conf` in the game's working directory and change the values there if you want to make changes for only one game.
 
 ### ReShade FX shaders
 You need to set `reshadeTexturePath` and `reshadeIncludePath` to the matching directories from the repository to run ReShade FX shaders, e.g., shaders from the [ReShade repository](https://github.com/crosire/reshade-shaders). You need to set a custom effect name to the shader path then add that effect name to `effects` like every other effect to use a specific shader.
@@ -135,7 +135,7 @@ Not really. The code was mostly written from scratch. vkBasalt directly uses ReS
 No. Shaders that need many techniques do not work, there might still be issues with stencil and blending and depth buffer access is not ready yet.
 
 ### You said that "depth buffer access is not ready yet". What do you mean?
-There is a WIP version that you can enable with `depthCapture = on`. It will cause many issues especially on non-Nvidia hardware. Also, the chosen depth buffer is not always the one wanted.
+There is a WIP version you can enable with `depthCapture = on`. It will cause many issues especially on non-Nvidia hardware. Also, the chosen depth buffer is not always the one wanted.
 
 ### Is there a way to change settings for ReShade shaders?
 There is some support for it [#46](https://github.com/DadSchoorse/vkBasalt/pull/46). An easy way to do it is to simply edit the shader file.
