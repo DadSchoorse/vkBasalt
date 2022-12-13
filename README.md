@@ -37,14 +37,14 @@ cd vkBasalt
 #### 64bit
 
 ```
-meson --buildtype=release --prefix=/usr builddir
+meson setup --buildtype=release --prefix=/usr builddir
 ninja -C builddir install
 ```
 #### 32bit
 
 Make sure that `PKG_CONFIG_PATH=/usr/lib32/pkgconfig` and `--libdir=lib32` are correct for your distro and change them if needed. On Debian based distros you need to replace `lib32` with `lib/i386-linux-gnu`, for example.
 ```
-ASFLAGS=--32 CFLAGS=-m32 CXXFLAGS=-m32 PKG_CONFIG_PATH=/usr/lib32/pkgconfig meson --prefix=/usr --buildtype=release --libdir=lib32 -Dwith_json=false builddir.32
+ASFLAGS=--32 CFLAGS=-m32 CXXFLAGS=-m32 PKG_CONFIG_PATH=/usr/lib32/pkgconfig meson setup --prefix=/usr --buildtype=release --libdir=lib32 -Dwith_json=false builddir.32
 ninja -C builddir.32 install
 ```
 
