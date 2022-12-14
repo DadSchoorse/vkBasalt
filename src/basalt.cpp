@@ -375,10 +375,9 @@ namespace vkBasalt
         // If the images got already requested once, return them again instead of creating new images
         if (pLogicalSwapchain->fakeImages.size())
         {
-            *pCount = std::min<uint32_t>(*pCount, pLogicalSwapchain->fakeImages.size());
-            VkResult res = *pCount < pLogicalSwapchain->fakeImages.size() ? VK_INCOMPLETE : VK_SUCCESS;
+            *pCount = std::min<uint32_t>(*pCount, pLogicalSwapchain->imageCount);
             std::memcpy(pSwapchainImages, pLogicalSwapchain->fakeImages.data(), sizeof(VkImage) * (*pCount));
-            return res;
+            return *pCount < pLogicalSwapchain->imageCount ? VK_INCOMPLETE : VK_SUCCESS;
         }
 
         pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, &pLogicalSwapchain->imageCount, nullptr);
@@ -524,10 +523,9 @@ namespace vkBasalt
             Logger::debug(std::to_string(i) + " written commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersNoEffect[i]));
         }
 
-        *pCount = std::min<uint32_t>(*pCount, pLogicalSwapchain->fakeImages.size());
-        VkResult res = *pCount < pLogicalSwapchain->fakeImages.size() ? VK_INCOMPLETE : VK_SUCCESS;
+        *pCount = std::min<uint32_t>(*pCount, pLogicalSwapchain->imageCount);
         std::memcpy(pSwapchainImages, pLogicalSwapchain->fakeImages.data(), sizeof(VkImage) * (*pCount));
-        return res;
+        return *pCount < pLogicalSwapchain->imageCount ? VK_INCOMPLETE : VK_SUCCESS;
     }
 
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
