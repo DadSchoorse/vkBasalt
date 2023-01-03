@@ -48,7 +48,7 @@ ENABLE_VKBASALT=1 %command%
 ```
 
 ## Settings
-Settings like the CAS sharpness amount can be changed in the config file.
+Settings, like the CAS sharpness amount, can be changed in the config file.
 
 The config file will be searched for in the locations:
 * `$XDG_CONFIG_HOME/vkBasalt/vkBasalt.conf` or `~/.config/vkBasalt/vkBasalt.conf` if `XDG_CONFIG_HOME` is not set
