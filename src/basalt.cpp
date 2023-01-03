@@ -375,28 +375,23 @@ namespace vkBasalt
         // If the images got already requested once, return them again instead of creating new images
         if (pLogicalSwapchain->fakeImages.size())
         {
+            *pCount = std::min<uint32_t>(*pCount, pLogicalSwapchain->imageCount);
             std::memcpy(pSwapchainImages, pLogicalSwapchain->fakeImages.data(), sizeof(VkImage) * (*pCount));
-            return VK_SUCCESS;
+            return *pCount < pLogicalSwapchain->imageCount ? VK_INCOMPLETE : VK_SUCCESS;
         }
 
-        pLogicalSwapchain->imageCount = *pCount;
-        pLogicalSwapchain->images.reserve(*pCount);
+        pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, &pLogicalSwapchain->imageCount, nullptr);
+        pLogicalSwapchain->images.resize(pLogicalSwapchain->imageCount);
+        pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, &pLogicalSwapchain->imageCount, pLogicalSwapchain->images.data());
 
         std::vector<std::string> effectStrings = pConfig->getOption<std::vector<std::string>>("effects", {"cas"});
 
         // create 1 more set of images when we can't use the swapchain it self
-        uint32_t fakeImageCount = *pCount * (effectStrings.size() + !pLogicalDevice->supportsMutableFormat);
+        uint32_t fakeImageCount = pLogicalSwapchain->imageCount * (effectStrings.size() + !pLogicalDevice->supportsMutableFormat);
 
         pLogicalSwapchain->fakeImages =
             createFakeSwapchainImages(pLogicalDevice, pLogicalSwapchain->swapchainCreateInfo, fakeImageCount, pLogicalSwapchain->fakeImageMemory);
         Logger::debug("created fake swapchain images");
-
-        VkResult result = pLogicalDevice->vkd.GetSwapchainImagesKHR(device, swapchain, pCount, pSwapchainImages);
-        for (unsigned int i = 0; i < *pCount; i++)
-        {
-            pLogicalSwapchain->images.push_back(pSwapchainImages[i]);
-            pSwapchainImages[i] = pLogicalSwapchain->fakeImages[i];
-        }
 
         VkFormat unormFormat = convertToUNORM(pLogicalSwapchain->format);
         VkFormat srgbFormat  = convertToSRGB(pLogicalSwapchain->format);
@@ -528,7 +523,9 @@ namespace vkBasalt
             Logger::debug(std::to_string(i) + " written commandbuffer " + convertToString(pLogicalSwapchain->commandBuffersNoEffect[i]));
         }
 
-        return result;
+        *pCount = std::min<uint32_t>(*pCount, pLogicalSwapchain->imageCount);
+        std::memcpy(pSwapchainImages, pLogicalSwapchain->fakeImages.data(), sizeof(VkImage) * (*pCount));
+        return *pCount < pLogicalSwapchain->imageCount ? VK_INCOMPLETE : VK_SUCCESS;
     }
 
     VKAPI_ATTR VkResult VKAPI_CALL vkBasalt_QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
