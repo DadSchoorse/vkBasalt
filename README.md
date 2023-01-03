@@ -31,7 +31,7 @@ Enable the layer with the environment variable.
 
 ### Lutris
 Follow these steps with Lutris:
-1. Right-click a game and click on `Configure`.
+1. Right-click a game and click `Configure`.
 2. Go to the `System options` tab and scroll down to `Environment variables`.
 3. Click `Add` and add `ENABLE_VKBASALT` under `Key` and `1` under `Value`.
 
