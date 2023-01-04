@@ -73,7 +73,7 @@ reshadeIncludePath = /home/user/reshade-shaders/Shaders
 ```
 
 ### Ingame input
-The [Home key](https://en.wikipedia.org/wiki/Home_key) can be used to toggle the applied effects on and off. The key can also be changed in the config file. It will not work on pure Wayland; it is based on X11. But it **should** not crash without X11.
+The [Home key](https://en.wikipedia.org/wiki/Home_key) can be used to toggle the applied effects. The key can also be changed in the config file. It will not work on pure Wayland; it is based on X11. But it **should** not crash without X11.
 
 ### Debug output
 The amount of debug output can be set with the `VKBASALT_LOG_LEVEL` environment variable, like `VKBASALT_LOG_LEVEL=debug`. Valid values are: `trace, debug, info, warn, error, none`.
