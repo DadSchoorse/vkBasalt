@@ -65,6 +65,12 @@ When using the terminal or an application (.desktop) file, execute:
 ENABLE_VKBASALT=1 yourgame
 ```
 
+If you've enabled vkBasalt globally, you can disable it for a specific application using:
+
+```ini
+DISABLE_VKBASALT=1 yourgame
+```
+
 ### Lutris
 With Lutris, follow these steps below:
 1. Right click on a game, and press `configure`.
