@@ -603,10 +603,12 @@ namespace vkBasalt
         // we need to delete the infos of the oldswapchain
 
         Logger::trace("vkDestroySwapchainKHR " + convertToString(swapchain));
-        swapchainMap[swapchain]->destroy();
-        swapchainMap.erase(swapchain);
-        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
+        if (swapchain != VK_NULL_HANDLE || swapchainMap.contains(swapchain)) {
+            swapchainMap[swapchain]->destroy();
+            swapchainMap.erase(swapchain);
+        }
 
+        LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
         pLogicalDevice->vkd.DestroySwapchainKHR(device, swapchain, pAllocator);
     }
 
