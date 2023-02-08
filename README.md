@@ -1,12 +1,12 @@
 # vkBasalt
-vkBasalt is a Vulkan post-processing layer for improving game visuals. Expect bugs from it; it is one of my first projects ever. Use it at your own risk.
+vkBasalt is a Vulkan post-processing layer for improving the visuals of games. Expect bugs from it as it is one of my first projects. Use it at your own risk.
 
-The current built-in effects are:
+Currently, the built-in effects are:
 - 3D color lookup table
-- Contrast adaptive sharpening
-- Denoised luma sharpening
-- Enhanced subpixel morphological antialiasing
-- Fast approximate anti-aliasing
+- Contrast Adaptive Sharpening
+- Denoised Luma Sharpening
+- Enhanced Subpixel Morphological Anti-Aliasing
+- Fast Approximate Anti-Aliasing
 
 It is also possible to use ReShade FX shaders.
 
@@ -27,7 +27,7 @@ sudo xbps-install vkBasalt
 ```
 
 ## Usage
-Enable the layer with the environment variable.
+You can enable the layer with an environment variable.
 
 ### Lutris
 Follow these steps with Lutris:
@@ -42,13 +42,13 @@ ENABLE_VKBASALT=1 yourgame
 ```
 
 ### Steam
-Edit your launch options with Steam and add:
+With Steam, edit your launch options and add:
 ```ini
 ENABLE_VKBASALT=1 %command% 
 ```
 
 ## Settings
-Settings, like the CAS sharpness amount, can be changed in the config file.
+Settings like CAS's sharpness amount can be changed in the config file.
 
 The config file will be searched for in the locations:
 * `$XDG_CONFIG_HOME/vkBasalt/vkBasalt.conf` or `~/.config/vkBasalt/vkBasalt.conf` if `XDG_CONFIG_HOME` is not set
@@ -73,7 +73,7 @@ reshadeIncludePath = /home/user/reshade-shaders/Shaders
 ```
 
 ### Ingame input
-The [Home key](https://en.wikipedia.org/wiki/Home_key) can be used to toggle the applied effects. The key can also be changed in the config file. It will not work on pure Wayland; it is based on X11. But it **should** not crash without X11.
+The [Home key](https://en.wikipedia.org/wiki/Home_key) can be used to toggle the applied effects. The key can also be changed in the config file. It will not work on pure Wayland as it is based on X11, but **should** not crash without X11.
 
 ### Debug output
 The amount of debug output can be set with the `VKBASALT_LOG_LEVEL` environment variable, like `VKBASALT_LOG_LEVEL=debug`. Valid values are: `trace, debug, info, warn, error, none`.
@@ -91,7 +91,7 @@ Before building, you will need:
 - X11 development files
 
 ### Building
-These instructions use `--prefix=/usr`, that is not recommended in general; vkBasalt will be installed in directories that are meant for the package manager. An alternative is not setting the prefix, so it will be installed in `/usr/local`. But you musto ensure the `ld` finds the library; /usr/local is probably not in the default path.
+These instructions use `--prefix=/usr`, that is not recommended in general as vkBasalt will be installed in directories that are meant for the package manager. An alternative is not setting the prefix, so it will be installed in `/usr/local`. But you must ensure the `ld` finds the library; /usr/local is probably not in the default path.
 
 Prefer to use distro-provided packages in general.
 ```
@@ -116,7 +116,7 @@ ninja -C builddir install
 ### Why is it called vkBasalt?
 It is a joke: Vulkan post-processing &#8594; after vulcan &#8594; basalt.
 
-### Does vkBasalt work with dxvk and vkd3d?
+### Does vkBasalt work with DXVK and VKD3D?
 Yes.
 
 ### Will vkBasalt get me banned?
