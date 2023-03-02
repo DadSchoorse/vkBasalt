@@ -73,9 +73,9 @@ namespace vkBasalt
         return *(void**) inst;
     }
 
-    VK_BASALT_EXPORT VkResult VKAPI_CALL vkBasalt_CreateInstance(const VkInstanceCreateInfo*  pCreateInfo,
-                                                                 const VkAllocationCallbacks* pAllocator,
-                                                                 VkInstance*                  pInstance)
+    VkResult VKAPI_CALL vkBasalt_CreateInstance(const VkInstanceCreateInfo*  pCreateInfo,
+                                                const VkAllocationCallbacks* pAllocator,
+                                                VkInstance*                  pInstance)
     {
         VkLayerInstanceCreateInfo* layerCreateInfo = (VkLayerInstanceCreateInfo*) pCreateInfo->pNext;
 
@@ -139,7 +139,7 @@ namespace vkBasalt
         return ret;
     }
 
-    VK_BASALT_EXPORT void VKAPI_CALL vkBasalt_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
+    void VKAPI_CALL vkBasalt_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
     {
         scoped_lock l(globalLock);
 
@@ -154,10 +154,10 @@ namespace vkBasalt
         instanceVersionMap.erase(GetKey(instance));
     }
 
-    VK_BASALT_EXPORT VkResult VKAPI_CALL vkBasalt_CreateDevice(VkPhysicalDevice             physicalDevice,
-                                                               const VkDeviceCreateInfo*    pCreateInfo,
-                                                               const VkAllocationCallbacks* pAllocator,
-                                                               VkDevice*                    pDevice)
+    VkResult VKAPI_CALL vkBasalt_CreateDevice(VkPhysicalDevice             physicalDevice,
+                                              const VkDeviceCreateInfo*    pCreateInfo,
+                                              const VkAllocationCallbacks* pAllocator,
+                                              VkDevice*                    pDevice)
     {
         scoped_lock l(globalLock);
         Logger::trace("vkCreateDevice");
@@ -289,7 +289,7 @@ namespace vkBasalt
         return VK_SUCCESS;
     }
 
-    VK_BASALT_EXPORT void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
+    void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
     {
         scoped_lock l(globalLock);
 
@@ -753,7 +753,7 @@ namespace vkBasalt
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enumeration function
 
-    VK_BASALT_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceLayerProperties(uint32_t* pPropertyCount, VkLayerProperties* pProperties)
+    VkResult VKAPI_CALL vkBasalt_EnumerateInstanceLayerProperties(uint32_t* pPropertyCount, VkLayerProperties* pProperties)
     {
         if (pPropertyCount)
             *pPropertyCount = 1;
@@ -769,16 +769,16 @@ namespace vkBasalt
         return VK_SUCCESS;
     }
 
-    VK_BASALT_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceLayerProperties(VkPhysicalDevice   physicalDevice,
-                                                                                 uint32_t*          pPropertyCount,
-                                                                                 VkLayerProperties* pProperties)
+    VkResult VKAPI_CALL vkBasalt_EnumerateDeviceLayerProperties(VkPhysicalDevice   physicalDevice,
+                                                                uint32_t*          pPropertyCount,
+                                                                VkLayerProperties* pProperties)
     {
         return vkBasalt_EnumerateInstanceLayerProperties(pPropertyCount, pProperties);
     }
 
-    VK_BASALT_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateInstanceExtensionProperties(const char*            pLayerName,
-                                                                                       uint32_t*              pPropertyCount,
-                                                                                       VkExtensionProperties* pProperties)
+    VkResult VKAPI_CALL vkBasalt_EnumerateInstanceExtensionProperties(const char*            pLayerName,
+                                                                      uint32_t*              pPropertyCount,
+                                                                      VkExtensionProperties* pProperties)
     {
         if (pLayerName == NULL || std::strcmp(pLayerName, VKBASALT_NAME))
         {
@@ -793,10 +793,10 @@ namespace vkBasalt
         return VK_SUCCESS;
     }
 
-    VK_BASALT_EXPORT VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(VkPhysicalDevice       physicalDevice,
-                                                                                     const char*            pLayerName,
-                                                                                     uint32_t*              pPropertyCount,
-                                                                                     VkExtensionProperties* pProperties)
+    VkResult VKAPI_CALL vkBasalt_EnumerateDeviceExtensionProperties(VkPhysicalDevice       physicalDevice,
+                                                                    const char*            pLayerName,
+                                                                    uint32_t*              pPropertyCount,
+                                                                    VkExtensionProperties* pProperties)
     {
         // pass through any queries that aren't to us
         if (pLayerName == NULL || std::strcmp(pLayerName, VKBASALT_NAME))
