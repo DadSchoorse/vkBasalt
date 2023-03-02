@@ -141,6 +141,9 @@ namespace vkBasalt
 
     void VKAPI_CALL vkBasalt_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
     {
+        if (!instance)
+            return;
+
         scoped_lock l(globalLock);
 
         Logger::trace("vkDestroyInstance");
@@ -291,6 +294,9 @@ namespace vkBasalt
 
     void VKAPI_CALL vkBasalt_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
     {
+        if (!device)
+            return;
+
         scoped_lock l(globalLock);
 
         Logger::trace("vkDestroyDevice");
@@ -605,6 +611,9 @@ namespace vkBasalt
 
     VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator)
     {
+        if (!swapchain)
+            return;
+
         scoped_lock l(globalLock);
         // we need to delete the infos of the oldswapchain
 
@@ -699,6 +708,9 @@ namespace vkBasalt
 
     VKAPI_ATTR void VKAPI_CALL vkBasalt_DestroyImage(VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator)
     {
+        if (!image)
+            return;
+
         scoped_lock l(globalLock);
 
         LogicalDevice* pLogicalDevice = deviceMap[GetKey(device)].get();
