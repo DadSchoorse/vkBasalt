@@ -114,7 +114,7 @@ ninja -C builddir install
 
 ## FAQ
 ### Why is it called vkBasalt?
-It is a joke: Vulkan post-processing &#8594; after vulcan &#8594; basalt.
+It is a joke: Vulkan post-processing → after vulcan → basalt.
 
 ### Does vkBasalt work with DXVK and VKD3D?
 Yes.
@@ -132,7 +132,7 @@ Maybe, but not soon.
 Not really. The code was mostly written from scratch. vkBasalt directly uses ReShade source code for the shader compiler (thanks [@crosire](https://github.com/crosire)), but that is about it.
 
 ### Does every ReShade shader work?
-No. Shaders that need many techniques do not work, there might still be issues with stencil and blending and depth buffer access is not ready yet.
+No. Depth buffer access is not ready yet, shaders that need many techniques do not work and there might still be issues with blending and stencil.
 
 ### You said that "depth buffer access is not ready yet". What do you mean?
 There is a WIP version you can enable with `depthCapture = on`. It will cause many issues especially on non-Nvidia hardware. Also, the chosen depth buffer is not always the one wanted.
