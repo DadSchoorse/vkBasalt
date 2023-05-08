@@ -5,6 +5,7 @@
 
 #include "effect_lexer.hpp"
 #include <unordered_map> // Used for static lookup tables
+#include <stdint.h>
 
 using namespace reshadefx;
 
