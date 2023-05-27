@@ -26,6 +26,8 @@
 #include "stb_image_dds.h"
 #include "stb_image_resize.h"
 
+#include "INIReader.h"
+
 namespace vkBasalt
 {
     ReshadeEffect::ReshadeEffect(LogicalDevice*       pLogicalDevice,
@@ -560,6 +562,13 @@ namespace vkBasalt
             // pipeline
 
             // Configure effect
+
+            INIReader ini("reshade.ini");
+
+            if (ini.ParseError() != 0) {
+                Logger::info("Could not load ReShade INI file. Using defaults.");
+            }
+
             std::vector<VkSpecializationMapEntry> specMapEntrys;
             std::vector<char>                     specData;
 
@@ -567,33 +576,36 @@ namespace vkBasalt
             {
                 if (!opt.name.empty())
                 {
-                    std::string val = pConfig->getOption<std::string>(opt.name);
+                    std::cout << pConfig->getOption<std::string>(effectName);
+                    std::string sectionName = effectName + ".fx";
+                    std::string val = ini.Get(sectionName.c_str(), opt.name.c_str(), "");
                     if (!val.empty())
                     {
+                        Logger::info("Effect: " + effectName + ", Key: " + opt.name + ", Value: " + val);
                         std::variant<int32_t, uint32_t, float> convertedValue;
                         offset = static_cast<uint32_t>(specData.size());
                         switch (opt.type.base)
                         {
                             case reshadefx::type::t_bool:
-                                convertedValue = (int32_t) pConfig->getOption<bool>(opt.name);
+                                convertedValue = ini.GetBoolean(sectionName.c_str(), opt.name.c_str(), false);
                                 specData.resize(offset + sizeof(VkBool32));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(VkBool32));
                                 specMapEntrys.push_back({specId, offset, sizeof(VkBool32)});
                                 break;
                             case reshadefx::type::t_int:
-                                convertedValue = pConfig->getOption<int32_t>(opt.name);
+                                convertedValue = (int32_t) ini.GetInteger(sectionName.c_str(), opt.name.c_str(), 0);
                                 specData.resize(offset + sizeof(int32_t));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(int32_t));
                                 specMapEntrys.push_back({specId, offset, sizeof(int32_t)});
                                 break;
                             case reshadefx::type::t_uint:
-                                convertedValue = (uint32_t) pConfig->getOption<int32_t>(opt.name);
+                                convertedValue = (uint32_t) ini.GetInteger(sectionName.c_str(), opt.name.c_str(), 0);
                                 specData.resize(offset + sizeof(uint32_t));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(uint32_t));
                                 specMapEntrys.push_back({specId, offset, sizeof(uint32_t)});
                                 break;
                             case reshadefx::type::t_float:
-                                convertedValue = pConfig->getOption<float>(opt.name);
+                                convertedValue = ini.GetFloat(sectionName.c_str(), opt.name.c_str(), std::stof("0.00"));
                                 specData.resize(offset + sizeof(float));
                                 std::memcpy(specData.data() + offset, &convertedValue, sizeof(float));
                                 specMapEntrys.push_back({specId, offset, sizeof(float)});
