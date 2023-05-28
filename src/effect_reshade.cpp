@@ -4,6 +4,7 @@
 #include <climits>
 #include <cstdlib>
 #include <cassert>
+#include <filesystem>
 
 #include <set>
 #include <variant>
@@ -571,17 +572,16 @@ namespace vkBasalt
 
             std::vector<VkSpecializationMapEntry> specMapEntrys;
             std::vector<char>                     specData;
+            std::filesystem::path effectPath(pConfig->getOption<std::string>(effectName));
+            std::string sectionName = effectPath.filename().string();
 
             for (uint32_t specId = 0, offset = 0; auto &opt : module.spec_constants)
             {
                 if (!opt.name.empty())
                 {
-                    std::cout << pConfig->getOption<std::string>(effectName);
-                    std::string sectionName = effectName + ".fx";
                     std::string val = ini.Get(sectionName.c_str(), opt.name.c_str(), "");
                     if (!val.empty())
                     {
-                        Logger::info("Effect: " + effectName + ", Key: " + opt.name + ", Value: " + val);
                         std::variant<int32_t, uint32_t, float> convertedValue;
                         offset = static_cast<uint32_t>(specData.size());
                         switch (opt.type.base)
