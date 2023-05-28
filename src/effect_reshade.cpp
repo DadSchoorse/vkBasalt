@@ -50,6 +50,11 @@ namespace vkBasalt
         inputOutputFormatUNORM = convertToUNORM(format);
         inputOutputFormatSRGB  = convertToSRGB(format);
 
+        INIReader ini("ReShade.ini");
+        if (ini.ParseError() != 0) {
+            Logger::info("Could not load ReShade INI file. Using fallback/default config.");
+        }
+
         inputImageViewsSRGB  = createImageViews(pLogicalDevice, inputOutputFormatSRGB, inputImages);
         inputImageViewsUNORM = createImageViews(pLogicalDevice, inputOutputFormatUNORM, inputImages);
         Logger::debug("created input ImageViews");
@@ -563,13 +568,6 @@ namespace vkBasalt
             // pipeline
 
             // Configure effect
-
-            INIReader ini("reshade.ini");
-
-            if (ini.ParseError() != 0) {
-                Logger::info("Could not load ReShade INI file. Using defaults.");
-            }
-
             std::vector<VkSpecializationMapEntry> specMapEntrys;
             std::vector<char>                     specData;
             std::filesystem::path effectPath(pConfig->getOption<std::string>(effectName));
