@@ -31,6 +31,7 @@ namespace vkBasalt
 
         void readConfigLine(std::string line);
         void readConfigFile(std::ifstream& stream);
+        void readConfigFromEnv(std::string configLine);
 
         void parseOption(const std::string& option, int32_t& result);
         void parseOption(const std::string& option, float& result);
