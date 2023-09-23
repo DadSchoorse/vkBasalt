@@ -4,10 +4,13 @@
 #include <ctime>
 #include <cstdlib>
 #include <cmath>
+#include <sys/shm.h>
 
 #include <algorithm>
 
 #include "logger.hpp"
+
+const std::string defaultRuntimePathnamePrefix = "/tmp/shader_runtime_";
 
 namespace vkBasalt
 {
@@ -75,6 +78,10 @@ namespace vkBasalt
             else if (source == "bufready_depth")
             {
                 uniforms.push_back(std::shared_ptr<ReshadeUniform>(new DepthUniform(uniform)));
+            }
+            else if (!source.empty())
+            {
+                uniforms.push_back(std::shared_ptr<ReshadeUniform>(new RuntimeUniform(uniform)));
             }
         }
         return uniforms;
@@ -378,6 +385,64 @@ namespace vkBasalt
         std::memcpy((uint8_t*) mapedBuffer + offset, &(hasDepth), sizeof(VkBool32));
     }
     DepthUniform::~DepthUniform()
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+    RuntimeUniform::RuntimeUniform(reshadefx::uniform_info uniformInfo)
+    {
+        auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
+        defaultValue = 0.0;
+        if (auto defaultValueAnnotation =
+                std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "defaultValue"; });
+            defaultValueAnnotation != uniformInfo.annotations.end())
+        {
+            defaultValue = defaultValueAnnotation->type.is_floating_point() ? defaultValueAnnotation->value.as_float[0] : 0.0f;
+        }
+
+        if (auto pathnameAnnotation =
+                std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "pathname"; });
+            pathnameAnnotation != uniformInfo.annotations.end())
+        {
+            pathname = new char[pathnameAnnotation->value.string_data.length() + 1];
+            strcpy(pathname, pathnameAnnotation->value.string_data.c_str());
+        }
+        else
+        {
+            pathname = new char[defaultRuntimePathnamePrefix.length() + source->value.string_data.length() + 1];
+            std::string tmp_pathname = defaultRuntimePathnamePrefix + source->value.string_data;
+            strcpy(pathname, tmp_pathname.c_str());
+        }
+
+        projId = 0;
+        if (auto projIdAnnotation =
+                std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "projId"; });
+            projIdAnnotation != uniformInfo.annotations.end())
+        {
+            projId = projIdAnnotation->value.as_int[0];
+        }
+        shmKey = ftok(pathname, projId);
+
+        Logger::debug("Found runtime uniform: " + std::to_string(defaultValue) + " " + pathname + " " + std::to_string(projId) + "\n");
+        offset = uniformInfo.offset;
+        size   = uniformInfo.size;
+    }
+    void RuntimeUniform::update(void* mapedBuffer)
+    {
+        float *value = &defaultValue;
+        bool needs_detach = false;
+        if (shmKey != -1) {
+            int shmId = shmget(shmKey,sizeof(*value),0444); // read-only
+            if (shmId != -1) {
+                value = (float*) shmat(shmId,(void*)0,0);
+                needs_detach = true;
+            }
+        }
+        std::memcpy((uint8_t*) mapedBuffer + offset, value, sizeof(*value));
+        if (needs_detach)
+            shmdt(value);
+    }
+    RuntimeUniform::~RuntimeUniform()
     {
     }
 } // namespace vkBasalt

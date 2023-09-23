@@ -139,6 +139,20 @@ namespace vkBasalt
         void virtual update(void* mapedBuffer) override;
         virtual ~DepthUniform();
     };
+
+    class RuntimeUniform : public ReshadeUniform
+    {
+    public:
+        RuntimeUniform(reshadefx::uniform_info uniformInfo);
+        void virtual update(void* mapedBuffer) override;
+        virtual ~RuntimeUniform();
+
+    private:
+        float defaultValue;
+        char* pathname;
+        int projId;
+        key_t shmKey;
+    };
 } // namespace vkBasalt
 
 #endif // RESHADE_UNIFORMS_HPP_INCLUDED
