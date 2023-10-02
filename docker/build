@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -e
+
+meson setup --buildtype=release --prefix=/usr builddir
+ninja -C builddir
+
+mkdir -p /out/64
+cp builddir/src/libvkbasalt.so /out/64
+
+ASFLAGS=--32 CFLAGS=-m32 CXXFLAGS=-m32 PKG_CONFIG_PATH=/usr/lib32/pkgconfig meson setup --prefix=/usr --buildtype=release --libdir=lib32 -Dwith_json=false builddir.32
+ninja -C builddir.32
+
+mkdir -p /out/32
+cp builddir.32/src/libvkbasalt.so /out/32
