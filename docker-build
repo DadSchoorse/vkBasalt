@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -e
+
+mkdir -p out
+
+docker build -f $PWD/docker/Dockerfile -t vkbasalt .
+docker run --rm -i -v $PWD/docker:/docker -v $PWD/out:/out vkbasalt
