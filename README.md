@@ -36,7 +36,7 @@ cd vkBasalt
 
 #### Docker
 
-If you have Docker installed on your system, you can kick off the Docker build using: `./docker-build`. This will run both the 32 and 64-bit builds, and copy their binaries to the `out` directory.
+If you have Docker installed on your system, you can kick off the Docker build using: `./docker-build`. This will run both the 32 and 64-bit builds, and copy the results to the `out` directory.
 
 If you don't have Docker installed or prefer not to use it, see the following sections.
 
