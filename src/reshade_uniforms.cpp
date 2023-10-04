@@ -7,6 +7,7 @@
 #include <sys/shm.h>
 
 #include <algorithm>
+#include <variant>
 
 #include "logger.hpp"
 
@@ -391,15 +392,10 @@ namespace vkBasalt
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
     RuntimeUniform::RuntimeUniform(reshadefx::uniform_info uniformInfo)
     {
+        offset = uniformInfo.offset;
+        size   = uniformInfo.size;
+        type   = uniformInfo.type;
         auto source = std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "source"; });
-        defaultValue = 0.0;
-        if (auto defaultValueAnnotation =
-                std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "defaultValue"; });
-            defaultValueAnnotation != uniformInfo.annotations.end())
-        {
-            defaultValue = defaultValueAnnotation->type.is_floating_point() ? defaultValueAnnotation->value.as_float[0] : 0.0f;
-        }
-
         if (auto pathnameAnnotation =
                 std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "pathname"; });
             pathnameAnnotation != uniformInfo.annotations.end())
@@ -423,24 +419,80 @@ namespace vkBasalt
         }
         shmKey = ftok(pathname, projId);
 
-        Logger::debug("Found runtime uniform: " + std::to_string(defaultValue) + " " + pathname + " " + std::to_string(projId) + "\n");
-        offset = uniformInfo.offset;
-        size   = uniformInfo.size;
+        if (auto defaultValueAnnotation =
+                std::find_if(uniformInfo.annotations.begin(), uniformInfo.annotations.end(), [](const auto& a) { return a.name == "defaultValue"; });
+            defaultValueAnnotation != uniformInfo.annotations.end())
+        {
+            reshadefx::constant value = defaultValueAnnotation->value;
+            if (type.is_floating_point()) {
+                defaultValue = std::vector<float>(value.as_float, value.as_float + type.components());
+                Logger::debug(std::string("Found float* runtime uniform: ") + pathname + " " + std::to_string(projId) +
+                    " of size " + std::to_string(type.components()) + "\n");
+            } else if (type.is_boolean()) {
+                defaultValue = std::vector<uint32_t>(value.as_uint, value.as_uint + type.components());
+                Logger::debug(std::string("Found bool* runtime uniform: ") + pathname + " " + std::to_string(projId) +
+                    " of size " + std::to_string(type.components()) + "\n");
+            } else if (type.is_numeric()) {
+                if (type.is_signed()) {
+                    defaultValue = std::vector<int32_t>(value.as_int, value.as_int + type.components());
+                    Logger::debug(std::string("Found int32_t* runtime uniform: ") + pathname + " " + std::to_string(projId) +
+                        " of size " + std::to_string(type.components()) + "\n");
+                } else {
+                    defaultValue = std::vector<uint32_t>(value.as_uint, value.as_uint + type.components());
+                    Logger::debug(std::string("Found uint32_t* runtime uniform: ") + pathname + " " + std::to_string(projId) +
+                        " of size " + std::to_string(type.components()) + "\n");
+                }
+            } else {
+                Logger::err("Tried to create a runtime uniform variable of an unsupported type");
+            }
+        }
     }
     void RuntimeUniform::update(void* mapedBuffer)
     {
-        float *value = &defaultValue;
-        bool needs_detach = false;
+        std::variant<std::monostate, std::vector<float>, std::vector<int32_t>, std::vector<uint32_t>, bool> value;
         if (shmKey != -1) {
-            int shmId = shmget(shmKey,sizeof(*value),0444); // read-only
+            int shmId = shmget(shmKey,size,0444); // read-only
             if (shmId != -1) {
-                value = (float*) shmat(shmId,(void*)0,0);
-                needs_detach = true;
+                if (type.is_floating_point()) {
+                    float* raw_ptr = static_cast<float*>(shmat(shmId, nullptr, 0));
+                    value = std::vector<float>(raw_ptr, raw_ptr + type.components());
+                    shmdt(raw_ptr);
+                } else if (type.is_boolean()) {
+                    bool* raw_ptr = static_cast<bool*>(shmat(shmId, nullptr, 0));
+
+                    // convert to a uint32_t vector, that's how the reshade uniform code understands booleans
+                    std::vector<uint32_t> bools_as_uint;
+                    for(size_t i = 0; i < type.components(); ++i) {
+                        bools_as_uint.push_back(static_cast<uint32_t>(raw_ptr[i]));
+                    }
+                    value = bools_as_uint;
+                    shmdt(raw_ptr);
+                } else if (type.is_numeric()) {
+                    if (type.is_signed()) {
+                        int32_t* raw_ptr = static_cast<int32_t*>(shmat(shmId, nullptr, 0));
+                        value = std::vector<int32_t>(raw_ptr, raw_ptr + type.components());
+                        shmdt(raw_ptr);
+                    } else {
+                        uint32_t* raw_ptr = static_cast<uint32_t*>(shmat(shmId, nullptr, 0));
+                        value = std::vector<uint32_t>(raw_ptr, raw_ptr + type.components());
+                        shmdt(raw_ptr);
+                    }
+                }
             }
         }
-        std::memcpy((uint8_t*) mapedBuffer + offset, value, sizeof(*value));
-        if (needs_detach)
-            shmdt(value);
+        if (std::holds_alternative<std::monostate>(value)) {
+            value = defaultValue;
+        }
+        if (std::holds_alternative<std::vector<float>>(value)) {
+            std::vector<float>& vec = std::get<std::vector<float>>(value);
+            std::memcpy((uint8_t*) mapedBuffer + offset, vec.data(), vec.size() * sizeof(float));
+        } else if (std::holds_alternative<std::vector<int32_t>>(value)) {
+            std::vector<int32_t>& vec = std::get<std::vector<int32_t>>(value);
+            std::memcpy((uint8_t*) mapedBuffer + offset, vec.data(), vec.size() * sizeof(int32_t));
+        } else if (std::holds_alternative<std::vector<uint32_t>>(value)) {
+            std::vector<uint32_t>& vec = std::get<std::vector<uint32_t>>(value);
+            std::memcpy((uint8_t*) mapedBuffer + offset, vec.data(), vec.size() * sizeof(uint32_t));
+        }
     }
     RuntimeUniform::~RuntimeUniform()
     {
