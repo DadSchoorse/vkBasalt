@@ -7,6 +7,7 @@
 #include <vector>
 #include <chrono>
 #include <memory>
+#include <variant>
 
 #include "vulkan_include.hpp"
 
@@ -138,6 +139,21 @@ namespace vkBasalt
         DepthUniform(reshadefx::uniform_info uniformInfo);
         void virtual update(void* mapedBuffer) override;
         virtual ~DepthUniform();
+    };
+
+    class RuntimeUniform : public ReshadeUniform
+    {
+    public:
+        RuntimeUniform(reshadefx::uniform_info uniformInfo);
+        void virtual update(void* mapedBuffer) override;
+        virtual ~RuntimeUniform();
+
+    private:
+        reshadefx::type type;
+        std::variant<std::monostate, std::vector<float>, std::vector<int32_t>, std::vector<uint32_t>, bool> defaultValue;
+        char* pathname;
+        int projId;
+        key_t shmKey;
     };
 } // namespace vkBasalt
 
